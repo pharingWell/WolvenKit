@@ -1,16 +1,18 @@
+using System;
+using System.Reflection;
 using System.Text;
 using WolvenKit.Common.FNV1A;
 using WolvenKit.RED4.IO;
 using WolvenKit.RED4.Save.IO;
 using WolvenKit.RED4.Types;
+using Activator = System.Activator;
 
 namespace WolvenKit.RED4.Save;
 
 public class PS2Entry
 {
     public ulong Id { get; set; }
-    public Type? Type { get; set; }
-    public RedBaseClass? Data { get; set; }
+    public RedBaseClass Data { get; set; }
 }
 
 public class PersistencySystem2 : INodeData
@@ -18,6 +20,12 @@ public class PersistencySystem2 : INodeData
     public List<uint> Ids { get; set; } = new();
     public uint Unk1 { get; set; }
     public List<PS2Entry> Entries { get; set; } = new();
+}
+
+public class UnknownRedClass : RedBaseClass
+{
+    public ulong Hash { get; set; } = 0;
+    public byte[] Buffer { get; set; } = Array.Empty<byte>();
 }
 
 public class PersistencySystem2Reader : Red4Reader
@@ -40,10 +48,8 @@ public class PersistencySystem2Reader : Red4Reader
 
     public long Remaining => BaseStream.Length - BaseStream.Position;
 
-    public override RedBaseClass ReadClass(Type type, uint size)
+    public override void ReadClass(RedBaseClass instance, uint size)
     {
-        var instance = RedTypeManager.Create(type);
-
         while (Remaining != 0)
         {
             var propNameHash = BaseReader.ReadUInt64();
@@ -52,7 +58,7 @@ public class PersistencySystem2Reader : Red4Reader
                 break;
             }
 
-            var propertyInfo = ClassHashHelper.GetPropertyInfo(type, propNameHash);
+            var propertyInfo = ClassHashHelper.GetPropertyInfo(instance.GetType(), propNameHash);
             if (propertyInfo == null)
             {
                 throw new Exception();
@@ -66,9 +72,18 @@ public class PersistencySystem2Reader : Red4Reader
                 throw new Exception();
             }
 
-            var value = Read(propertyInfo.Type, (uint)Remaining, propertyInfo.Flags);
+            var redTypeInfos = RedReflection.GetRedTypeInfos(propertyInfo.Type, propertyInfo.Flags);
+
+            var value = Read(redTypeInfos, (uint)Remaining);
             instance.SetProperty(propertyInfo.RedName, value);
         }
+    }
+
+    public override RedBaseClass ReadClass(Type type, uint size)
+    {
+        var instance = RedTypeManager.Create(type);
+
+        ReadClass(instance, size);
 
         return instance;
     }
@@ -85,68 +100,40 @@ public class PersistencySystem2Reader : Red4Reader
         return BaseReader.ReadUInt64();
     }
 
-    public override CEnum<T> ReadCEnum<T>()
+    public override IRedEnum ReadCEnum(List<RedTypeInfo> redTypeInfos, uint size)
     {
-        var remaining = Remaining;
-        var sizeType = Enum.GetUnderlyingType(typeof(T));
-        
-        if (sizeType == typeof(sbyte))
-        {
-            return (Enum)Enum.ToObject(typeof(T), BaseReader.ReadSByte());
-        }
-        if (sizeType == typeof(byte))
-        {
-            return (Enum)Enum.ToObject(typeof(T), BaseReader.ReadByte());
-        }
-        if (sizeType == typeof(short))
-        {
-            return (Enum)Enum.ToObject(typeof(T), BaseReader.ReadInt16());
-        }
-        if (sizeType == typeof(ushort))
-        {
-            return (Enum)Enum.ToObject(typeof(T), BaseReader.ReadUInt16());
-        }
-        if (sizeType == typeof(int))
-        {
-            return (Enum)Enum.ToObject(typeof(T), BaseReader.ReadInt32());
-        }
-        if (sizeType == typeof(uint))
-        {
-            return (Enum)Enum.ToObject(typeof(T), BaseReader.ReadUInt32());
-        }
-        if (sizeType == typeof(long))
-        {
-            return (Enum)Enum.ToObject(typeof(T), BaseReader.ReadInt64());
-        }
-        if (sizeType == typeof(ulong))
-        {
-            return (Enum)Enum.ToObject(typeof(T), BaseReader.ReadUInt64());
-        }
+        var type = redTypeInfos[0].RedObjectType;
+        var sizeType = Enum.GetUnderlyingType(type);
 
-        throw new Exception();
+        var obj = Type.GetTypeCode(sizeType) switch
+        {
+            TypeCode.SByte => Enum.ToObject(type, BaseReader.ReadSByte()),
+            TypeCode.Byte => Enum.ToObject(type, BaseReader.ReadByte()),
+            TypeCode.Int16 => Enum.ToObject(type, BaseReader.ReadInt16()),
+            TypeCode.UInt16 => Enum.ToObject(type, BaseReader.ReadUInt16()),
+            TypeCode.Int32 => Enum.ToObject(type, BaseReader.ReadInt32()),
+            TypeCode.UInt32 => Enum.ToObject(type, BaseReader.ReadUInt32()),
+            TypeCode.Int64 => Enum.ToObject(type, BaseReader.ReadInt64()),
+            TypeCode.UInt64 => Enum.ToObject(type, BaseReader.ReadUInt64()),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        var fullType = RedReflection.GetFullType(redTypeInfos);
+        return (IRedEnum)Activator.CreateInstance(fullType, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { obj }, null)!;
     }
 
-    public override IRedHandle<T> ReadCHandle<T>()
+    public override IRedHandle ReadCHandle(List<RedTypeInfo> redTypeInfos, uint size)
     {
+        var type = RedReflection.GetFullType(redTypeInfos);
+        var result = (IRedHandle)Activator.CreateInstance(type);
+
         var clsType = ClassHashHelper.GetTypeFromHash(BaseReader.ReadUInt64())!;
-        return (CHandle<T>)ReadClass(clsType, (uint)Remaining);
+        result.SetValue(ReadClass(clsType, (uint)Remaining));
+
+        return result;
     }
 
-    public override IRedArray<T> ReadCArray<T>(uint size)
-    {
-        var array = new CArray<T>();
-
-        var elementCount = _reader.ReadUInt32();
-
-        var i = 0;
-        for (; i < elementCount; i++)
-        {
-            var element = ReadArrayItem(i, typeof(T), Flags.Empty);
-            array.Add((T)element);
-        }
-
-        return array;
-    }
+    public override IRedArray ReadCArray(List<RedTypeInfo> redTypeInfos, uint size, bool readAdditionalBytes = true) => base.ReadCArray(redTypeInfos, size, false);
 }
 
 public class PersistencySystem2Writer : Red4Writer
@@ -259,19 +246,46 @@ public class PersistencySystem2Parser : INodeParser
                 var classHash = reader.ReadUInt64();
                 var size = reader.ReadUInt32();
 
+                Type? type = null;
                 if (classHash != 0)
                 {
-                    entry.Type = ClassHashHelper.GetTypeFromHash(classHash)!;
+                    type = ClassHashHelper.GetTypeFromHash(classHash)!;
                 }
 
-                if (size != 0 && classHash != 0)
+                var startPos = reader.BaseStream.Position;
+                if (type != null)
                 {
-                    using var subMemory = new MemoryStream(reader.ReadBytes((int)size));
-                    using var subReader = new PersistencySystem2Reader(subMemory);
+                    try
+                    {
+                        var instance1 = RedTypeManager.Create(type);
+                        if (size != 0)
+                        {
+                            using var subMemory = new MemoryStream(reader.ReadBytes((int)size));
+                            using var subReader = new PersistencySystem2Reader(subMemory);
 
-                    entry.Data = subReader.ReadClass(entry.Type, size);
+                            subReader.ReadClass(instance1, size);
+                        }
+                        entry.Data = instance1;
+
+                        result.Entries.Add(entry);
+                        continue;
+                    }
+                    catch (Exception)
+                    {
+                        // could not resolve a property, fall back to Unknown cls
+                    }
                 }
+
+                reader.BaseStream.Position = startPos;
+
+                var instance2 = new UnknownRedClass { Hash = classHash };
+                if (size != 0)
+                {
+                    instance2.Buffer = reader.ReadBytes((int)size);
+                }
+                entry.Data = instance2;
             }
+
             result.Entries.Add(entry);
         }
 
@@ -296,17 +310,16 @@ public class PersistencySystem2Parser : INodeParser
             writer.Write(entry.Id);
             if (entry.Id != 0)
             {
-                if (entry.Type != null)
+                if (entry.Data is UnknownRedClass unk)
                 {
-                    writer.Write(ClassHashHelper.GetHashFromType(entry.Type));
+                    writer.Write(unk.Hash);
+                    writer.Write(unk.Buffer.Length);
+                    writer.Write(unk.Buffer);
                 }
                 else
                 {
-                    writer.Write((ulong)0);
-                }
+                    writer.Write(ClassHashHelper.GetHashFromType(entry.Data.GetType()));
 
-                if (entry.Data != null)
-                {
                     using var subMemory = new MemoryStream();
                     using var subWriter = new PersistencySystem2Writer(subMemory);
 
@@ -315,10 +328,6 @@ public class PersistencySystem2Parser : INodeParser
                     var bytes = subMemory.ToArray()[..^8];
                     writer.Write(bytes.Length);
                     writer.Write(bytes);
-                }
-                else
-                {
-                    writer.Write(0);
                 }
             }
         }

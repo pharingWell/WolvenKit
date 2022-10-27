@@ -5,14 +5,13 @@ namespace WolvenKit.RED4.Save.IO;
 
 public class CyberpunkSaveWriter : IDisposable
 {
-    private BinaryWriter _writer;
-    private Encoding _encoding;
+    private readonly BinaryWriter _writer;
+    private readonly Encoding _encoding;
+    private bool _disposed;
 
     private CyberpunkSaveFile _file;
 
     public List<NodeInfo> NodeInfos;
-
-    private bool _disposed;
 
     public CyberpunkSaveWriter(Stream output) : this(output, Encoding.UTF8, false)
     {

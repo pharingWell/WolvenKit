@@ -9,7 +9,7 @@ using HelixToolkit.Wpf.SharpDX;
 using Prism.Commands;
 using ReactiveUI;
 using Splat;
-using WolvenKit.Common.Services;
+using WolvenKit.Core.Interfaces;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.ViewModels.Documents
@@ -321,6 +321,10 @@ namespace WolvenKit.ViewModels.Documents
                 {
                     SelectedItem = group;
                     e.Handled = true;
+                }
+                if (e.HitTestResult.ModelHit is SubmeshComponent { Parent: MeshComponent { Parent: MeshComponent mesh } })
+                {
+                    Locator.Current.GetService<ILoggerService>().Info("Mesh Name: " + mesh.Name);
                 }
             }
         }

@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using HelixToolkit.SharpDX.Core;
 using HelixToolkit.Wpf.SharpDX;
 using Splat;
-using WolvenKit.Common.Services;
+using WolvenKit.Core.Interfaces;
 using WolvenKit.Functionality.Extensions;
 using WolvenKit.Functionality.Helpers;
 using WolvenKit.Functionality.Other;
@@ -120,7 +120,7 @@ namespace WolvenKit.ViewModels.Documents
                     textureCoordinates = new Vector2Collection(mesh.texCoords0.Length);
                     for (var i = 0; i < mesh.texCoords0.Length; i++)
                     {
-                        textureCoordinates.Add(mesh.texCoords0[i].ToVector2());
+                        textureCoordinates.Add(mesh.texCoords0[i].ToVector2Flip());
                     }
                 }
                 else
@@ -471,7 +471,7 @@ namespace WolvenKit.ViewModels.Documents
             var dictionary = material.Values;
 
             var mat = material.Instance;
-            while (mat != null && mat.BaseMaterial != null)
+            while (mat != null && mat.BaseMaterial.DepotPath != CName.Empty)
             {
                 var baseMaterialFile = File.GetFileFromDepotPathOrCache(mat.BaseMaterial.DepotPath);
 
@@ -576,7 +576,7 @@ namespace WolvenKit.ViewModels.Documents
                 ModTools.ConvertMultilayerMaskToDdsStreams(mlm, out var streams);
 
 
-                var firstStream = await ImageDecoder.RenderToBitmapSourceDds(streams[0]);
+                var firstStream = await ImageDecoder.RenderToBitmapImageDds(streams[0], Enums.ETextureRawFormat.TRF_Grayscale);
 
                 var destBitmap = new Bitmap((int)firstStream.Width, (int)firstStream.Height);
                 var rmBitmap = new Bitmap((int)firstStream.Width, (int)firstStream.Height);
@@ -599,7 +599,7 @@ namespace WolvenKit.ViewModels.Documents
                         break;
                     }
 
-                    if (layer.Material == null)
+                    if (layer.Material.DepotPath == CName.Empty)
                     {
                         goto SkipLayer;
                     }
@@ -611,8 +611,8 @@ namespace WolvenKit.ViewModels.Documents
                         goto SkipLayer;
                     }
 
-                    var mask = i == 0 ? firstStream : await ImageDecoder.RenderToBitmapSourceDds(streams[i]);
-                    mask = new TransformedBitmap(mask, new ScaleTransform(1, -1));
+                    var tmp = i == 0 ? firstStream : await ImageDecoder.RenderToBitmapImageDds(streams[i], Enums.ETextureRawFormat.TRF_Grayscale);
+                    var mask = new TransformedBitmap(tmp, new ScaleTransform(1, 1));
 
                     Bitmap maskBitmap;
                     using (var outStream = new MemoryStream())
@@ -623,7 +623,7 @@ namespace WolvenKit.ViewModels.Documents
                         maskBitmap = new Bitmap(outStream);
                     }
 
-                    if (layer.ColorScale == "null_null" || layer.Opacity == 0 || layer.Material == null)
+                    if (layer.ColorScale == "null_null" || layer.Opacity == 0 || layer.Material.DepotPath == CName.Empty)
                     {
                         goto SkipColor;
                     }
@@ -694,9 +694,9 @@ namespace WolvenKit.ViewModels.Documents
                     if (normalFile != null && normalFile.RootChunk is ITexture it)
                     {
                         var stream = new MemoryStream();
-                        ModTools.ConvertRedClassToDdsStream(it, stream, out var format);
+                        ModTools.ConvertRedClassToDdsStream(it, stream, out _, out var decompressedFormat);
 
-                        var normal = await ImageDecoder.RenderToBitmapSourceDds(stream);
+                        var normal = await ImageDecoder.RenderToBitmapImageDds(stream, decompressedFormat);
 
                         Bitmap normalLayer;
                         using (var outStream = new MemoryStream())
@@ -825,7 +825,7 @@ namespace WolvenKit.ViewModels.Documents
                 }
 
                 var stream = new FileStream(filename_d, FileMode.Create);
-                ModTools.ConvertRedClassToDdsStream(it, stream, out var format);
+                ModTools.ConvertRedClassToDdsStream(it, stream, out var format, out _);
                 stream.Dispose();
             }
 
@@ -839,7 +839,7 @@ namespace WolvenKit.ViewModels.Documents
                 }
 
                 var stream = new FileStream(filename_d, FileMode.Create);
-                ModTools.ConvertRedClassToDdsStream(it, stream, out var format);
+                ModTools.ConvertRedClassToDdsStream(it, stream, out var format, out _);
                 stream.Dispose();
             }
 
@@ -853,7 +853,7 @@ namespace WolvenKit.ViewModels.Documents
                 }
 
                 var stream = new FileStream(filename_d, FileMode.Create);
-                ModTools.ConvertRedClassToDdsStream(it, stream, out var format);
+                ModTools.ConvertRedClassToDdsStream(it, stream, out var format, out _);
                 stream.Dispose();
             }
 
@@ -880,9 +880,9 @@ namespace WolvenKit.ViewModels.Documents
                 //stream.Dispose();
 
                 var stream = new MemoryStream();
-                ModTools.ConvertRedClassToDdsStream(it, stream, out var format);
+                ModTools.ConvertRedClassToDdsStream(it, stream, out _, out var decompressedFormat);
 
-                var normal = await ImageDecoder.RenderToBitmapSourceDds(stream);
+                var normal = await ImageDecoder.RenderToBitmapImageDds(stream, decompressedFormat);
 
                 stream.Dispose();
 
@@ -936,9 +936,9 @@ namespace WolvenKit.ViewModels.Documents
                 //stream.Dispose();
 
                 var stream = new MemoryStream();
-                ModTools.ConvertRedClassToDdsStream(it, stream, out var format);
+                ModTools.ConvertRedClassToDdsStream(it, stream, out _, out var decompressedFormat);
 
-                var normal = await ImageDecoder.RenderToBitmapSourceDds(stream);
+                var normal = await ImageDecoder.RenderToBitmapImageDds(stream, decompressedFormat);
 
                 stream.Dispose();
 

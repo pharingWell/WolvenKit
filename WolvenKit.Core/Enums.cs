@@ -21,8 +21,8 @@ namespace WolvenKit.Common
     public enum EWolvenKitFile
     {
         Cr2w,
-        Redscript,
-        Tweak,
+        TweakXl,
+        ArchiveXl,
         Save
     }
 
@@ -35,7 +35,6 @@ namespace WolvenKit.Common
 
     public enum ETweakExtension
     {
-        tweak,
         yaml
     }
 
@@ -94,7 +93,7 @@ namespace WolvenKit.Common
         Important,
         Success,
         Warning,
-        Wcc
+        Debug
     }
 
     public enum EArchiveType
@@ -123,13 +122,15 @@ namespace WolvenKit.Common
         //json,
         mlmask,
         cubemap,
+        xcube,
         envprobe,
         texarray,
         morphtarget,
         fnt,
         opusinfo,
         anims,
-        ent
+        ent,
+        inkatlas
     }
 
     /// <summary>
@@ -149,7 +150,8 @@ namespace WolvenKit.Common
         ttf,
         wav,
         masklist,
-        csv
+        csv,
+        re
     }
 
     public enum EConvertableOutput
@@ -254,6 +256,13 @@ namespace WolvenKit.Common
         Cooked,
         Uncooked,
         Raw
+    }
+
+    public enum EBool : byte
+    {
+        False,
+        True,
+        Automatic
     }
 
     /// IMPORT FLAGS

@@ -6,24 +6,40 @@ using WolvenKit.Common.Model;
 using WolvenKit.RED4.Types;
 using WolvenKit.RED4.TweakDB;
 using WolvenKit.RED4.TweakDB.Helper;
+using System.Threading.Tasks;
 
 namespace WolvenKit.Common.Services
 {
     public class TweakDBService : ITweakDBService
     {
-        private const string tweakdbstr = "WolvenKit.Common.Resources.tweakdbstr.kark";
-        private const string tweakdbstr_add = "WolvenKit.Common.Resources.tweakdbstr_add.kark";
+        private const string s_tweakdbstr = "WolvenKit.Common.Resources.tweakdbstr.kark";
+        private const string s_userStrs = "userStrs.kark";
 
         private static readonly TweakDBStringHelper s_stringHelper = new();
         private static TweakDB s_tweakDb = new();
 
+        private bool _isLoading;
+
+        public bool IsLoaded;
         public event EventHandler Loaded;
 
         public TweakDBService()
         {
-            s_stringHelper.LoadFromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(tweakdbstr));
-            s_stringHelper.LoadFromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(tweakdbstr_add));
-            TweakDBID.ResolveHashHandler = s_stringHelper.GetString;
+            s_stringHelper.LoadFromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(s_tweakdbstr));
+
+            var userStrsPath = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? throw new InvalidOperationException(), s_userStrs);
+            if (File.Exists(userStrsPath))
+            {
+                s_stringHelper.Load(userStrsPath);
+            }
+
+            userStrsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "REDModding", "WolvenKit", s_userStrs);
+            if (File.Exists(userStrsPath))
+            {
+                s_stringHelper.Load(userStrsPath);
+            }
+
+            TweakDBIDPool.ResolveHashHandler = s_stringHelper.GetString;
         }
 
         private void OnLoadDB()
@@ -34,24 +50,30 @@ namespace WolvenKit.Common.Services
             }
         }
 
-        public void LoadDB(string path)
+        public Task LoadDB(string path)
         {
-            using var fh = File.OpenRead(path);
-            using var reader = new TweakDBReader(fh);
-
-            if (reader.ReadFile(out var tweakDb) == WolvenKit.RED4.TweakDB.EFileReadErrorCodes.NoError)
+            if (IsLoaded || _isLoading)
             {
-                s_tweakDb = tweakDb;
-                AddCustomRecords();
-                OnLoadDB();
+                return Task.CompletedTask;
             }
-        }
 
-        // just for fun...
-        private void AddCustomRecords()
-        {
-            s_tweakDb.Records.Add("Items.trigger_inline3", typeof(gamedataVehicleWheelRole_Record));
-            s_tweakDb.Records.Add("weapons.E3_grenade", typeof(gamedataGrenade_Record));
+            _isLoading = true;
+
+            return Task.Run(() =>
+            {
+                using var fh = File.OpenRead(path);
+                using var reader = new TweakDBReader(fh);
+
+                if (reader.ReadFile(out var tweakDb) == WolvenKit.RED4.TweakDB.EFileReadErrorCodes.NoError)
+                {
+                    s_tweakDb = tweakDb;
+                    OnLoadDB();
+
+                    IsLoaded = true;
+                }
+
+                _isLoading = false;
+            });
         }
 
         public bool Exists(TweakDBID key)

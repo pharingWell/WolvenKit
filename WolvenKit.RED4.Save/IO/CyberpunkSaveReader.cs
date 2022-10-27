@@ -5,15 +5,14 @@ using WolvenKit.RED4.Types;
 
 namespace WolvenKit.RED4.Save.IO;
 
-public class CyberpunkSaveReader : IDisposable
+public class CyberpunkSaveReader : IDisposable, IErrorHandler
 {
-    private BinaryReader _reader;
+    private readonly BinaryReader _reader;
+    private bool _disposed;
 
     private CyberpunkSaveFile? _csavFile;
 
     public List<NodeEntry> NodeEntries;
-
-    private bool _disposed;
 
 
     public CyberpunkSaveReader(Stream input) : this(input, Encoding.UTF8, false)
@@ -59,7 +58,7 @@ public class CyberpunkSaveReader : IDisposable
             return result;
         }
 
-        if (((CyberpunkSaveHeaderStruct)info).gameVersion != (ulong)Enums.gameGameVersion.CP77_Patch_1_5_Actual_Hotfix1)
+        if (((CyberpunkSaveHeaderStruct)info).gameVersion != (ulong)Enums.gameGameVersion.CP77_Patch_1_6)
         {
             file = null;
             return EFileReadErrorCodes.UnsupportedVersion;
@@ -139,7 +138,15 @@ public class CyberpunkSaveReader : IDisposable
             {
                 if (!node.ReadByParent)
                 {
-                    ParserHelper.ReadNode(reader, node);
+                    reader.BaseStream.Position = node.Offset;
+                    reader.ReadInt32(); // nodeId
+                    var parser = ParserHelper.GetParser(node.Name);
+                    if (parser is IErrorHandler errorHandler)
+                    {
+                        errorHandler.ParsingError += HandleParsingError;
+                    }
+
+                    parser.Read(reader, node);
                 }
             }
         }
@@ -256,6 +263,10 @@ public class CyberpunkSaveReader : IDisposable
             }
         }
     }
+
+    public event ParsingErrorEventHandler? ParsingError;
+
+    protected virtual bool HandleParsingError(ParsingErrorEventArgs e) => ParsingError != null && ParsingError.Invoke(e);
 
     #region IDisposable
 

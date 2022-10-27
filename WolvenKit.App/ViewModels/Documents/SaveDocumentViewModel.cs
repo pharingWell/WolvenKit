@@ -5,12 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using ReactiveUI.Fody.Helpers;
 using Splat;
-using WolvenKit.Common.Services;
+using WolvenKit.Core.Interfaces;
 using WolvenKit.RED4.Archive.Buffer;
 using WolvenKit.RED4.Save;
 using WolvenKit.RED4.Save.IO;
 using WolvenKit.RED4.Types;
-using WolvenKit.ViewModels.Documents;
 
 namespace WolvenKit.ViewModels.Documents;
 
@@ -132,10 +131,10 @@ public class SaveDocumentViewModel : DocumentViewModel
 
         public SaveTreeViewItem(InventoryHelper.ItemData itemData)
         {
-            DisplayName = $"<TweakDBID 0x{(ulong)itemData.ItemTdbId:X8}>";
-            if (itemData.ItemTdbId.ResolvedText != null)
+            DisplayName = $"<TweakDBID 0x{(ulong)itemData.Header.ItemId.Id:X8}>";
+            if (itemData.Header.ItemId.Id.ResolvedText != null)
             {
-                DisplayName = itemData.ItemTdbId.ResolvedText;
+                DisplayName = itemData.Header.ItemId.Id.ResolvedText;
             }
 
             Value = itemData;

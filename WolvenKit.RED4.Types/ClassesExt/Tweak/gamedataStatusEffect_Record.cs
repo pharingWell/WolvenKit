@@ -3,7 +3,7 @@ namespace WolvenKit.RED4.Types
 {
 	public partial class gamedataStatusEffect_Record
 	{
-		[RED("additionalParam")]
+        [RED("additionalParam")]
 		[REDProperty(IsIgnored = true)]
 		public CName AdditionalParam
 		{
@@ -18,8 +18,8 @@ namespace WolvenKit.RED4.Types
 			get => GetPropertyValue<TweakDBID>();
 			set => SetPropertyValue<TweakDBID>(value);
 		}
-		
-		[RED("duration")]
+
+        [RED("duration")]
 		[REDProperty(IsIgnored = true)]
 		public TweakDBID Duration
 		{

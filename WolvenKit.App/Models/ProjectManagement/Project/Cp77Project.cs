@@ -1,6 +1,9 @@
 using System;
 using System.IO;
+using Splat;
 using WolvenKit.Common;
+using WolvenKit.Common.Services;
+using WolvenKit.Functionality.Services;
 
 
 namespace WolvenKit.ProjectManagement.Project
@@ -17,6 +20,20 @@ namespace WolvenKit.ProjectManagement.Project
         }
 
         public override GameType GameType => GameType.Cyberpunk2077;
+
+        public string SoundDirectory
+        {
+            get
+            {
+                var dir = Path.Combine(FileDirectory, "customSounds");
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                return dir;
+            }
+        }
 
         public string ScriptDirectory
         {
@@ -51,6 +68,20 @@ namespace WolvenKit.ProjectManagement.Project
             }
         }
 
+        public string ArchiveXLDirectory
+        {
+            get
+            {
+                var dir = Path.Combine(FileDirectory, "archiveXL");
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                return dir;
+            }
+        }
+
         public override string PackedRootDirectory
         {
             get
@@ -65,11 +96,37 @@ namespace WolvenKit.ProjectManagement.Project
             }
         }
 
-        public override string PackedArchiveDirectory
+        public override string PackedRedModDirectory
         {
             get
             {
-                var dir = Path.Combine(PackedRootDirectory, "archive", "pc", "mod"/*, $"mod{Name}"*/);
+                var dir = Path.Combine(PackedRootDirectory, "mods", Name);
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                return dir;
+            }
+        }
+
+        public string GetPackedArchiveDirectory(bool isRedMod)
+        {
+            var dir = isRedMod ? Path.Combine(PackedRedModDirectory, "archives") : Path.Combine(PackedRootDirectory, "archive", "pc", "mod");
+
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            return dir;
+        }
+
+        public string PackedSoundsDirectory
+        {
+            get
+            {
+                var dir = Path.Combine(PackedRedModDirectory, "customSounds");
                 if (!Directory.Exists(dir))
                 {
                     Directory.CreateDirectory(dir);
@@ -83,7 +140,7 @@ namespace WolvenKit.ProjectManagement.Project
         {
             get
             {
-                var dir = Path.Combine(PackedRootDirectory, "r6", "tweakdbs");
+                var dir = Path.Combine(PackedRootDirectory, "r6", "tweaks");
                 if (!Directory.Exists(dir))
                 {
                     Directory.CreateDirectory(dir);
@@ -92,22 +149,6 @@ namespace WolvenKit.ProjectManagement.Project
                 return dir;
             }
         }
-
-        public string PackedScriptsDirectory
-        {
-            get
-            {
-                var dir = Path.Combine(PackedRootDirectory, "r6", "scripts");
-                if (!Directory.Exists(dir))
-                {
-                    Directory.CreateDirectory(dir);
-                }
-
-                return dir;
-            }
-        }
-
-        
 
         #region methods
 
@@ -120,11 +161,32 @@ namespace WolvenKit.ProjectManagement.Project
             _ = RawDirectory;
             _ = TweakDirectory;
             _ = ScriptDirectory;
+            _ = ArchiveXLDirectory;
+        }
+
+        private void LoadProjectHashes()
+        {
+            if (Locator.Current.GetService<IHashService>() is HashService hashService)
+            {
+                hashService.ClearProjectHashes();
+
+                var hashPath = Path.Combine(FileDirectory, "project_hashes.txt");
+                if (!File.Exists(hashPath))
+                {
+                    return;
+                }
+
+                var paths = File.ReadAllLines(hashPath);
+                foreach (var path in paths)
+                {
+                    hashService.AddProjectPath(path);
+                }
+            }
         }
 
         public object Clone()
         {
-            var clone = new Cp77Project()
+            Cp77Project clone = new()
             {
                 Name = Name,
                 Author = Author,

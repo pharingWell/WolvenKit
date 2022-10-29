@@ -163,7 +163,6 @@ namespace WolvenKit.RED4.Save
                 writer.Write((ulong)entry);
             }
 
-            writer.Write(data.Unk2_UnkList.Count);
             foreach (var entry in data.Unk2_UnkList)
             {
                 writer.Write(entry.Unk1_NameList.Count);

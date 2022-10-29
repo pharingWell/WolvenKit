@@ -53,6 +53,12 @@
                         </Grid>
                     </DataTemplate>
 
+                    <DataTemplate DataType="{x:Type toolvm:SaveGameBrowserViewModel}">
+                        <Grid>
+                            <tools:SaveGameBrowserView />
+                        </Grid>
+                    </DataTemplate>
+
 
                     <DataTemplate DataType="{x:Type docvm:RedDocumentViewModel}">
                         <Grid>

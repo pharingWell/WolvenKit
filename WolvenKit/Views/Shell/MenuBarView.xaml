@@ -530,6 +530,11 @@
                     Margin="2,1"
                     Header="LocKey Browser"
                     IsCheckable="True" />
+                <MenuItem
+                    x:Name="SaveGameBrowserCheckbox"
+                    Margin="2,1"
+                    Header="SaveGame Browser"
+                    IsCheckable="True" />
 
                 <Separator Margin="0,10" />
 

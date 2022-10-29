@@ -152,6 +152,9 @@ namespace WolvenKit
                     services.AddSingleton<LocKeyBrowserViewModel>();
                     services.AddTransient<IViewFor<LocKeyBrowserViewModel>, LocKeyBrowserView>();
 
+                    services.AddSingleton<SaveGameBrowserViewModel>();
+                    services.AddTransient<IViewFor<SaveGameBrowserViewModel>, SaveGameBrowserView>();
+
                     #endregion
 
                     #region tools

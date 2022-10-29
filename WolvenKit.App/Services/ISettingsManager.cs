@@ -125,6 +125,17 @@ namespace WolvenKit.Functionality.Services
             return dir;
         }
 
+        public static string GetSaveGameDir()
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "CD Projekt Red", "Cyberpunk 2077");
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            return dir;
+        }
+
 
         Color GetThemeAccent();
 

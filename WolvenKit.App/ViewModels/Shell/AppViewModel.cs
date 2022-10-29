@@ -205,7 +205,8 @@ namespace WolvenKit.ViewModels.Shell
                 AssetBrowserVM,
                 ImportExportToolVM,
                 TweakBrowserVM,
-                LocKeyBrowserVM
+                LocKeyBrowserVM,
+                SaveGameBrowserVM
             };
 
             // TweakDB when we're good and ready
@@ -1034,6 +1035,16 @@ namespace WolvenKit.ViewModels.Shell
             {
                 _locKeyBrowserViewModel ??= Locator.Current.GetService<LocKeyBrowserViewModel>();
                 return _locKeyBrowserViewModel;
+            }
+        }
+
+        private SaveGameBrowserViewModel _saveGameBrowserViewModel;
+        public SaveGameBrowserViewModel SaveGameBrowserVM
+        {
+            get
+            {
+                _saveGameBrowserViewModel ??= Locator.Current.GetService<SaveGameBrowserViewModel>();
+                return _saveGameBrowserViewModel;
             }
         }
 

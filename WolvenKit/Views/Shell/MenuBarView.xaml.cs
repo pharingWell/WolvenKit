@@ -218,6 +218,10 @@ public partial class MenuBarView : ReactiveUserControl<MenuBarViewModel>
                     viewModel => viewModel.MainViewModel.LocKeyBrowserVM.IsVisible,
                     view => view.LocKeyBrowserCheckbox.IsChecked)
                 .DisposeWith(disposables);
+            this.Bind(ViewModel,
+                    viewModel => viewModel.MainViewModel.SaveGameBrowserVM.IsVisible,
+                    view => view.SaveGameBrowserCheckbox.IsChecked)
+                .DisposeWith(disposables);
         });
     }
 

@@ -6,7 +6,7 @@ namespace WolvenKit.RED4.Save;
 
 public class GameSessionConfig : INodeData
 {
-    public ulong Hash1 { get; set; }
+    public CResourceReference<CResource> World { get; set; }
     public CResourceReference<worldStreamingWorld> StreamingWorld { get; set; }
     public string TextValue { get; set; }
     public ulong Hash3 { get; set; }
@@ -22,7 +22,7 @@ public class GameSessionConfigParser : INodeParser
     {
         node.Value = new GameSessionConfig
             {
-                Hash1 = reader.ReadUInt64(),
+                World = new CResourceReference<CResource>(reader.ReadUInt64()),
                 StreamingWorld = new CResourceReference<worldStreamingWorld>(reader.ReadUInt64()),
                 TextValue = reader.ReadLengthPrefixedString(),
                 Hash3 = reader.ReadUInt64(),
@@ -34,7 +34,7 @@ public class GameSessionConfigParser : INodeParser
     {
         var value = (GameSessionConfig)node.Value;
 
-        writer.Write(value.Hash1);
+        writer.Write((ulong)value.World.DepotPath);
         writer.Write((ulong)value.StreamingWorld.DepotPath);
         writer.WriteLengthPrefixedString(value.TextValue);
         writer.Write(value.Hash3);

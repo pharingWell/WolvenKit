@@ -6,27 +6,16 @@ namespace WolvenKit.RED4.Save
 {
     public class DSDynamicConnections : INodeData
     {
-        public List<Entry> Entries { get; set; }
-
-        public DSDynamicConnections()
-        {
-            Entries = new List<Entry>();
-        }
+        public List<Entry> Entries { get; set; } = new();
 
         public class Entry
         {
-            public ulong Unknown1 { get; set; }
+            public NodeRef Unknown1 { get; set; }
             public string Unknown2 { get; set; }
-            public List<ulong> Unknown3 { get; set; }
-            public List<ulong> Unknown4 { get; set; }
+            public List<ulong> Unknown3 { get; set; } = new();
+            public List<NodeRef> Unknown4 { get; set; } = new();
             public byte[] Unknown5 { get; set; }
             public string Unknown6 { get; set; }
-
-            public Entry()
-            {
-                Unknown3 = new List<ulong>();
-                Unknown4 = new List<ulong>();
-            }
         }
     }
 
@@ -78,7 +67,7 @@ namespace WolvenKit.RED4.Save
             writer.WriteVLQInt32(data.Entries.Count);
             foreach (var entry in data.Entries)
             {
-                writer.Write(entry.Unknown1);
+                writer.Write((ulong)entry.Unknown1);
             }
 
             foreach (var entry in data.Entries)
@@ -94,7 +83,7 @@ namespace WolvenKit.RED4.Save
                 writer.WriteVLQInt32(entry.Unknown4.Count);
                 foreach (var val in entry.Unknown4)
                 {
-                    writer.Write(val);
+                    writer.Write((ulong)val);
                 }
 
                 writer.Write(entry.Unknown5);

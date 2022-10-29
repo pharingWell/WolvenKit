@@ -1,5 +1,4 @@
 using WolvenKit.RED4.Types;
-using WolvenKit.Core.Extensions;
 using WolvenKit.RED4.Save.IO;
 
 namespace WolvenKit.RED4.Save
@@ -15,8 +14,8 @@ namespace WolvenKit.RED4.Save
 
         public class Entry
         {
-            public ulong CNameHash { get; set; }
-            public ushort Unknown1 { get; set; }
+            public NodeRef Unk1_NodeRef { get; set; }
+            public ushort Unk2 { get; set; }
         }
     }
 
@@ -33,8 +32,8 @@ namespace WolvenKit.RED4.Save
             {
                 var entry = new ContainerManager.Entry();
 
-                entry.CNameHash = reader.ReadUInt64();
-                entry.Unknown1 = reader.ReadUInt16();
+                entry.Unk1_NodeRef = reader.ReadUInt64();
+                entry.Unk2 = reader.ReadUInt16();
                 data.Entries.Add(entry);
             }
 
@@ -48,8 +47,8 @@ namespace WolvenKit.RED4.Save
             writer.Write(data.Entries.Count);
             foreach (var entry in data.Entries)
             {
-                writer.Write(entry.CNameHash);
-                writer.Write(entry.Unknown1);
+                writer.Write((ulong)entry.Unk1_NodeRef);
+                writer.Write(entry.Unk2);
             }
         }
     }

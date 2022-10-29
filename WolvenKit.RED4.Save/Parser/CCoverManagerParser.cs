@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WolvenKit.RED4.Save.IO;
 using WolvenKit.RED4.Types;
 
@@ -19,8 +14,8 @@ namespace WolvenKit.RED4.Save
     }
     public class CCoverManagerEntry
     {
-        public ulong Unk_Hash1 { get; set; }
-        public ulong Unk_EntityHash { get; set; }
+        public NodeRef Unk_NodeRef { get; set; }
+        public ulong Unk_EntityID { get; set; }
 
         // probably bool, if this is true, the hashes are also used somewhere els in the save
         public byte Unknown3 { get; set; }
@@ -38,8 +33,8 @@ namespace WolvenKit.RED4.Save
             for (int i = 0; i < entryCount; i++)
             {
                 var entry = new CCoverManagerEntry();
-                entry.Unk_Hash1 = reader.ReadUInt64();
-                entry.Unk_EntityHash = reader.ReadUInt64();
+                entry.Unk_NodeRef = reader.ReadUInt64();
+                entry.Unk_EntityID = reader.ReadUInt64();
                 entry.Unknown3 = reader.ReadByte();
                 data.Entries.Add(entry);
             }
@@ -54,8 +49,8 @@ namespace WolvenKit.RED4.Save
             writer.Write(data.Entries.Count);
             foreach (var entry in data.Entries)
             {
-                writer.Write(entry.Unk_Hash1);
-                writer.Write(entry.Unk_EntityHash);
+                writer.Write((ulong)entry.Unk_NodeRef);
+                writer.Write(entry.Unk_EntityID);
                 writer.Write(entry.Unknown3);
             }
         }

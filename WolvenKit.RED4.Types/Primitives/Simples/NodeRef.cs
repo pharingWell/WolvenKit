@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace WolvenKit.RED4.Types
 {
     [RED("NodeRef")]
-    [DebuggerDisplay("{_hash}", Type = "NodeRef")]
+    [DebuggerDisplay("{GetResolvedText()}", Type = "NodeRef")]
     public readonly struct NodeRef : IRedString, IRedPrimitive<NodeRef>, IEquatable<NodeRef>, IComparable<NodeRef>, IComparable
     {
         public static NodeRef Empty = 0;

@@ -24,7 +24,7 @@ namespace WolvenKit.RED4.Types
 
         }
 
-        public override object DeepCopy()
+        public override object DeepCopy(Dictionary<object, object> visited)
         {
             var other = new CArray<T>();
 

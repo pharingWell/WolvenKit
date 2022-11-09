@@ -42,14 +42,14 @@ namespace WolvenKit.RED4.Archive.Buffer
             return MemberwiseClone();
         }
 
-        public object DeepCopy()
+        public object DeepCopy(Dictionary<object, object> visited)
         {
             var pkg = new RedPackage();
             pkg.RootCruids = RootCruids;
             pkg.Chunks = new List<RedBaseClass>();
             foreach (var chunk in Chunks)
             {
-                pkg.Chunks.Add((RedBaseClass)chunk.DeepCopy());
+                pkg.Chunks.Add((RedBaseClass)chunk.DeepCopy(visited));
             }
             return pkg;
         }

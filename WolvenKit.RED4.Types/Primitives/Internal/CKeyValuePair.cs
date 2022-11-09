@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace WolvenKit.RED4.Types;
 
@@ -65,18 +66,17 @@ public sealed class CKeyValuePair : IRedType, IEquatable<CKeyValuePair>, IRedClo
         return MemberwiseClone();
     }
 
-    public object DeepCopy()
+    public object DeepCopy(Dictionary<object, object> visited)
     {
         IRedType otherValue;
         if (Value is IRedCloneable cl)
         {
-            otherValue = (IRedType)cl.DeepCopy();
+            otherValue = (IRedType)cl.DeepCopy(visited);
         }
         else
         {
             otherValue = Value;
         }
         return new CKeyValuePair(Key, otherValue);
-
     }
 }

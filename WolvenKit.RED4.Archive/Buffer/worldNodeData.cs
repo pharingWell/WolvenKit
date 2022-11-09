@@ -49,16 +49,16 @@ namespace WolvenKit.RED4.Archive.Buffer
 
         public object ShallowCopy() => MemberwiseClone();
 
-        public object DeepCopy() =>
+        public object DeepCopy(Dictionary<object, object> visited) =>
             new worldNodeData
             {
                 Id = Id,
                 NodeIndex = NodeIndex,
-                Position = (Vector4)Position.DeepCopy(),
-                Orientation = (Quaternion)Orientation.DeepCopy(),
-                Scale = (Vector3)Scale.DeepCopy(),
-                Pivot = (Vector3)Pivot.DeepCopy(),
-                Bounds = (Box)Bounds.DeepCopy(),
+                Position = (Vector4)Position.DeepCopy(visited),
+                Orientation = (Quaternion)Orientation.DeepCopy(visited),
+                Scale = (Vector3)Scale.DeepCopy(visited),
+                Pivot = (Vector3)Pivot.DeepCopy(visited),
+                Bounds = (Box)Bounds.DeepCopy(visited),
                 QuestPrefabRefHash = QuestPrefabRefHash,
                 UkHash1 = UkHash1,
                 CookedPrefabData = CookedPrefabData,

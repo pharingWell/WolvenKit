@@ -136,9 +136,21 @@ namespace WolvenKit.RED4.Types
             return MemberwiseClone();
         }
 
-        public object DeepCopy()
+        public object DeepCopy(Dictionary<object, object> visited)
         {
-            return CHandle.Parse(InnerType, (RedBaseClass)_chunk.DeepCopy());
+            if (Chunk == null)
+            {
+                return CHandle.Parse(InnerType, null);
+            }
+
+            if (!visited.TryGetValue(Chunk, out var clone))
+            {
+                clone = RedTypeManager.Create(Chunk.GetType());
+                visited.Add(Chunk, clone);
+                ((IRedCloneable)Chunk).DeepCopy(clone, visited);
+            }
+
+            return CHandle.Parse(InnerType, (RedBaseClass)clone);
         }
     }
 }

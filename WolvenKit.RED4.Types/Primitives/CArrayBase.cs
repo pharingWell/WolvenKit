@@ -57,7 +57,7 @@ namespace WolvenKit.RED4.Types
             return MemberwiseClone();
         }
 
-        public abstract object DeepCopy();
+        public abstract object DeepCopy(Dictionary<object, object> visited);
 
         #region Event
         /*

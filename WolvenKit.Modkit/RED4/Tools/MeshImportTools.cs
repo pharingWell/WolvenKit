@@ -236,7 +236,7 @@ namespace WolvenKit.Modkit.RED4
                     var aynifni = Vec4.Transform(newT, Quat.Inverse(infinya));
 
 
-                    var before = rig.BoneTransforms[i].Translation.DeepCopy();
+                    var before = ((IRedCloneable)rig.BoneTransforms[i].Translation).DeepCopy();
 
                     //level = 0;
 

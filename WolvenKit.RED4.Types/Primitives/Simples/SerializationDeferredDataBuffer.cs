@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.ComponentModel;
+using System.Collections.Generic;
 
 namespace WolvenKit.RED4.Types
 {
@@ -79,12 +80,12 @@ namespace WolvenKit.RED4.Types
             return MemberwiseClone();
         }
 
-        public object DeepCopy()
+        public object DeepCopy(Dictionary<object, object> visited)
         {
             var db = new SerializationDeferredDataBuffer();
             if (Data is IRedCloneable irc)
             {
-                db.Data = (IParseableBuffer)irc.DeepCopy();
+                db.Data = (IParseableBuffer)irc.DeepCopy(visited);
             }
             else
             {

@@ -13,7 +13,7 @@ namespace WolvenKit.RED4.Types
             IsReadOnly = true;
         }
 
-        public override object DeepCopy()
+        public override object DeepCopy(Dictionary<object, object> visited)
         {
             var other = new CArrayFixedSize<T>(_internalList.Count);
 

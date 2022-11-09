@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using WolvenKit.RED4.Archive.CR2W;
 using WolvenKit.RED4.Types;
 
@@ -29,14 +28,14 @@ namespace WolvenKit.RED4.Archive.Buffer
             return MemberwiseClone();
         }
 
-        public object DeepCopy()
+        public object DeepCopy(Dictionary<object, object> visited)
         {
             var list = new CR2WList();
             foreach (var file in Files)
             {
                 list.Files.Add(new CR2WFile()
                 {
-                    RootChunk = (RedBaseClass)file.RootChunk.DeepCopy()
+                    RootChunk = (RedBaseClass)file.RootChunk.DeepCopy(visited)
                 });
             }
             return list;

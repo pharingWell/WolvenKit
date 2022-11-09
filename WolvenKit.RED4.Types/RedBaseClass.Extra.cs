@@ -10,7 +10,7 @@ public partial class RedBaseClass
     {
         if (clone)
         {
-            var copy = (RedBaseClass)DeepCopy();
+            var copy = (RedBaseClass)((IRedCloneable)this).DeepCopy();
             return copy.ToDictionary(false);
         }
 
@@ -195,30 +195,37 @@ public partial class RedBaseClass
         return MemberwiseClone();
     }
 
-    public object DeepCopy()
+    public object DeepCopy(Dictionary<object, object> visited)
     {
         var other = RedTypeManager.Create(GetType());
+
+        ((IRedCloneable)this).DeepCopy(other, visited);
+
+        return other;
+    }
+
+    void IRedCloneable.DeepCopy(object target, Dictionary<object, object> visited)
+    {
+        var other = (RedBaseClass)target;
 
         foreach (var property in _properties)
         {
             if (property.Value is IRedCloneable cl)
             {
-                var copy = (IRedType)cl.DeepCopy();
+                var clone = (IRedType)cl.DeepCopy(visited);
 
                 // TODO do we need to set more parents like this?
-                if (copy is IRedBufferWrapper buffer)
+                if (clone is IRedBufferWrapper buffer)
                 {
                     buffer.Buffer.Parent = other;
                 }
 
-                other._properties[property.Key] = copy;
+                other._properties[property.Key] = clone;
             }
             else
             {
                 other._properties[property.Key] = property.Value;
             }
         }
-
-        return other;
     }
 }

@@ -9,7 +9,8 @@ namespace WolvenKit.RED4.Types
     {
         public CStatic() { }
         public CStatic(int size) : base(size) { }
-        public override object DeepCopy()
+
+        public override object DeepCopy(Dictionary<object, object> visited)
         {
             var other = new CStatic<T>(_internalList.Count);
 

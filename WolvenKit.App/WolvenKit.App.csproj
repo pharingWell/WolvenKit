@@ -89,4 +89,8 @@
     <Resource Include="Resources\WolvenKitFileDefinitions.xml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ViewModels\Shell\RedTypes\" />
+  </ItemGroup>
+
 </Project>

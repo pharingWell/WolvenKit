@@ -90,7 +90,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
 
         if (HasChildren())
         {
-            TempList = new ObservableCollectionExtended<ChunkViewModel>(new[] { new ChunkViewModel(new RedDummy(), nameof(RedDummy), this) });
+            TempList = new ObservableCollectionExtended<ChunkViewModel>(new[] { Create(new RedDummy(), nameof(RedDummy), this) });
         }
 
 
@@ -270,7 +270,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
 
     public bool ShouldShowCopyPasteHandle => Data is IRedBaseHandle;
 
-    public bool ShouldShowArrayOps => IsInArray || IsArray;
+    public bool ShouldShowArrayOps { get; protected set; }
 
     public IRedArray? ArraySelfOrParent => Parent?.ResolvedData is IRedArray ira ? ira : ResolvedData as IRedArray;
 
@@ -1419,25 +1419,6 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         }
     }
 
-    private bool CanDuplicateChunk() => IsInArray && Parent is not null;   // TODO RelayCommand check notify
-    [RelayCommand(CanExecute = nameof(CanDuplicateChunk))]
-    private void DuplicateChunk()
-    {
-        if (Parent is null)
-        {
-            return;
-        }
-
-        if (Data is IRedCloneable irc)
-        {
-            Parent.InsertChild(Parent.GetIndexOf(this) + 1, (IRedType)irc.DeepCopy());
-        }
-        else if (Data is not null)
-        {
-            Parent.InsertChild(Parent.GetIndexOf(this) + 1, Data);
-        }
-    }
-
     private bool CanCopySelection() => IsInArray && Parent is not null;   // TODO RelayCommand check notify
     [RelayCommand(CanExecute = nameof(CanCopySelection))]
     private void CopySelection()
@@ -1864,7 +1845,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             obj = TweakDBService.GetFlat(tdb);
             if (obj is not null)
             {
-                Properties.Add(new ChunkViewModel(obj, nameof(TweakDBID), this, true));
+                Properties.Add(Create(obj, nameof(TweakDBID), this, true));
                 OnPropertyChanged(nameof(TVProperties));
                 return;
             }
@@ -1900,7 +1881,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             {
                 if (ary[i] is IRedType t)
                 {
-                    Properties.Add(new ChunkViewModel(t, "Element", this, isreadonly));
+                    Properties.Add(Create(t, "Element", this, isreadonly));
                 }
             }
         }
@@ -1914,18 +1895,18 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             {
                 if (i == 0)
                 {
-                    Properties.Add(new ChunkViewModel(kvp.Key, "Key", this, isreadonly));
+                    Properties.Add(Create(kvp.Key, "Key", this, isreadonly));
                 }
                 else
                 {
-                    Properties.Add(new ChunkViewModel(kvp.Value, "Value", this, isreadonly));
+                    Properties.Add(Create(kvp.Value, "Value", this, isreadonly));
                 }
             }
         }
         else if (obj is inkWidgetReference iwr)
         {
             // need to add XPath somewhere in the data structure
-            Properties.Add(new ChunkViewModel((CString)"TODO", nameof(inkWidgetReference), this));
+            Properties.Add(Create((CString)"TODO", nameof(inkWidgetReference), this));
         }
         else if (obj is RedBaseClass redClass)
         {
@@ -1949,18 +1930,18 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                 if (t is null)
                 {
                     //_loggerService.Warning($"Property is null: {name}");
-                    Properties.Add(new ChunkViewModel(new RedDummy(), propertyInfo.RedName.NotNull(), this, isreadonly));
+                    Properties.Add(Create(new RedDummy(), propertyInfo.RedName.NotNull(), this, isreadonly));
                 }
                 else
                 {
-                    Properties.Add(new ChunkViewModel(t, propertyInfo.RedName.NotNull(), this, isreadonly));
+                    Properties.Add(Create(t, propertyInfo.RedName.NotNull(), this, isreadonly));
                 }
             }
 
             foreach (var dp in dps)
             {
                 ArgumentNullException.ThrowIfNull(dp);
-                Properties.Add(new ChunkViewModel(redClass.GetProperty(dp).NotNull(), dp, this, isreadonly));
+                Properties.Add(Create(redClass.GetProperty(dp).NotNull(), dp, this, isreadonly));
             }
         }
         else if (obj is SerializationDeferredDataBuffer sddb)
@@ -1969,7 +1950,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             {
                 for (var i = 0; i < PropertyCount; i++)
                 {
-                    Properties.Add(new ChunkViewModel(p4.Chunks[i], nameof(RedPackage), this, isreadonly));
+                    Properties.Add(Create(p4.Chunks[i], nameof(RedPackage), this, isreadonly));
                 }
             }
             else if (sddb.Data is not null)
@@ -1980,7 +1961,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                     var value = pi.GetValue(sddb.Data);
                     if (value is IRedType irt)
                     {
-                        Properties.Add(new ChunkViewModel(irt, pi.Name, this, isreadonly));
+                        Properties.Add(Create(irt, pi.Name, this, isreadonly));
                     }
                 }
             }
@@ -1991,7 +1972,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             {
                 for (var i = 0; i < PropertyCount; i++)
                 {
-                    Properties.Add(new ChunkViewModel(p42.Chunks[i], p42.Chunks[i].GetType().Name, this, isreadonly));
+                    Properties.Add(Create(p42.Chunks[i], p42.Chunks[i].GetType().Name, this, isreadonly));
                 }
             }
             if (sdb.File is CR2WFile cr2)
@@ -2001,11 +1982,11 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                 //{
                 //    properties.Add(i, new ChunkViewModel(i, chunks[i], this));
                 //}
-                Properties.Add(new ChunkViewModel(cr2.RootChunk, cr2.RootChunk.GetType().Name, this, isreadonly));
+                Properties.Add(Create(cr2.RootChunk, cr2.RootChunk.GetType().Name, this, isreadonly));
             }
             if (sdb.Data is IParseableBuffer ipb)
             {
-                Properties.Add(new ChunkViewModel(ipb.Data.NotNull(), ipb.Data.GetType().Name, this, isreadonly));
+                Properties.Add(Create(ipb.Data.NotNull(), ipb.Data.GetType().Name, this, isreadonly));
             }
         }
         else if (obj is DataBuffer db)
@@ -2014,14 +1995,14 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             {
                 for (var i = 0; i < PropertyCount; i++)
                 {
-                    Properties.Add(new ChunkViewModel(p43.Chunks[i], p43.Chunks[i].GetType().Name, this, isreadonly));
+                    Properties.Add(Create(p43.Chunks[i], p43.Chunks[i].GetType().Name, this, isreadonly));
                 }
             }
             else if (db.Data is CR2WList cl)
             {
                 for (var i = 0; i < PropertyCount; i++)
                 {
-                    Properties.Add(new ChunkViewModel(cl.Files[i].RootChunk, cl.Files[i].RootChunk.GetType().Name, this, isreadonly));
+                    Properties.Add(Create(cl.Files[i].RootChunk, cl.Files[i].RootChunk.GetType().Name, this, isreadonly));
                 }
             }
             else if (db.Data is IList list)
@@ -2030,7 +2011,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                 {
                     if (thing is IRedType redType)
                     {
-                        Properties.Add(new ChunkViewModel(redType, redType.GetType().Name, this, isreadonly));
+                        Properties.Add(Create(redType, redType.GetType().Name, this, isreadonly));
                     }
                 }
             }
@@ -2042,7 +2023,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                     var value = pi.GetValue(db.Data);
                     if (value is IRedType irt)
                     {
-                        Properties.Add(new ChunkViewModel(irt, pi.Name, this, isreadonly));
+                        Properties.Add(Create(irt, pi.Name, this, isreadonly));
                     }
                 }
             }
@@ -2058,7 +2039,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                 {
                     if (ibd.GetPropertyValue(name) is IRedType t)
                     {
-                        Properties.Add(new ChunkViewModel(t, name, this, isreadonly));
+                        Properties.Add(Create(t, name, this, isreadonly));
                     }
                 }
             }
@@ -2066,14 +2047,14 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             {
                 foreach (var thing in list)
                 {
-                    Properties.Add(new ChunkViewModel((IRedType)thing, "Element", this, isreadonly));
+                    Properties.Add(Create((IRedType)thing, "Element", this, isreadonly));
                 }
             }
             else if (Data is Dictionary<string, object> dict)
             {
                 foreach (var (name, thing) in dict)
                 {
-                    Properties.Add(new ChunkViewModel((IRedType)thing, name, this, isreadonly));
+                    Properties.Add(Create((IRedType)thing, name, this, isreadonly));
                 }
             }
             else
@@ -2084,7 +2065,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                     var value = Data is not null ? pi.GetValue(Data) : null;
                     if (value is IRedType irt)
                     {
-                        Properties.Add(new ChunkViewModel(irt, pi.Name, this, isreadonly));
+                        Properties.Add(Create(irt, pi.Name, this, isreadonly));
                     }
                 }
 
@@ -2092,7 +2073,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                 {
                     try
                     {
-                        Properties.Add(new ChunkViewModel(wss.Nodes[sst.NodeIndex].NotNull(), "Node", this, isreadonly));
+                        Properties.Add(Create(wss.Nodes[sst.NodeIndex].NotNull(), "Node", this, isreadonly));
                     }
                     catch (Exception ex) { _loggerService.Error(ex); }
                 }
@@ -3474,5 +3455,37 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
 
     #endregion
 
+    #region static
 
+    public static ChunkViewModel Create(IRedType data, string name, ChunkViewModel? parent = null, bool isReadOnly = false)
+    {
+        if (data is IRedArray)
+        {
+            return new CArrayViewModel(data, name, parent, isReadOnly);
+        }
+
+        return new ChunkViewModel(data, name, parent, isReadOnly);
+    }
+
+    public static ChunkViewModel Create(IRedType data, RDTDataViewModel tab)
+    {
+        if (data is IRedArray)
+        {
+            return new CArrayViewModel(data, tab);
+        }
+
+        return new ChunkViewModel(data, tab);
+    }
+
+    public static ChunkViewModel Create(IRedType export, ReferenceSocket socket)
+    {
+        if (export is IRedArray)
+        {
+            return new CArrayViewModel(export, socket);
+        }
+
+        return new ChunkViewModel(export, socket);
+    }
+
+    #endregion
 }

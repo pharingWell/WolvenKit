@@ -101,10 +101,11 @@ public partial class TweakBrowserViewModel : ToolViewModel
                 if (SelectedRecordEntry != null && _tweakDB.IsLoaded)
                 {
                     SelectedRecord.Clear();
-                    SelectedRecord.Add(new ChunkViewModel(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), SelectedRecordEntry.DisplayName, null, true)
-                    {
-                        IsExpanded = true
-                    });
+
+                    var chunk = ChunkViewModel.Create(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), SelectedRecordEntry.DisplayName, null, true);
+                    chunk.IsExpanded = true;
+
+                    SelectedRecord.Add(chunk);
                 }
                 else
                 {
@@ -120,7 +121,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                 {
                     var flat = TweakDBService.GetFlat(SelectedFlatEntry.Item);
                     ArgumentNullException.ThrowIfNull(flat);
-                    SelectedFlat = new ChunkViewModel(flat, flat.GetType().Name);
+                    SelectedFlat = ChunkViewModel.Create(flat, flat.GetType().Name);
                 }
                 else
                 {
@@ -140,7 +141,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                         arr.Add(query);
                     }
 
-                    SelectedQuery = new ChunkViewModel(arr, nameof(CArray<TweakDBID>));
+                    SelectedQuery = ChunkViewModel.Create(arr, nameof(CArray<TweakDBID>));
                 }
                 else
                 {
@@ -157,7 +158,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     var u = TweakDBService.GetGroupTag(SelectedGroupTagEntry.Item);
                     if (u is not null)
                     {
-                        SelectedGroupTag = new ChunkViewModel((CUInt8)u, nameof(CUInt8));
+                        SelectedGroupTag = ChunkViewModel.Create((CUInt8)u, nameof(CUInt8));
                     }
                 }
                 else

@@ -60,10 +60,9 @@ public partial class CNameWrapper : ObservableObject, Nodify.INode<ReferenceSock
         var cr2w = DataViewModel.Parent.GetFileFromDepotPathOrCache(Socket.File);
         if (cr2w != null && cr2w.RootChunk != null)
         {
-            var chunk = new ChunkViewModel(cr2w.RootChunk, Socket)
-            {
-                Location = Location
-            };
+            var chunk = ChunkViewModel.Create(cr2w.RootChunk, Socket);
+            chunk.Location = Location;
+
             DataViewModel.Nodes.Remove(this);
             DataViewModel.Nodes.Add(chunk);
             DataViewModel.LookForReferences(chunk);

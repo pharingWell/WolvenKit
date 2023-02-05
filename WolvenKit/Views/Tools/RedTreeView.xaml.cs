@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Splat;
 using Syncfusion.UI.Xaml.TreeView;
+using Syncfusion.UI.Xaml.TreeView.Engine;
 using WolvenKit.App.Interaction;
 using WolvenKit.App.ViewModels.Documents;
 using WolvenKit.App.ViewModels.Shell;
@@ -17,9 +18,30 @@ namespace WolvenKit.Views.Tools
     /// <summary>
     /// Interaction logic for RedTreeView.xaml
     /// </summary>
-    public partial class RedTreeView : UserControl
+    public partial class RedTreeView
     {
-        public RedTreeView() => InitializeComponent();
+        public RedTreeView()
+        {
+            InitializeComponent();
+
+            var listOfCVMs = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(domainAssembly => domainAssembly.GetTypes())
+                .Where(type => typeof(ChunkViewModel).IsAssignableFrom(type))
+                .ToList();
+
+            listOfCVMs.Add(typeof(GroupedChunkViewModel));
+
+            foreach (var cvmType in listOfCVMs)
+            {
+                TreeView.HierarchyPropertyDescriptors.Add(new HierarchyPropertyDescriptor
+                {
+                    ChildPropertyName = "TVProperties",
+                    IsExpandedPropertyName = "IsExpanded",
+                    IsSelectedPropertyName = "IsSelected",
+                    TargetType = cvmType
+                });
+            }
+        }
 
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(object), typeof(RedTreeView));

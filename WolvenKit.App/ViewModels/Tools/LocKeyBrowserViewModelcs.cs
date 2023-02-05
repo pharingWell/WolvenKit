@@ -133,11 +133,12 @@ public class LocKeyBrowserViewModel : ToolViewModel
             if (_selectedLocKey != null)
             {
                 SelectedChunk.Clear();
-                SelectedChunk.Add(new ChunkViewModel(_selectedLocKey, _selectedLocKey.GetType().Name, null, false)
-                {
-                    IsReadOnly = true,
-                    IsExpanded = true
-                });
+
+                var chunk = ChunkViewModel.Create(_selectedLocKey, _selectedLocKey.GetType().Name);
+                chunk.IsReadOnly = true;
+                chunk.IsExpanded = true;
+
+                SelectedChunk.Add(chunk);
             }
             else
             {

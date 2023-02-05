@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
@@ -36,6 +37,7 @@ using WolvenKit.RED4.Types;
 using YamlDotNet.Serialization;
 using static WolvenKit.App.ViewModels.Dialogs.DialogViewModel;
 using static WolvenKit.RED4.Types.RedReflection;
+using Activator = System.Activator;
 using IRedString = WolvenKit.RED4.Types.IRedString;
 using Mat4 = System.Numerics.Matrix4x4;
 using Quat = System.Numerics.Quaternion;
@@ -3457,34 +3459,21 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
 
     #region static
 
-    public static ChunkViewModel Create(IRedType data, string name, ChunkViewModel? parent = null, bool isReadOnly = false)
+    public static ChunkViewModel Create(IRedType data, string name, ChunkViewModel? parent = null, bool isReadOnly = false) => InternalCreate(data, name, parent, isReadOnly);
+
+    public static ChunkViewModel Create(IRedType data, RDTDataViewModel tab) => InternalCreate(data, tab);
+
+    public static ChunkViewModel Create(IRedType export, ReferenceSocket socket) => InternalCreate(export, socket);
+
+    private static ChunkViewModel InternalCreate(params object?[] args)
     {
-        if (data is IRedArray)
+        var type = typeof(ChunkViewModel);
+        if (args[0] is IRedArray)
         {
-            return new CArrayViewModel(data, name, parent, isReadOnly);
+            type = typeof(CArrayViewModel);
         }
 
-        return new ChunkViewModel(data, name, parent, isReadOnly);
-    }
-
-    public static ChunkViewModel Create(IRedType data, RDTDataViewModel tab)
-    {
-        if (data is IRedArray)
-        {
-            return new CArrayViewModel(data, tab);
-        }
-
-        return new ChunkViewModel(data, tab);
-    }
-
-    public static ChunkViewModel Create(IRedType export, ReferenceSocket socket)
-    {
-        if (export is IRedArray)
-        {
-            return new CArrayViewModel(export, socket);
-        }
-
-        return new ChunkViewModel(export, socket);
+        return (ChunkViewModel)Activator.CreateInstance(type, args)!;
     }
 
     #endregion

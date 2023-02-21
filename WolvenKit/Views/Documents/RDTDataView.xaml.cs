@@ -35,7 +35,7 @@ namespace WolvenKit.Views.Documents
             {
 
                 this.OneWayBind(ViewModel,
-                       viewmodel => viewmodel.Chunks,
+                       viewmodel => viewmodel.Properties,
                        view => view.RedTreeView.ItemsSource)
                    .DisposeWith(disposables);
                 this.Bind(ViewModel,

@@ -83,7 +83,7 @@
             </RowDefinition>
         </Grid.RowDefinitions>
 
-        <tools:RedTreeView
+        <tools:RedTreeView2
             x:Name="RedTreeView"
             Grid.Column="0"
             Margin="-1" />

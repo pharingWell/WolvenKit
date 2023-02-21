@@ -23,6 +23,7 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     private List<ResourcePath> _nodePaths = new();
 
     private List<ChunkViewModel> _chunks = new();
+    private List<PropertyViewModel>? _properties;
 
 
     public RDTDataViewModel(IRedType data, RedDocumentViewModel parent) : base(parent, data.GetType().Name)
@@ -61,6 +62,22 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
             return _chunks;
         }
         set => _chunks = value;
+    }
+
+    public List<PropertyViewModel> Properties
+    {
+        get
+        {
+            if (_properties == null)
+            {
+                _properties = _data is null ? new() : new List<PropertyViewModel>
+                {
+                    PropertyViewModel.Create(null, new RedPropertyInfo(_data), _data)
+                };
+            }
+            return _properties;
+        }
+        set => _properties = value;
     }
 
     public virtual ChunkViewModel GenerateChunks() => new(_data, this);

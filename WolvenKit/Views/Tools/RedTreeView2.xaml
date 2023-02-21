@@ -35,21 +35,27 @@
     <syncfusion:SfTreeGrid
         x:Name="RedTreeView"
         AllowEditing="False"
+        AllowFiltering="True"
         AllowResizingColumns="True"
-        AllowSorting="False"
         AutoExpandMode="RootNodesExpanded"
         AutoGenerateColumnsMode="None"
         ChildPropertyName="Properties"
         ColumnSizer="Star"
+        FilterLevel="Extended"
         GridLinesVisibility="None"
         ItemsSource="{Binding ElementName=uc, Path=ItemsSource, Mode=TwoWay}"
         NavigationMode="Row"
+        SelectedItem="{Binding ElementName=uc, Path=SelectedItem}"
+        SelectedItems="{Binding ElementName=uc, Path=SelectedItems}"
         SelectionMode="Extended">
+        <syncfusion:SfTreeGrid.RecordContextMenu>
+            <ContextMenu />
+        </syncfusion:SfTreeGrid.RecordContextMenu>
         <syncfusion:SfTreeGrid.Columns>
             <syncfusion:TreeGridColumns>
                 <syncfusion:TreeGridTextColumn HeaderText="Name" MappingName="DisplayName" />
                 <syncfusion:TreeGridTextColumn HeaderText="Value" MappingName="DisplayValue" />
-                <syncfusion:TreeGridTemplateColumn HeaderText="Type">
+                <syncfusion:TreeGridTemplateColumn HeaderText="Type" MappingName="DisplayType">
                     <syncfusion:TreeGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center" Orientation="Horizontal">

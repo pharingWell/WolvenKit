@@ -7,7 +7,7 @@ namespace WolvenKit.App.ViewModels.Shell;
 
 public abstract partial class PropertyViewModel : ObservableObject
 {
-    protected readonly PropertyViewModel? _parent;
+    public PropertyViewModel? Parent { get; }
 
     public RedPropertyInfo RedPropertyInfo { get; }
     [ObservableProperty] protected object? _dataObject;
@@ -24,7 +24,7 @@ public abstract partial class PropertyViewModel : ObservableObject
     
     public PropertyViewModel(PropertyViewModel? parent, RedPropertyInfo redPropertyInfo, object? data)
     {
-        _parent = parent;
+        Parent = parent;
         RedPropertyInfo = redPropertyInfo;
         _dataObject = data;
         
@@ -45,7 +45,7 @@ public abstract partial class PropertyViewModel : ObservableObject
     protected virtual void UpdateInfos()
     {
         DisplayName = "";
-        DisplayValue = PrettyValue(DataObject?.ToString());
+        DisplayValue = $"{PrettyValue(DataObject?.ToString())} {GetDisplayProperty()}";
         DisplayType = RedPropertyInfo.RedTypeName;
 
         if (RedPropertyInfo.Index != -1)
@@ -66,6 +66,8 @@ public abstract partial class PropertyViewModel : ObservableObject
             DisplayName = "ROOT";
         }
     }
+
+    protected virtual string? GetDisplayProperty() => null;
 
     protected string PrettyValue(string? str)
     {

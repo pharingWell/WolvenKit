@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell;
@@ -47,6 +48,8 @@ public class HandlePropertyViewModel : PropertyViewModel<IRedBaseHandle>
     {
         base.UpdateInfos();
 
-        DisplayValue = _data?.GetValue() != null ? $"{{{PrettyValue(_data.GetValue().ToString())}}}" : "null";
+        DisplayValue = _data?.GetValue() != null ? $"{{{PrettyValue(_data.GetValue().ToString())}}} {GetDisplayProperty()}" : "null";
     }
+
+    protected override string? GetDisplayProperty() => Properties.FirstOrDefault(x => x.DisplayName == "debugName")?.DisplayValue;
 }

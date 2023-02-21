@@ -1,10 +1,9 @@
-﻿using System;
-using System.Reflection;
+﻿using CommunityToolkit.Mvvm.Input;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell;
 
-public class ArrayPropertyViewModel : PropertyViewModel<IRedArray>
+public partial class ArrayPropertyViewModel : PropertyViewModel<IRedArray>
 {
     public ArrayPropertyViewModel(PropertyViewModel? parent, RedPropertyInfo redPropertyInfo, IRedArray? data) : base(parent, redPropertyInfo, data)
     {
@@ -15,20 +14,6 @@ public class ArrayPropertyViewModel : PropertyViewModel<IRedArray>
         if (_data == null)
         {
             return;
-        }
-
-        ExtendedTypeInfo typeInfo;
-        if (RedPropertyInfo.ExtendedPropertyInfo != null)
-        {
-            typeInfo = RedReflection.GetTypeInfo(RedPropertyInfo.ExtendedPropertyInfo.Type);
-        }
-        else if (_data != null)
-        {
-            typeInfo = RedReflection.GetTypeInfo(_data);
-        }
-        else
-        {
-            throw new ArgumentNullException(nameof(typeInfo));
         }
 
         Properties.Clear();
@@ -55,5 +40,32 @@ public class ArrayPropertyViewModel : PropertyViewModel<IRedArray>
         DisplayValue = _data != null ? $"Count = {_data.Count}" : "null";
     }
 
-    public int GetIndex(object? data) => _data!.IndexOf(data);
+    [RelayCommand]
+    public void AddArrayItem()
+    {
+
+    }
+
+    [RelayCommand]
+    public void ClearArray()
+    {
+        if (_data == null || _data.Count == 0)
+        {
+            return;
+        }
+
+        _data.Clear();
+
+        FetchProperties();
+        UpdateInfos();
+    }
+
+    [RelayCommand]
+    public void DeleteArrayItem(PropertyViewModel child)
+    {
+        _data!.Remove(child.DataObject);
+
+        FetchProperties();
+        UpdateInfos();
+    }
 }

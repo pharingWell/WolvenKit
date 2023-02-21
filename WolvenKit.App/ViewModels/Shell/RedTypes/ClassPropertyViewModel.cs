@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell;
@@ -46,4 +47,6 @@ public class ClassPropertyViewModel : PropertyViewModel<RedBaseClass>
             Properties.Add(Create(this, new RedPropertyInfo(propertyInfo), _data.GetProperty(propertyInfo.RedName)));
         }
     }
+
+    protected override string? GetDisplayProperty() => Properties.FirstOrDefault(x => x.DisplayName == "debugName")?.DisplayValue;
 }

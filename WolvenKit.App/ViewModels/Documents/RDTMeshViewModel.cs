@@ -16,16 +16,21 @@ using CommunityToolkit.Mvvm.Input;
 using HelixToolkit.SharpDX.Core;
 using HelixToolkit.Wpf.SharpDX;
 using Microsoft.Win32;
+using WolvenKit.App.Controllers;
 using WolvenKit.App.Extensions;
 using WolvenKit.App.Helpers;
 using WolvenKit.App.Models;
 using WolvenKit.App.Services;
+using WolvenKit.Common.Interfaces;
+using WolvenKit.Common.Services;
 using WolvenKit.Core.Extensions;
+using WolvenKit.Core.Interfaces;
 using WolvenKit.Modkit.RED4;
 using WolvenKit.Modkit.RED4.Tools;
 using WolvenKit.RED4.Archive.Buffer;
 using WolvenKit.RED4.Archive.CR2W;
 using WolvenKit.RED4.Archive.IO;
+using WolvenKit.RED4.CR2W;
 using WolvenKit.RED4.Types;
 using Material = WolvenKit.App.Models.Material;
 
@@ -33,6 +38,13 @@ namespace WolvenKit.App.ViewModels.Documents;
 
 public partial class RDTMeshViewModel : RedDocumentTabViewModel
 {
+    private readonly ISettingsManager _settingsManager;
+    private readonly IGameControllerFactory _gameController;
+    private readonly ILoggerService _loggerService;
+    private readonly Red4ParserService _parserService;
+    private readonly IModTools _modTools;
+    private readonly GeometryCacheService _geometryCacheService;
+
     protected readonly RedBaseClass? _data;
 
     private readonly Dictionary<string, LoadableModel> _modelList = new();
@@ -46,29 +58,70 @@ public partial class RDTMeshViewModel : RedDocumentTabViewModel
 
     #region ctor
 
-    public RDTMeshViewModel(RedDocumentViewModel parent, string header) : base(parent, header)
+    public RDTMeshViewModel(RedDocumentViewModel parent, string header,
+        ISettingsManager settingsManager,
+        IGameControllerFactory gameController,
+        ILoggerService loggerService,
+        Red4ParserService parserService,
+        IModTools modTools,
+        GeometryCacheService geometryCacheService) : base(parent, header)
     {
+        _loggerService = loggerService;
+        _parserService = parserService;
+        _settingsManager = settingsManager;
+        _gameController = gameController;
+        _modTools = modTools;
+        _geometryCacheService = geometryCacheService;
+
         Parent = parent;
     }
 
     // TODO refactor this into inherited viewmodels
 
-    public RDTMeshViewModel(CMesh data, RedDocumentViewModel file) : this(file, MeshViewHeaders.MeshPreview)
+    public RDTMeshViewModel(CMesh data, RedDocumentViewModel file,
+        ISettingsManager settingsManager,
+        IGameControllerFactory gameController,
+        ILoggerService loggerService,
+        Red4ParserService parserService,
+        IModTools modTools,
+        GeometryCacheService geometryCacheService) 
+        : this(file, MeshViewHeaders.MeshPreview, settingsManager, gameController, loggerService, parserService, modTools, geometryCacheService)
     {
         _data = data;
     }
 
-    public RDTMeshViewModel(worldStreamingSector data, RedDocumentViewModel file) : this(file, MeshViewHeaders.SectorPreview)
+    public RDTMeshViewModel(worldStreamingSector data, RedDocumentViewModel file,
+        ISettingsManager settingsManager,
+        IGameControllerFactory gameController,
+        ILoggerService loggerService,
+        Red4ParserService parserService,
+        IModTools modTools,
+        GeometryCacheService geometryCacheService) 
+        : this(file, MeshViewHeaders.SectorPreview, settingsManager, gameController, loggerService, parserService, modTools, geometryCacheService)
     {
         _data = data;
     }
 
-    public RDTMeshViewModel(worldStreamingBlock data, RedDocumentViewModel file) : this(file, MeshViewHeaders.AllSectorPreview)
+    public RDTMeshViewModel(worldStreamingBlock data, RedDocumentViewModel file,
+        ISettingsManager settingsManager,
+        IGameControllerFactory gameController,
+        ILoggerService loggerService,
+        Red4ParserService parserService,
+        IModTools modTools,
+        GeometryCacheService geometryCacheService) 
+        : this(file, MeshViewHeaders.AllSectorPreview, settingsManager, gameController, loggerService, parserService, modTools, geometryCacheService)
     {
         _data = data;
     }
 
-    public RDTMeshViewModel(entEntityTemplate ent, RedDocumentViewModel file) : this(file, MeshViewHeaders.EntityPreview)
+    public RDTMeshViewModel(entEntityTemplate ent, RedDocumentViewModel file,
+        ISettingsManager settingsManager,
+        IGameControllerFactory gameController,
+        ILoggerService loggerService,
+        Red4ParserService parserService,
+        IModTools modTools,
+        GeometryCacheService geometryCacheService) 
+        : this(file, MeshViewHeaders.EntityPreview, settingsManager, gameController, loggerService, parserService, modTools, geometryCacheService)
     {
         _data = ent;
     }
@@ -144,9 +197,20 @@ public partial class RDTMeshViewModel : RedDocumentTabViewModel
 
     #region properties
 
-    public EffectsManager? EffectsManager { get; private set; }
+    private EffectsManager? _effectsManager;
+    private HelixToolkit.Wpf.SharpDX.Camera? _camera;
 
-    public HelixToolkit.Wpf.SharpDX.Camera? Camera { get; private set; }
+    public EffectsManager? EffectsManager
+    {
+        get => _effectsManager;
+        private set => SetProperty(ref _effectsManager, value);
+    }
+
+    public HelixToolkit.Wpf.SharpDX.Camera? Camera
+    {
+        get => _camera;
+        private set => SetProperty(ref _camera, value);
+    }
 
     public SceneNodeGroupModel3D GroupModel { get; set; } = new SceneNodeGroupModel3D();
 
@@ -1377,6 +1441,11 @@ public partial class RDTMeshViewModel : RedDocumentTabViewModel
 
 
             var firstStream = await ImageDecoder.RenderToBitmapImageDds(streams[0], Enums.ETextureRawFormat.TRF_Grayscale);
+            if (firstStream == null)
+            {
+                _loggerService.Error("Could not load MultilayerMask");
+                return;
+            }
 
             var destBitmap = new Bitmap((int)firstStream.Width, (int)firstStream.Height);
             var rmBitmap = new Bitmap((int)firstStream.Width, (int)firstStream.Height);
@@ -1413,6 +1482,12 @@ public partial class RDTMeshViewModel : RedDocumentTabViewModel
                 }
 
                 var tmp = i == 0 ? firstStream : await ImageDecoder.RenderToBitmapImageDds(streams[i], Enums.ETextureRawFormat.TRF_Grayscale);
+                if (tmp == null)
+                {
+                    _loggerService.Error("Could not load Multilayer_Layer");
+                    continue;
+                }
+
                 var mask = new TransformedBitmap(tmp, new ScaleTransform(1, 1));
 
                 Bitmap maskBitmap;
@@ -1500,6 +1575,11 @@ public partial class RDTMeshViewModel : RedDocumentTabViewModel
                     ModTools.ConvertRedClassToDdsStream(it, stream, out _, out var decompressedFormat);
 
                     var normal = await ImageDecoder.RenderToBitmapImageDds(stream, decompressedFormat);
+                    if (normal == null)
+                    {
+                        _loggerService.Error($"Could not load NormalTexture \"{mllt.NormalTexture.DepotPath}\"");
+                        goto SkipNormals;
+                    }
 
                     Bitmap normalLayer;
                     using (var outStream = new MemoryStream())
@@ -1693,6 +1773,11 @@ public partial class RDTMeshViewModel : RedDocumentTabViewModel
             ModTools.ConvertRedClassToDdsStream(it, stream, out _, out var decompressedFormat);
 
             var normal = await ImageDecoder.RenderToBitmapImageDds(stream, decompressedFormat);
+            if (normal == null)
+            {
+                _loggerService.Error($"Could not load NormalTexture \"{crrn.DepotPath}\"");
+                goto SkipNormals;
+            }
 
             stream.Dispose();
 
@@ -1749,6 +1834,11 @@ public partial class RDTMeshViewModel : RedDocumentTabViewModel
             ModTools.ConvertRedClassToDdsStream(it, stream, out _, out var decompressedFormat);
 
             var normal = await ImageDecoder.RenderToBitmapImageDds(stream, decompressedFormat);
+            if (normal == null)
+            {
+                _loggerService.Error($"Could not load NormalTexture \"{crrn2.DepotPath}\"");
+                goto SkipNormals;
+            }
 
             stream.Dispose();
 

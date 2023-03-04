@@ -16,6 +16,7 @@ using WolvenKit.App.Interaction;
 using WolvenKit.App.Services;
 using WolvenKit.Core.Compression;
 using WolvenKit.Core.Interfaces;
+using WolvenKit.RED4.CR2W;
 using WolvenKit.Views.Dialogs.Windows;
 
 namespace WolvenKit
@@ -34,9 +35,6 @@ namespace WolvenKit
         // Constructor #2
         public AppImpl()
         {
-            // init ioc helpers
-            IocHelper.GetFunc = t => Locator.Current.GetService(t);
-
             Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
             Init();
@@ -45,7 +43,7 @@ namespace WolvenKit
 
             // load oodle
             var settingsManager = Locator.Current.GetService<ISettingsManager>();
-            if (!Oodle.Load(settingsManager?.GetRED4OodleDll()))
+            if (settingsManager.IsHealthy() && !Oodle.Load(settingsManager?.GetRED4OodleDll()))
             {
                 throw new FileNotFoundException($"{Core.Constants.Oodle} not found.");
             }
@@ -97,6 +95,8 @@ namespace WolvenKit
 
             loggerService.Info("Initializing Discord RPC API");
             DiscordHelper.InitializeDiscordRPC();
+
+            RedImage.LoggerService = loggerService;
 
             // Some things can only be initialized after base.OnStartup(e);
             base.OnStartup(e);

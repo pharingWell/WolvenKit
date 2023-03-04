@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using WolvenKit.Common.DDS;
 using WolvenKit.Common.Model.Arguments;
+using WolvenKit.Core.Interfaces;
 using WolvenKit.RED4.Archive.CR2W;
 using WolvenKit.RED4.CR2W;
 using WolvenKit.RED4.Types;
@@ -19,16 +20,23 @@ namespace WolvenKit.App.ViewModels.Documents;
 
 public partial class RDTTextureViewModel : RedDocumentTabViewModel
 {
+    private readonly ILoggerService _loggerService;
+    private readonly Red4ParserService _parserService;
+
     protected readonly RedBaseClass? _data;
 
-    protected readonly RedImage _redImage;
+    protected readonly RedImage? _redImage;
 
     public delegate void RenderDelegate();
     public RenderDelegate Render;
     public bool IsRendered;
 
-    public RDTTextureViewModel(RedBaseClass data, RedDocumentViewModel file) : base(file, "Texture Preview")
+    public RDTTextureViewModel(RedBaseClass data, RedDocumentViewModel file,
+        ILoggerService loggerService,
+        Red4ParserService parserService) : base(file, "Texture Preview")
     {
+        _loggerService = loggerService;
+        _parserService = parserService;
 
         _data = data;
         _redImage = RedImage.FromRedClass(data);
@@ -36,8 +44,12 @@ public partial class RDTTextureViewModel : RedDocumentTabViewModel
         Render = SetupImage;
     }
 
-    public RDTTextureViewModel(Stream stream, RedDocumentViewModel file) : base(file, "Texture Preview")
+    public RDTTextureViewModel(Stream stream, RedDocumentViewModel file,
+        ILoggerService loggerService,
+        Red4ParserService parserService) : base(file, "Texture Preview")
     {
+        _loggerService = loggerService;
+        _parserService = parserService;
 
         var buffer = new byte[stream.Length];
         stream.Read(buffer, 0, buffer.Length);
@@ -57,7 +69,7 @@ public partial class RDTTextureViewModel : RedDocumentTabViewModel
 
     protected void SetupImage()
     {
-        if (IsRendered)
+        if (IsRendered || _redImage == null)
         {
             return;
         }
@@ -104,50 +116,11 @@ public partial class RDTTextureViewModel : RedDocumentTabViewModel
 
         if (dlg.ShowDialog().GetValueOrDefault())
         {
-            var ext = Path.GetExtension(dlg.FileName).ToUpperInvariant();
-
-            RedImage image;
-            switch (ext)
+            var image = RedImage.LoadFromFile(dlg.FileName);
+            if (image == null)
             {
-                case ".JPG":
-                case ".JPEG":
-                case ".JPE":
-                {
-                    image = RedImage.LoadFromJPGFile(dlg.FileName);
-                    break;
-                }
-                case ".PNG":
-                {
-                    image = RedImage.LoadFromPNGFile(dlg.FileName);
-                    break;
-                }
-                case ".BMP":
-                {
-                    image = RedImage.LoadFromBMPFile(dlg.FileName);
-                    break;
-                }
-
-                case ".TIF":
-                case ".TIFF":
-                {
-                    image = RedImage.LoadFromTIFFFile(dlg.FileName);
-                    break;
-                }
-
-                case ".DDS":
-                {
-                    image = RedImage.LoadFromDDSFile(dlg.FileName);
-                    break;
-                }
-
-                case ".TGA":
-                {
-                    image = RedImage.LoadFromTGAFile(dlg.FileName);
-                    break;
-                }
-
-                default:
-                    throw new NotImplementedException();
+                _loggerService.Error($"\"{dlg.FileName}\" could not be loaded!");
+                return;
             }
 
             var xbmImportArgs = new XbmImportArgs
@@ -191,7 +164,7 @@ public partial class RDTTextureViewModel : RedDocumentTabViewModel
     {
         using var reader = new BinaryReader(stream);
 
-        if (!_parser.TryReadRed4File(reader, out file))
+        if (!_parserService.TryReadRed4File(reader, out file))
         {
             _loggerService.Error($"Failed to read cr2w file {path}");
             return false;

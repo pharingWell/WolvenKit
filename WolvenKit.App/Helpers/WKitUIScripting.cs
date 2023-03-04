@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Windows.Forms.VisualStyles;
 using Microsoft.ClearScript;
+using WolvenKit.App.Factories;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Exporters;
 using WolvenKit.Common;
+using WolvenKit.Common.Conversion;
 using WolvenKit.Common.Model.Arguments;
 using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
@@ -15,6 +19,8 @@ using WolvenKit.RED4.Archive;
 using WolvenKit.RED4.Archive.CR2W;
 using WolvenKit.RED4.Archive.IO;
 using WolvenKit.RED4.CR2W;
+using WolvenKit.RED4.CR2W.JSON;
+using EFileReadErrorCodes = WolvenKit.RED4.Archive.IO.EFileReadErrorCodes;
 
 namespace WolvenKit.App.Helpers;
 
@@ -22,11 +28,20 @@ public class WKitUIScripting : WKitScripting
 {
     private readonly IProjectManager _projectManager;
     private readonly IWatcherService _watcherService;
+    private readonly IPaneViewModelFactory _paneViewModelFactory;
 
-    public WKitUIScripting(ILoggerService loggerService, IProjectManager projectManager, IArchiveManager archiveManager, Red4ParserService parserService, IWatcherService watcherService) : base(loggerService, archiveManager, parserService)
+    public WKitUIScripting(
+        IPaneViewModelFactory paneViewModelFactory,
+        ILoggerService loggerService, 
+        IProjectManager projectManager, 
+        IArchiveManager archiveManager, 
+        Red4ParserService parserService, 
+        IWatcherService watcherService) 
+        : base(loggerService, archiveManager, parserService)
     {
         _projectManager = projectManager;
         _watcherService = watcherService;
+        _paneViewModelFactory = paneViewModelFactory;
     }
 
     public void SuspendFileWatcher(bool suspend)
@@ -101,6 +116,121 @@ public class WKitUIScripting : WKitScripting
         }
     }
 
+    public virtual object? LoadGameFileFromProject(string path, string type)
+    {
+        if (_projectManager.ActiveProject == null)
+        {
+            _loggerService.Error("No project loaded");
+            return null;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(_projectManager.ActiveProject.ModDirectory, "*.*", SearchOption.AllDirectories))
+        {
+            var relPath = Path.GetRelativePath(_projectManager.ActiveProject.ModDirectory, file);
+            if (relPath == path)
+            {
+                using var fs = File.Open(file, FileMode.Open);
+                using var cr = new CR2WReader(fs);
+
+                if (cr.ReadFile(out var cr2wFile) != EFileReadErrorCodes.NoError)
+                {
+                    _loggerService.Error($"\"{relPath}\" is not a CR2W file");
+                    return null;
+                }
+
+                if (type == "cr2w")
+                {
+                    return cr2wFile;
+                }
+
+                if (type == "json")
+                {
+                    var dto = new RedFileDto(cr2wFile!);
+                    return RedJsonSerializer.Serialize(dto);
+                }
+
+                _loggerService.Error($"Unsupported load type \"{type}\"");
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    public virtual object? LoadRawJsonFromProject(string path, string type)
+    {
+        if (_projectManager.ActiveProject == null)
+        {
+            _loggerService.Error("No project loaded");
+            return null;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(_projectManager.ActiveProject.RawDirectory, "*.*", SearchOption.AllDirectories))
+        {
+            var relPath = Path.GetRelativePath(_projectManager.ActiveProject.RawDirectory, file);
+            if (relPath == path)
+            {
+                var json = File.ReadAllText(file);
+                
+                if (type == "json")
+                {
+                    return json;
+                }
+
+                if (type == "cr2w")
+                {
+                    var ser = RedJsonSerializer.Deserialize<RedFileDto>(json);
+                    if (ser == null)
+                    {
+                        _loggerService.Error($"Could not parse \"{file}\"");
+                        return null;
+                    }
+                    return ser.Data;
+                }
+
+                _loggerService.Error($"Unsupported load type \"{type}\"");
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    public List<string> GetProjectFiles(string folderType)
+    {
+        var result = new List<string>();
+
+        if (_projectManager.ActiveProject == null)
+        {
+            _loggerService.Error("No project loaded");
+            return result;
+        }
+
+        string baseFolder;
+
+        switch (folderType)
+        {
+            case "archive":
+                baseFolder = _projectManager.ActiveProject.ModDirectory;
+                break;
+
+            case "raw":
+                baseFolder = _projectManager.ActiveProject.RawDirectory;
+                break;
+
+            default:
+                _loggerService.Error($"Unsupported folder type \"{folderType}\"");
+                return result;
+        }
+
+        foreach (var file in Directory.GetFiles(baseFolder, "*.*", SearchOption.AllDirectories))
+        {
+            result.Add(Path.GetRelativePath(baseFolder, file));
+        }
+
+        return result;
+    }
+
     private T ParseExportSettings<T>(ScriptObject scriptSettingsObject) where T : ExportArgs, new()
     {
         // find all of the matching scriptable properties the script provided
@@ -168,7 +298,7 @@ public class WKitUIScripting : WKitScripting
         }
 
         // get the export view model and clear the items
-        var expVM = IocHelper.GetService<TextureExportViewModel>();
+        var expVM = _paneViewModelFactory.TextureExportViewModel();
         foreach (var item in expVM.Items)
         {
             item.IsChecked = false;

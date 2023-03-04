@@ -83,6 +83,11 @@ namespace WolvenKit.Views.Shell
         {
             if (_useAppdataStorage)
             {
+                if (_viewModel is null)
+                {
+                    return;
+                }
+
                 var xmlPath = Path.Combine(ISettingsManager.GetAppData(), "DockStates.xml");
                 var writer = XmlWriter.Create(xmlPath);
 
@@ -242,9 +247,12 @@ namespace WolvenKit.Views.Shell
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void PART_DockingManager_WindowClosing(object sender, WindowClosingEventArgs e)
+        private async void PART_DockingManager_WindowClosing(object sender, WindowClosingEventArgs e)
         {
-
+            if (e.TargetItem is ContentControl { Content: DocumentViewModel vm })
+            {
+                e.Cancel = !await TryCloseDocument(vm);
+            }
         }
 
         private void PART_DockingManager_Loaded(object sender, RoutedEventArgs e)

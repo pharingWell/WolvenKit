@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WolvenKit.App.Factories;
 using WolvenKit.App.Models;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Shell;
@@ -41,12 +42,14 @@ public partial class TweakBrowserViewModel : ToolViewModel
 
     private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
 
+    private readonly AppViewModel _appViewModel;
+    private readonly IChunkViewmodelFactory _chunkViewmodelFactory;
     private readonly ISettingsManager _settingsManager;
     private readonly INotificationService _notificationService;
     private readonly IProjectManager _projectManager;
     private readonly ILoggerService _loggerService;
-    private readonly TweakDBService _tweakDB;
-    private readonly LocKeyService _locKeyService;
+    private readonly ITweakDBService _tweakDB;
+    private readonly ILocKeyService _locKeyService;
 
     public string Extension { get; set; } = "tweak";
 
@@ -66,14 +69,18 @@ public partial class TweakBrowserViewModel : ToolViewModel
     #region constructors
 
     public TweakBrowserViewModel(
+        AppViewModel appViewModel,
+        IChunkViewmodelFactory chunkViewmodelFactory, 
         ISettingsManager settingsManager,
         INotificationService notificationService,
         IProjectManager projectManager,
         ILoggerService loggerService,
-        TweakDBService tweakDbService,
-        LocKeyService locKeyService
+        ITweakDBService tweakDbService,
+        ILocKeyService locKeyService
     ) : base(ToolTitle)
     {
+        _appViewModel = appViewModel;
+        _chunkViewmodelFactory = chunkViewmodelFactory;
         _settingsManager = settingsManager;
         _notificationService = notificationService;
         _projectManager = projectManager;
@@ -98,17 +105,12 @@ public partial class TweakBrowserViewModel : ToolViewModel
 
             case nameof(SelectedRecordEntry):
             {
+                SelectedRecord.Clear();
                 if (SelectedRecordEntry != null && _tweakDB.IsLoaded)
                 {
-                    SelectedRecord.Clear();
-                    SelectedRecord.Add(new ChunkViewModel(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), SelectedRecordEntry.DisplayName, null, true)
-                    {
-                        IsExpanded = true
-                    });
-                }
-                else
-                {
-                    SelectedRecord.Clear();
+                    var vm = _chunkViewmodelFactory.ChunkViewModel(TweakDBService.GetRecord(SelectedRecordEntry.Item).NotNull(), SelectedRecordEntry.DisplayName, _appViewModel, null, true);
+                    vm.IsExpanded = true;
+                    SelectedRecord.Add(vm);
                 }
                 OnPropertyChanged(nameof(SelectedRecord));
                 break;
@@ -120,7 +122,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                 {
                     var flat = TweakDBService.GetFlat(SelectedFlatEntry.Item);
                     ArgumentNullException.ThrowIfNull(flat);
-                    SelectedFlat = new ChunkViewModel(flat, flat.GetType().Name);
+                    SelectedFlat = _chunkViewmodelFactory.ChunkViewModel(flat, flat.GetType().Name, _appViewModel);
                 }
                 else
                 {
@@ -140,7 +142,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                         arr.Add(query);
                     }
 
-                    SelectedQuery = new ChunkViewModel(arr, nameof(CArray<TweakDBID>));
+                    SelectedQuery = _chunkViewmodelFactory.ChunkViewModel(arr, nameof(CArray<TweakDBID>), _appViewModel);
                 }
                 else
                 {
@@ -157,7 +159,7 @@ public partial class TweakBrowserViewModel : ToolViewModel
                     var u = TweakDBService.GetGroupTag(SelectedGroupTagEntry.Item);
                     if (u is not null)
                     {
-                        SelectedGroupTag = new ChunkViewModel((CUInt8)u, nameof(CUInt8));
+                        SelectedGroupTag = _chunkViewmodelFactory.ChunkViewModel((CUInt8)u, nameof(CUInt8), _appViewModel);
                     }
                 }
                 else

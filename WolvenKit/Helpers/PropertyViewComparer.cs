@@ -18,7 +18,7 @@ public class PropertyViewComparer : IComparer<object>, ISortDirection
         var value1 = p1.DisplayName;
         var value2 = p2.DisplayName;
 
-        var c = 0;
+        int c;
 
         if (p1.RedPropertyInfo.Index != -1)
         {
@@ -26,7 +26,7 @@ public class PropertyViewComparer : IComparer<object>, ISortDirection
         }
         else
         {
-            c = value1.CompareTo(value2);
+            c = string.Compare(value1, value2, StringComparison.InvariantCultureIgnoreCase);
         }
 
         if (SortDirection == ListSortDirection.Descending)

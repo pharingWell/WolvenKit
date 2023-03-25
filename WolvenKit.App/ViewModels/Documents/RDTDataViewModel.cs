@@ -106,6 +106,11 @@ public partial class RDTDataViewModel : RedDocumentTabViewModel
     [ObservableProperty]
     private bool _isEmbeddedFile;
 
+    [ObservableProperty] private PropertyViewModel? _selectedProperty;
+
+    [ObservableProperty] private ObservableCollection<PropertyViewModel> _selectedProperties = new();
+
+
     [ObservableProperty] private ChunkViewModel? _selectedChunk;
 
     [ObservableProperty] private ObservableCollection<ChunkViewModel> _selectedChunks = new ObservableCollection<ChunkViewModel>();

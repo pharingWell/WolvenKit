@@ -1,7 +1,11 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Syncfusion.Data;
+using Syncfusion.UI.Xaml.Grid;
+using Syncfusion.UI.Xaml.ScrollAxis;
 using Syncfusion.UI.Xaml.TreeGrid;
+using Syncfusion.Windows.Tools.Controls;
 using WolvenKit.App.ViewModels.Shell;
 using WolvenKit.Helpers;
 
@@ -48,9 +52,64 @@ public partial class RedTreeView2 : UserControl
     {
         InitializeComponent();
 
+        Navigator.HierarchyNavigatorSelectedItemChanged += Navigator_OnHierarchyNavigatorSelectedItemChanged;
+
         RedTreeView.SortComparers.Add(new SortComparer() { Comparer = new PropertyViewComparer(), PropertyName = "DisplayName" });
 
+        RedTreeView.SelectionChanged += RedTreeView_OnSelectionChanged;
         RedTreeView.TreeGridContextMenuOpening += RedTreeView_OnTreeGridContextMenuOpening;
+    }
+
+    private bool _selectionChanging;
+
+    private void RedTreeView_OnSelectionChanged(object sender, GridSelectionChangedEventArgs e)
+    {
+        if (e.AddedItems.Count == 1 && e.AddedItems[0] is TreeGridRowInfo info)
+        {
+            if (_selectionChanging)
+            {
+                return;
+            }
+
+            _selectionChanging = true;
+            Navigator.SetCurrentValue(HierarchyNavigator.SelectedItemProperty, info.RowData);
+            _selectionChanging = false;
+        }
+    }
+
+    private void SelectTreeItem()
+    {
+        var items = Navigator.ItemsHost.Items;
+
+        if (items.Count < 2)
+        {
+            return;
+        }
+
+        for (var i = 0; i < items.Count - 1; i++)
+        {
+            var rowIndex = RedTreeView.ResolveToRowIndex(items[i]);
+            RedTreeView.ExpandNode(rowIndex);
+        }
+
+        var lastItem = items[^1];
+        RedTreeView.SetCurrentValue(SfGridBase.SelectedItemProperty, lastItem);
+
+        var rowIndex2 = RedTreeView.ResolveToRowIndex(lastItem);
+        var columnIndex = RedTreeView.ResolveToStartColumnIndex();
+        RedTreeView.ScrollInView(new RowColumnIndex(rowIndex2, columnIndex));
+    }
+
+    private void Navigator_OnHierarchyNavigatorSelectedItemChanged(object sender, HierarchyNavigatorSelectedItemChangedEventArgs e)
+    {
+        if (_selectionChanging)
+        {
+            return;
+        }
+
+        _selectionChanging = true;
+        SelectTreeItem();
+        _selectionChanging = false;
     }
 
     private void RedTreeView_OnTreeGridContextMenuOpening(object sender, TreeGridContextMenuEventArgs e)

@@ -91,7 +91,7 @@
         <!--  Grid Splitter  -->
         <syncfusion:SfGridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
 
-        <editors:RedTypeView
+        <editors:RedTypeView2
             x:Name="CustomPG"
             Grid.Column="2"
             DataContext="{Binding SelectedChunk, IsAsync=True}" />

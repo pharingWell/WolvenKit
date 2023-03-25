@@ -159,7 +159,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
             }
             else if (file is not null && Cr2wFile != null)
             {
-                using var writer = new CR2WWriter(fs);
+                using var writer = new CR2WWriter(fs) { LoggerService = _loggerService };
                 writer.WriteFile(Cr2wFile);
             }
         }
@@ -274,13 +274,13 @@ public partial class RedDocumentViewModel : DocumentViewModel
                 TabItemViewModels.Add(new RDTGraphViewModel(ggr, this));
             }
         }
-        if (cls is scnSceneResource ssr)
-        {
-            if (_globals.Value.ENABLE_NODE_EDITOR)
-            {
-                TabItemViewModels.Add(new RDTGraphViewModel(ssr, this));
-            }
-        }
+        //if (cls is scnSceneResource ssr)
+        //{
+        //    if (_globals.Value.ENABLE_NODE_EDITOR)
+        //    {
+        //        TabItemViewModels.Add(new RDTGraphViewModel(ssr, this));
+        //    }
+        //}
     }
 
     public void PopulateItems()

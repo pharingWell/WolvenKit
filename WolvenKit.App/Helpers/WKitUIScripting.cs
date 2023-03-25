@@ -4,11 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
-using System.Windows.Forms.VisualStyles;
 using Microsoft.ClearScript;
 using WolvenKit.App.Factories;
 using WolvenKit.App.Services;
-using WolvenKit.App.ViewModels.Exporters;
 using WolvenKit.Common;
 using WolvenKit.Common.Conversion;
 using WolvenKit.Common.Model.Arguments;
@@ -24,6 +22,9 @@ using EFileReadErrorCodes = WolvenKit.RED4.Archive.IO.EFileReadErrorCodes;
 
 namespace WolvenKit.App.Helpers;
 
+/// <summary>
+/// TODO
+/// </summary>
 public class WKitUIScripting : WKitScripting
 {
     private readonly IProjectManager _projectManager;
@@ -44,18 +45,23 @@ public class WKitUIScripting : WKitScripting
         _paneViewModelFactory = paneViewModelFactory;
     }
 
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="suspend"></param>
     public void SuspendFileWatcher(bool suspend)
     {
         if (_watcherService != null && _watcherService.IsSuspended != suspend)
         {
             _watcherService.IsSuspended = suspend;
-            if (!suspend)
-            {
-                _watcherService.RefreshAsync(_projectManager.ActiveProject);
-            }
         }
     }
 
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="cr2w"></param>
     public virtual void SaveToProject(string path, CR2WFile cr2w)
     {
         if (_projectManager.ActiveProject is null)
@@ -70,6 +76,11 @@ public class WKitUIScripting : WKitScripting
         });
     }
 
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="gameFile"></param>
     public virtual void SaveToProject(string path, IGameFile gameFile)
     {
         if (_projectManager.ActiveProject is null)
@@ -83,6 +94,11 @@ public class WKitUIScripting : WKitScripting
         });
     }
 
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="content"></param>
     public virtual void SaveToRaw(string path, string content)
     {
         if (_projectManager.ActiveProject is null)
@@ -116,6 +132,12 @@ public class WKitUIScripting : WKitScripting
         }
     }
 
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
     public virtual object? LoadGameFileFromProject(string path, string type)
     {
         if (_projectManager.ActiveProject == null)
@@ -157,6 +179,12 @@ public class WKitUIScripting : WKitScripting
         return null;
     }
 
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
     public virtual object? LoadRawJsonFromProject(string path, string type)
     {
         if (_projectManager.ActiveProject == null)
@@ -196,6 +224,11 @@ public class WKitUIScripting : WKitScripting
         return null;
     }
 
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="folderType"></param>
+    /// <returns></returns>
     public List<string> GetProjectFiles(string folderType)
     {
         var result = new List<string>();
@@ -270,6 +303,13 @@ public class WKitUIScripting : WKitScripting
         return exportArgs;
     }
 
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="exportList"></param>
+    /// <param name="exportSettings"></param>
+    /// <exception cref="Exception"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
     public void ExportFiles(dynamic exportList, dynamic? exportSettings = null)
     {
         // dynamic type checking

@@ -350,7 +350,8 @@ public class RED4Controller : ObservableObject, IGameController
     private static IEnumerable<string> GetArchiveXlFiles(Cp77Project cp77Proj) => Directory.EnumerateFiles(cp77Proj.ResourcesDirectory, "*.xl", SearchOption.AllDirectories);
     private static IEnumerable<string> GetResourceFiles(Cp77Project cp77Proj) => Directory.EnumerateFiles(cp77Proj.ResourcesDirectory, "*.*", SearchOption.AllDirectories)
         .Where(name => !IsSpecialExtension(name))
-        .Where(x => Path.GetFileName(x) != "info.json");
+        .Where(x => Path.GetFileName(x) != "info.json")
+        ;
     private static IEnumerable<string> GetScriptFiles(Cp77Project cp77Proj) => Directory.EnumerateFiles(cp77Proj.ResourcesDirectory, "*.*", SearchOption.AllDirectories).Where(name => IsScript(name));
     private static IEnumerable<string> GetTweakFiles(Cp77Project cp77Proj) => Directory.EnumerateFiles(cp77Proj.ResourcesDirectory, "*.*", SearchOption.AllDirectories).Where(name => IsScript(name));
 
@@ -370,21 +371,22 @@ public class RED4Controller : ObservableObject, IGameController
             _notificationService.Error("Cannot pack project (no project/not cyberpunk project)!");
             return false;
         }
+
         if (!options.IsRedmod && Directory.EnumerateFiles(cp77Proj.SoundDirectory).Any())
         {
             _loggerService.Warning("This project contains custom sound files but is packed as legacy mod!");
             _notificationService.Warning($"This project contains custom sound files and needs to be packed as a REDmod!");
 
-            _progressService.IsIndeterminate = false;
-            return false;
+            //_progressService.IsIndeterminate = false;
+            //return false;
         }
-        if (!options.IsRedmod && Directory.GetFiles(cp77Proj.ResourcesDirectory).Select(x => IsScript(x)).Any())
+        if (!options.IsRedmod && Directory.EnumerateFiles(cp77Proj.ResourcesDirectory).Any(x => IsScript(x)))
         {
             _loggerService.Warning("This project contains script files but is packed as legacy mod!");
             _notificationService.Warning($"This project contains script files and needs to be packed as a REDmod!");
 
-            _progressService.IsIndeterminate = false;
-            return false;
+            //_progressService.IsIndeterminate = false;
+            //return false;
         }
 
         // cleanup
@@ -680,7 +682,14 @@ public class RED4Controller : ObservableObject, IGameController
     private bool PackRedmodFiles(Cp77Project cp77Proj)
     {
         // write info.json file if it not exists
+        var modinfo = Path.Combine(cp77Proj.ResourcesDirectory, "info.json");
         var modInfoJsonPath = Path.Combine(cp77Proj.PackedRedModDirectory, "info.json");
+
+        if (File.Exists(modinfo))
+        {
+            File.Copy(modinfo, modInfoJsonPath, true);
+        }
+        
         if (!File.Exists(modInfoJsonPath))
         {
             JsonSerializerOptions jsonoptions = new()

@@ -12,6 +12,7 @@
     xmlns:reactiveUi="http://reactiveui.net"
     xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
     xmlns:tools="clr-namespace:WolvenKit.App.ViewModels.Tools;assembly=WolvenKit.App"
+    x:Name="uc"
     d:DataContext="{d:DesignInstance Type=tools:ProjectExplorerViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="400"
@@ -47,6 +48,7 @@
                 x:Key="TreeGridContextMenu"
                 FontSize="11"
                 Style="{DynamicResource WPFContextMenuStyle}">
+
                 <MenuItem
                     Margin="0"
                     Header="Actions"
@@ -64,7 +66,7 @@
                     x:Name="ConvertToJsonMenuItem"
                     Command="{Binding ConvertToCommand}"
                     Header="Convert to JSON"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    Visibility="{Binding Path=ConvertToIsEnabled, UpdateSourceTrigger=PropertyChanged, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <MenuItem.Icon>
                         <Grid>
                             <iconPacks:PackIconCodicons
@@ -81,7 +83,7 @@
                     x:Name="ConvertFromJsonMenuItem"
                     Command="{Binding ConvertFromCommand}"
                     Header="Convert from JSON"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    Visibility="{Binding Path=ConvertFromIsEnabled, UpdateSourceTrigger=PropertyChanged, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <MenuItem.Icon>
                         <Grid>
                             <iconPacks:PackIconCodicons
@@ -94,17 +96,16 @@
                         </Grid>
                     </MenuItem.Icon>
                 </MenuItem>
-
                 <MenuItem
                     x:Name="BKImport"
                     Command="{Binding Bk2ImportCommand}"
                     Header="Import Avi to BK2"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <MenuItem
                     x:Name="BKExport"
                     Command="{Binding Bk2ExportCommand}"
                     Header="Export BK2 to Avi"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                 <Separator />
 
@@ -154,13 +155,14 @@
                             Kind="ContentPaste" />
                     </MenuItem.Icon>
                 </MenuItem>
+
                 <Separator />
 
                 <MenuItem Command="{Binding CopyRelPathCommand}" Header="Copy relative path" />
                 <MenuItem
                     Command="{Binding OpenInAssetBrowserCommand}"
                     Header="Open in Asset Browser"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconForkAwesome
                             Width="13"
@@ -173,7 +175,7 @@
                 <MenuItem
                     Command="{Binding ReimportFileCommand}"
                     Header="Replace with original"
-                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconForkAwesome
                             Width="13"
@@ -668,6 +670,7 @@
             FilterLevel="Extended"
             HeaderRowHeight="3"
             IsReadOnly="True"
+            ItemsSource="{Binding ElementName=uc, Path=TreeItemSource, Mode=OneWay}"
             LiveNodeUpdateMode="AllowDataShaping"
             ParentPropertyName="Hash"
             PreviewMouseDown="TreeGrid_MouseDown"
@@ -730,6 +733,7 @@
             FilterLevel="Extended"
             HeaderRowHeight="28"
             IsReadOnly="True"
+            ItemsSource="{Binding ElementName=uc, Path=FlatItemSource, Mode=OneWay}"
             LiveNodeUpdateMode="AllowDataShaping"
             ParentPropertyName="Hash"
             PreviewMouseDown="TreeGrid_MouseDown"
@@ -741,7 +745,7 @@
             VirtualizingPanel.IsVirtualizing="True"
             VirtualizingPanel.ScrollUnit="Pixel"
             VirtualizingPanel.VirtualizationMode="Recycling"
-            Visibility="{Binding IsFlatModeEnabled, Converter={StaticResource Boolean2VisibilityConverter}}">
+            Visibility="{Binding IsFlatModeEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
 
             <syncfusion:SfTreeGrid.Resources>
                 <Style TargetType="syncfusion:TreeGridCell">

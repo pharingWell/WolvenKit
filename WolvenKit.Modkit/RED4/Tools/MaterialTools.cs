@@ -26,6 +26,8 @@ namespace WolvenKit.Modkit.RED4
     /// </summary>
     public partial class ModTools
     {
+        // Unused?
+        /*
         public bool ExportMeshWithMaterials(Stream meshStream, FileInfo outfile, MeshExportArgs meshArgs, ValidationMode vmode = ValidationMode.TryFix)
         {
             var archives = meshArgs.Archives;
@@ -74,6 +76,7 @@ namespace WolvenKit.Modkit.RED4
 
             return true;
         }
+        */
         private void GetMaterialEntries(CR2WFile cr2w, Stream meshStream, ref List<string> primaryDependencies, ref List<string> materialEntryNames, ref List<CMaterialInstance> materialEntries, List<ICyberGameArchive> archives)
         {
             if (cr2w.RootChunk is not CMesh cmesh)
@@ -286,7 +289,7 @@ namespace WolvenKit.Modkit.RED4
             }
         }
 
-        private MatData SetupMaterial(CR2WFile cr2w, Stream meshStream, List<ICyberGameArchive> archives, string matRepo, MeshesInfo info, EUncookExtension eUncookExtension = EUncookExtension.dds)
+        private MatData SetupMaterial(CR2WFile cr2w, Stream meshStream, List<ICyberGameArchive> archives, string matRepo, MeshesInfo info, EUncookExtension eUncookExtension = EUncookExtension.dds, bool experimentUseNewMeshExporter = false)
         {
             var primaryDependencies = new List<string>();
 
@@ -308,6 +311,11 @@ namespace WolvenKit.Modkit.RED4
                     new XbmExportArgs() { UncookExtension = eUncookExtension },
                     new MlmaskExportArgs() { UncookExtension = eUncookExtension }
                 );
+
+            if (experimentUseNewMeshExporter)
+            {
+                _loggerService.Info($"SetupMaterial: skipping all .mi or .mt material entries");
+            }
 
             for (var i = 0; i < primaryDependencies.Count; i++)
             {
@@ -379,8 +387,13 @@ namespace WolvenKit.Modkit.RED4
                     case ".gradient":
                         ExtractGradient(path);
                         break;
+
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        if (!experimentUseNewMeshExporter)
+                        {
+                            throw new ArgumentOutOfRangeException();
+                        }
+                        break;
                 }
 
                 void ExtractXBM(string path)
@@ -884,68 +897,32 @@ namespace WolvenKit.Modkit.RED4
 
             if (materialParameterType == typeof(CMaterialParameterCube))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<ITexture>(path.NotNull());
+                return ReadPath<ITexture>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterFoliageParameters))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<CFoliageProfile>(path.NotNull());
+                return ReadPath<CFoliageProfile>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterGradient))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<CGradient>(path.NotNull());
+                return ReadPath<CGradient>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterHairParameters))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<CHairProfile>(path.NotNull());
+                return ReadPath<CHairProfile>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterMultilayerMask))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<Multilayer_Mask>(path.NotNull());
+                return ReadPath<Multilayer_Mask>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterMultilayerSetup))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<Multilayer_Setup>(path.NotNull());
+                return ReadPath<Multilayer_Setup>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterScalar))
@@ -960,13 +937,7 @@ namespace WolvenKit.Modkit.RED4
 
             if (materialParameterType == typeof(CMaterialParameterSkinParameters))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<CSkinProfile>(path.NotNull());
+                return ReadPath<CSkinProfile>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterStructBuffer))
@@ -977,35 +948,17 @@ namespace WolvenKit.Modkit.RED4
 
             if (materialParameterType == typeof(CMaterialParameterTerrainSetup))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<CTerrainSetup>(path.NotNull());
+                return ReadPath<CTerrainSetup>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterTexture))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<ITexture>(path.NotNull());
+                return ReadPath<ITexture>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterTextureArray))
             {
-                string? path = null;
-                if (obj is JsonElement value)
-                {
-                    path = value.GetString();
-                }
-
-                return new CResourceReference<ITexture>(path.NotNull());
+                return ReadPath<ITexture>();
             }
 
             if (materialParameterType == typeof(CMaterialParameterVector))
@@ -1027,6 +980,24 @@ namespace WolvenKit.Modkit.RED4
             }
 
             throw new NotImplementedException(materialParameterType.Name);
+
+            CResourceReference<T> ReadPath<T>() where T : CResource
+            {
+                if (obj is not JsonElement value)
+                {
+                    throw new NotSupportedException();
+                }
+
+                switch (value.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        return new CResourceReference<T>(value.GetString().NotNull());
+                    case JsonValueKind.Number:
+                        return new CResourceReference<T>(value.GetUInt64());
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
         }
 
         private object GetSerializableValue(IRedType value)
@@ -1065,7 +1036,12 @@ namespace WolvenKit.Modkit.RED4
 
             if (value is IRedResourceReference rRef)
             {
-                return rRef.DepotPath;
+                if (rRef.DepotPath.IsResolvable)
+                {
+                    return rRef.DepotPath.GetResolvedText()!;
+                }
+
+                return (ulong)rRef.DepotPath;
             }
 
             throw new NotImplementedException(value.GetType().Name);
@@ -1486,10 +1462,10 @@ namespace WolvenKit.Modkit.RED4
                                     {
                                         found = true;
 
-                                        var convValue = GetMaterialParameterValue(refer.GetType(), value).NotNull();
+                                        var convValue = GetMaterialParameterValue(refer.GetType(), value);
                                         if (valueDict.ContainsKey(refer.ParameterName.ToString().NotNull()) && !Equals(valueDict[refer.ParameterName.ToString().NotNull()], convValue))
                                         {
-                                            chunk.Values.Add(new CKeyValuePair(refer.ParameterName.ToString().NotNull(), convValue));
+                                            chunk.Values.Add(new CKeyValuePair(refer.ParameterName.ToString().NotNull(), convValue.NotNull()));
                                         }
                                     }
                                 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -18,6 +19,7 @@ using Syncfusion.Windows.Tools.Controls;
 using WolvenKit.App.Helpers;
 using WolvenKit.App.Interaction;
 using WolvenKit.App.Models.Docking;
+using WolvenKit.App.Models.ProjectManagement.Project;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels;
 using WolvenKit.App.ViewModels.Documents;
@@ -42,7 +44,6 @@ namespace WolvenKit.Views.Shell
         private bool _stateChanged;
 
         private bool _usingProjectLayout = false;
-        private bool _hadLoadedProject = false;
         private readonly bool _debuggingLayouts = false;
         private readonly bool _useAppdataStorage = true;
 
@@ -81,27 +82,13 @@ namespace WolvenKit.Views.Shell
 
         public void SaveLayout()
         {
-            if (_useAppdataStorage)
+            if (DataContext is AppViewModel { ActiveProject: { } project })
             {
-                if (_viewModel is null)
-                {
-                    return;
-                }
-
-                var xmlPath = Path.Combine(ISettingsManager.GetAppData(), "DockStates.xml");
-                var writer = XmlWriter.Create(xmlPath);
-
-                PART_DockingManager.SaveDockState(writer);
-
-                writer.Close();
-
-                // save open windows
-                using var fs = new FileStream(Path.Combine(ISettingsManager.GetAppData(), "DockPanes.txt"), FileMode.Create);
-                using var sw = new StreamWriter(fs);
-                foreach (var pane in _viewModel.DockedViews)
-                {
-                    sw.WriteLine(pane.GetType().Name);
-                }
+                SaveLayout(Path.Combine(project.ProjectDirectory, "layout.xml"));
+            } 
+            else if (_useAppdataStorage)
+            {
+                SaveLayout(Path.Combine(ISettingsManager.GetAppData(), "DockStates.xml"));
             }
             else
             {
@@ -109,22 +96,84 @@ namespace WolvenKit.Views.Shell
             }
         }
 
-        public void SaveLayoutToProject()
+        private void SaveLayout(string filePath)
         {
-            if (_viewModel is null || _viewModel.ActiveProject is null)
-            {
-                return;
-            }
-
-            var layoutPath = Path.Combine(_viewModel.ActiveProject.ProjectDirectory, "layout.xml");
-            var writer = XmlWriter.Create(layoutPath);
+            var writer = XmlWriter.Create(filePath);
             PART_DockingManager.SaveDockState(writer);
             writer.Close();
-            Locator.Current.GetService<ILoggerService>().Info($"Saved current layout to {layoutPath}");
+
+            Locator.Current.GetService<ILoggerService>().Info($"Saved current layout to {filePath}");
+        }
+
+        private bool LoadLayout(string filePath)
+        {
+            if (DataContext is not AppViewModel appViewModel)
+            {
+                return false;
+            }
+
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+
+            var logger = Locator.Current.GetService<ILoggerService>();
+
+            var reader = XmlReader.Create(filePath);
+
+            var defaultXmlSerializer = DockingManager.CreateDefaultXmlSerializer(typeof (List<DockingParams>));
+            if (!defaultXmlSerializer.CanDeserialize(reader))
+            {
+                return false;
+            }
+
+            try
+            {
+                var dockingParamsList = (List<DockingParams>)defaultXmlSerializer.Deserialize(reader);
+                ArgumentNullException.ThrowIfNull(dockingParamsList);
+
+                foreach (var dockingParam in dockingParamsList)
+                {
+                    var found = false;
+                    foreach (FrameworkElement child in PART_DockingManager.Children)
+                    {
+                        if (child.Name == dockingParam.Name)
+                        {
+                            found = true;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        if (!appViewModel.AddDockedPane(dockingParam.Name))
+                        {
+                            logger.Warning($"ViewModel for \"{dockingParam.Name}\" could not be found!");
+                        }
+                    }
+                }
+
+                reader.Close();
+                reader = XmlReader.Create(filePath);
+
+                var isSuccess = PART_DockingManager.LoadDockState(reader);
+
+                reader.Close();
+
+                return isSuccess;
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+            }
+            
+            reader.Close();
+
+            return false;
         }
 
         private void LoadLayout()
         {
+            var logger = Locator.Current.GetService<ILoggerService>();
             try
             {
                 if (_useAppdataStorage)
@@ -136,46 +185,47 @@ namespace WolvenKit.Views.Shell
                         return;
                     }
 
-                    var reader = XmlReader.Create(xmlPath);
-
-                    var isSuccessful = PART_DockingManager.LoadDockState(reader);
-
-                    reader.Close();
+                    logger.Info($"Trying to load layout from {xmlPath}...");
+                    var isSuccessful = LoadLayout(xmlPath);
+                    logger.Debug($"... Layout load returned {isSuccessful}");
 
                     if (!isSuccessful)
                     {
                         LoadLayoutDefault();
                         return;
                     }
-
-                    Locator.Current.GetService<ILoggerService>().Info($"Loaded layout from {xmlPath}: {isSuccessful}");
                 }
                 else
                 {
+                    logger.Info($"Trying to load layout from default path ...");
                     var isSuccessful = PART_DockingManager.LoadDockState();
-                    Trace.WriteLine(isSuccessful);
+                    logger.Debug($"...Layout load returned {isSuccessful}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Trace.WriteLine(ex.Message);
+                logger.Error($"Layout load error: {e.Message}");
                 LoadLayoutDefault();
             }
         }
 
         public void LoadLayoutDefault()
         {
+            var logger = Locator.Current.GetService<ILoggerService>();
+
             try
             {
                 var reader = XmlReader.Create("DockStatesDefault.xml");
-                var isSuccessful = PART_DockingManager.LoadDockState(reader);
-                Trace.WriteLine(isSuccessful);
+
+                logger.Info($"Trying to load default layout from {Path.GetFullPath("DockStatesDefault.xml")}...");
+                var isSuccessful = LoadLayout("DockStatesDefault.xml");
+                logger.Debug($"...Default layout load returned {isSuccessful}");
+
                 reader.Close();
-                Locator.Current.GetService<ILoggerService>().Info($"Loaded default layout");
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Trace.WriteLine(ex.Message);
+                logger.Error($"Default layout load error: {e.Message}");
             }
         }
 
@@ -211,7 +261,7 @@ namespace WolvenKit.Views.Shell
         {
             if (vm.IsDirty)
             {
-                if (await Interactions.ShowMessageBoxAsync("Unsaved changes will be lost - are you sure you want to close this file?", "Confirm", WMessageBoxButtons.YesNo) == WMessageBoxResult.No)
+                if (await Interactions.ShowMessageBoxAsync($"\"{vm.Header.TrimEnd('*')}\" has unsaved changes - are you sure you want to close this file?", "Confirm", WMessageBoxButtons.YesNo) == WMessageBoxResult.No)
                 {
                     return false;
                 }
@@ -314,7 +364,7 @@ namespace WolvenKit.Views.Shell
             // set active property
             if (e.OldValue is ContentControl oldValue)
             {
-                if (oldValue.Content is IDockElement dockElement)
+                if (oldValue.Content is IDockElement dockElement && dockElement.IsActive)
                 {
                     dockElement.IsActive = false;
                 }
@@ -322,7 +372,7 @@ namespace WolvenKit.Views.Shell
 
             if (e.NewValue is ContentControl content)
             {
-                if (content.Content is IDockElement dockElement)
+                if (content.Content is IDockElement dockElement && !dockElement.IsActive)
                 {
                     dockElement.IsActive = true;
                 }
@@ -376,6 +426,24 @@ namespace WolvenKit.Views.Shell
                     e.Cancel = !await TryCloseDocument(vm);
                 }
             }
+        }
+
+        public async Task<bool> CloseAll()
+        {
+            var allClosed = true;
+
+            for (var i = _viewModel.DockedViews.Count - 1; i >= 0; i--)
+            {
+                if (_viewModel.DockedViews[i] is DocumentViewModel doc)
+                {
+                    if (!await TryCloseDocument(doc))
+                    {
+                        allClosed = false;
+                    }
+                }
+            }
+
+            return allClosed;
         }
 
         private async void PART_DockingManager_OnCloseOtherTabs(object sender, CloseTabEventArgs e)
@@ -468,28 +536,24 @@ namespace WolvenKit.Views.Shell
                 return;
             }
 
+            var logger = Locator.Current.GetService<ILoggerService>();
+
             try
             {
-                // need to also handle if files have been modified (probably elsewhere, though)
-                if (!_hadLoadedProject && ItemsSource is ObservableCollection<IDockElement> oc)
-                {
-                    _hadLoadedProject = true;
-                    //oc.Clear();
-                }
                 var layoutPath = Path.Combine(_viewModel.ActiveProject.ProjectDirectory, "layout.xml");
                 if (File.Exists(layoutPath))
                 {
-                    var reader = XmlReader.Create(layoutPath);
-                    var Debugging_A = PART_DockingManager.LoadDockState(reader);
-                    Trace.WriteLine(Debugging_A);
-                    reader.Close();
+                    logger.Info($"Trying to load project layout from {layoutPath}...");
+                    var loadedProjectLayout = LoadLayout(layoutPath);
+                    logger.Debug($"...Project layout load returned {loadedProjectLayout}");
+
+                    // If we get here I guess
                     _usingProjectLayout = true;
-                    //PART_DockingManager.SetCurrentValue(DockingManager.PersistStateProperty, false);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //viewModel.Log(e.Message);
+                logger.Error($"Project layout load error: {e.Message}");
                 throw;
             }
         }

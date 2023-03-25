@@ -51,7 +51,6 @@ public partial class TextureImportViewModel : ImportViewModel
     private IHashService _hashService;
     private IModTools _modTools;
 
-
     public TextureImportViewModel(
         IGameControllerFactory gameController,
         ISettingsManager settingsManager,
@@ -79,17 +78,20 @@ public partial class TextureImportViewModel : ImportViewModel
         _progressService = progressService;
         _parserService = parserService;
 
-        LoadFiles();
-
         PropertyChanged += TextureExportViewModel_PropertyChanged;
     }
-    private void TextureExportViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+
+    private async void TextureExportViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(IsActive))
         {
             if (IsActive)
             {
-                LoadFiles();
+                if (_refreshtask is null || (_refreshtask is not null && _refreshtask.IsCompleted))
+                {
+                    _refreshtask = LoadFilesAsync();
+                    await _refreshtask;
+                }
             }
         }
     }
@@ -123,8 +125,17 @@ public partial class TextureImportViewModel : ImportViewModel
             }
 
             // import settings from vanilla
-            item.Properties = ImportableItemViewModel.LoadXbmSettingsFromGame(item.BaseFile, _archiveManager, _projectManager, _parserService);
-            _loggerService?.Info($"Loaded settings for \"{item.Name}\": Parsed game file");
+            if (ImportableItemViewModel.TryLoadXbmSettingsFromGame(item.BaseFile, _archiveManager, _projectManager, _parserService, out var args))
+            {
+                item.Properties = args;
+                _loggerService?.Info($"Loaded settings for \"{item.Name}\": Parsed game file");
+            }
+            else
+            {
+                // fall back to default settings
+                item.Properties = ImportableItemViewModel.LoadXbmDefaultSettings(item.BaseFile);
+                _loggerService?.Warning($"Could not load settings for \"{item.Name}\" from game");
+            }
         }
     }
 
@@ -178,7 +189,6 @@ public partial class TextureImportViewModel : ImportViewModel
         IsProcessing = false;
 
         _watcherService.IsSuspended = false;
-        await _watcherService.RefreshAsync(_projectManager.ActiveProject);
         _progressService.IsIndeterminate = false;
 
         if (sucessful > 0)
@@ -282,22 +292,38 @@ public partial class TextureImportViewModel : ImportViewModel
         return false;
     }
 
-    protected override void LoadFiles()
+    protected override async Task LoadFilesAsync()
     {
         if (_projectManager.ActiveProject is null)
         {
             return;
         }
 
-        var files = Directory.GetFiles(_projectManager.ActiveProject.RawDirectory, "*", SearchOption.AllDirectories)
-            .Where(CanImport)
-            .Select(x => new ImportableItemViewModel(x, _archiveManager, _projectManager, _parserService));
+        var files = Directory.GetFiles(_projectManager.ActiveProject.RawDirectory, "*", SearchOption.AllDirectories).Where(CanImport);
+
+        // do not refresh if the files are the same
+        if(Enumerable.SequenceEqual( Items.Select(x => x.BaseFile), files))
+        {
+            return;
+        }
+
+        _progressService.IsIndeterminate = true;
 
         Items.Clear();
-        Items = new(files);
+        foreach (var filePath in files)
+        {
+            if (!Items.Any(x => x.BaseFile.Equals(filePath)))
+            {
+                var vm = await Task.Run(() => new ImportableItemViewModel(filePath, _archiveManager, _projectManager, _parserService));
+                Items.Add(vm);
+            }
+        }
 
         ProcessAllCommand.NotifyCanExecuteChanged();
+        _progressService.IsIndeterminate = false;
     }
+
+    
 
     private static bool CanImport(string x) => Enum.TryParse<ERawFileFormat>(Path.GetExtension(x).TrimStart('.'), out var _);
 

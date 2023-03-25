@@ -5,14 +5,10 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
-using SharpDX.DirectWrite;
 using WolvenKit.App.Controllers;
 using WolvenKit.App.Interaction;
-using WolvenKit.App.Models;
 using WolvenKit.App.Services;
 using WolvenKit.App.ViewModels.Tools;
 using WolvenKit.Common;
@@ -25,7 +21,6 @@ using WolvenKit.Core.Services;
 using WolvenKit.Modkit.RED4.Opus;
 using WolvenKit.RED4.Archive;
 using WolvenKit.RED4.CR2W;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace WolvenKit.App.ViewModels.Exporters;
 
@@ -81,25 +76,23 @@ public partial class TextureExportViewModel : ExportViewModel
         _parserService = red4ParserService;
         _progressService = progressService;
 
-        LoadFiles();
-
         PropertyChanged += TextureExportViewModel_PropertyChanged;
     }
 
     
 
-    private void TextureExportViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private async void TextureExportViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        switch (e.PropertyName)
+        if (e.PropertyName == nameof(IsActive))
         {
-            case nameof(IsActive):
-                if (IsActive)
+            if (IsActive)
+            {
+                if (_refreshtask is null || (_refreshtask is not null && _refreshtask.IsCompleted))
                 {
-                    LoadFiles();
+                    _refreshtask = LoadFilesAsync();
+                    await _refreshtask;
                 }
-                break;
-            default:
-                break;
+            }
         }
     }
 
@@ -160,7 +153,6 @@ public partial class TextureExportViewModel : ExportViewModel
         IsProcessing = false;
 
         _watcherService.IsSuspended = false;
-        await _watcherService.RefreshAsync(_projectManager.ActiveProject);
         _progressService.IsIndeterminate = false;
 
         if (sucessful > 0)
@@ -201,6 +193,7 @@ public partial class TextureExportViewModel : ExportViewModel
 
                 meshExportArgs.Archives.Insert(0, proj.AsArchive());
 
+                // Should check for depo here instead of dtl
                 meshExportArgs.MaterialRepo = _settingsManager.MaterialRepositoryPath;
             }
             if (item.Properties is MorphTargetExportArgs morphTargetExportArgs)
@@ -243,21 +236,35 @@ public partial class TextureExportViewModel : ExportViewModel
         return false;
     }
 
-    protected override void LoadFiles()
+    protected override async Task LoadFilesAsync()
     {
         if (_projectManager.ActiveProject is null)
         {
             return;
         }
 
-        var files = Directory.GetFiles(_projectManager.ActiveProject.ModDirectory, "*", SearchOption.AllDirectories)
-            .Where(CanExport)
-            .Select(x => new ExportableItemViewModel(x));
+        var files = Directory.GetFiles(_projectManager.ActiveProject.ModDirectory, "*", SearchOption.AllDirectories).Where(CanExport);
+
+        // do not refresh if the files are the same
+        if (Enumerable.SequenceEqual(Items.Select(x => x.BaseFile), files))
+        {
+            return;
+        }
+
+        _progressService.IsIndeterminate = true;
 
         Items.Clear();
-        Items = new(files);
+        foreach (var filePath in files)
+        {
+            if (!Items.Any(x => x.BaseFile.Equals(filePath)))
+            {
+                var vm = await Task.Run(() => new ExportableItemViewModel(filePath));
+                Items.Add(vm);
+            }
+        }
 
         ProcessAllCommand.NotifyCanExecuteChanged();
+        _progressService.IsIndeterminate = false;
     }
 
     private static bool CanExport(string x) => Enum.TryParse<ECookedFileFormat>(Path.GetExtension(x).TrimStart('.'), out var _);
@@ -399,4 +406,5 @@ public partial class TextureExportViewModel : ExportViewModel
             }
         }
     }
+
 }

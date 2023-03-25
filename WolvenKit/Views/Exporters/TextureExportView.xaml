@@ -240,6 +240,7 @@
                         AllowFiltering="True"
                         ColumnSizer="Star"
                         FilterRowCondition="Contains"
+                        FilterRowEditorType="TextBoxExt"
                         HeaderText="Name"
                         HorizontalHeaderContentAlignment="Left"
                         MappingName="Name" />
@@ -251,7 +252,7 @@
                         FilterRowCondition="Contains"
                         HeaderText="Export Task"
                         HorizontalHeaderContentAlignment="Left"
-                        MappingName="Properties" />
+                        MappingName="PropertiesDisplay" />
 
                 </syncfusion:SfDataGrid.Columns>
 

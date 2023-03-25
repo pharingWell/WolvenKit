@@ -253,8 +253,10 @@
                         </syncfusion:GridCheckBoxColumn.HeaderTemplate>
                     </syncfusion:GridCheckBoxColumn>
                     <syncfusion:GridTextColumn
+                        AllowFiltering="True"
                         ColumnSizer="Star"
                         FilterRowCondition="Contains"
+                        FilterRowEditorType="TextBoxExt"
                         HeaderText="Name"
                         HorizontalHeaderContentAlignment="Left"
                         MappingName="Name" />
@@ -264,7 +266,7 @@
                         FilterRowCondition="Contains"
                         HeaderText="Import Task"
                         HorizontalHeaderContentAlignment="Left"
-                        MappingName="Properties" />
+                        MappingName="PropertiesDisplay" />
                 </syncfusion:SfDataGrid.Columns>
 
             </syncfusion:SfDataGrid>

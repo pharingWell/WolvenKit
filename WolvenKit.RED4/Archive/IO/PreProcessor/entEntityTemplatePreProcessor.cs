@@ -1,10 +1,15 @@
+using WolvenKit.Core.Interfaces;
 using WolvenKit.RED4.Archive.Buffer;
 using WolvenKit.RED4.Types;
 
-namespace WolvenKit.RED4.Archive.IO;
+namespace WolvenKit.RED4.Archive.IO.PreProcessor;
 
 public class entEntityTemplatePreProcessor : IPreProcessor
 {
+    private readonly ILoggerService? _loggerService;
+
+    public entEntityTemplatePreProcessor(ILoggerService? loggerService) => _loggerService = loggerService;
+
     public void Process(RedBaseClass cls)
     {
         if (cls is not entEntityTemplate entEntityTemplate)
@@ -29,8 +34,6 @@ public class entEntityTemplatePreProcessor : IPreProcessor
         {
             foreach (var component in entEntityTemplate.Components)
             {
-                ArgumentNullException.ThrowIfNull(component);
-
                 rp.Chunks.Add(component);
             }
         }

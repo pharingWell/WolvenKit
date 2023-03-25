@@ -696,9 +696,9 @@ namespace WolvenKit.Modkit.RED4
 
             for (var i = 0; i < vertCount; i++)
             {
-                var x = (mesh.positions[i].X - qTrans.X) / qScale.X;
-                var y = (mesh.positions[i].Y - qTrans.Y) / qScale.Y;
-                var z = (mesh.positions[i].Z - qTrans.Z) / qScale.Z;
+                var x = qScale.X != 0 ? (mesh.positions[i].X - qTrans.X) / qScale.X : 0;
+                var y = qScale.Y != 0 ? (mesh.positions[i].Y - qTrans.Y) / qScale.Y : 0;
+                var z = qScale.Z != 0 ? (mesh.positions[i].Z - qTrans.Z) / qScale.Z : 0;
                 Re4Mesh.ExpVerts[i, 0] = Convert.ToInt16(x * 32767);
                 Re4Mesh.ExpVerts[i, 1] = Convert.ToInt16(y * 32767);
                 Re4Mesh.ExpVerts[i, 2] = Convert.ToInt16(z * 32767);
@@ -1742,7 +1742,7 @@ namespace WolvenKit.Modkit.RED4
             if (importGarmentSupport && cr2w.RootChunk is CMesh cMesh)
             {
 
-                if (meshes.All(x => x.garmentMorph?.Length > 0 && x.garmentSupportWeight?.Length > 0))
+                if (meshes.All(x => x.garmentMorph?.Length > 0))
                 {
                     var garmentMeshBlobChunk = GetParameter_meshMeshParamGarmentSupport(cMesh);
 
@@ -1806,7 +1806,6 @@ namespace WolvenKit.Modkit.RED4
             ArgumentNullException.ThrowIfNull(mesh.positions, nameof(mesh));
             ArgumentNullException.ThrowIfNull(mesh.indices, nameof(mesh));
             ArgumentNullException.ThrowIfNull(mesh.garmentMorph, nameof(mesh));
-            ArgumentNullException.ThrowIfNull(mesh.garmentSupportWeight, nameof(mesh));
 
             var vertBuffer = new MemoryStream();
             var vertBW = new BinaryWriter(vertBuffer);
@@ -1833,13 +1832,13 @@ namespace WolvenKit.Modkit.RED4
                 morphBW.Write(mesh.garmentMorph[v].Z);
 
                 var vertexHasValidCap = mesh.garmentSupportCap?.Length > v ? mesh.garmentSupportCap[v].X >= .5f : false;
-                flagBW.Write(Convert.ToByte(mesh.garmentSupportWeight.Length > v ? mesh.garmentSupportWeight[v].X * 255 : 0));
+                flagBW.Write(Convert.ToByte(mesh.garmentSupportWeight?.Length > v ? mesh.garmentSupportWeight[v].X * 255 : 0));
                 flagBW.Write(Convert.ToByte(vertexHasValidCap ? 1 : 0));
                 flagBW.Write((byte)0);
                 flagBW.Write((byte)0);
                 if (vertexHasValidCap)
                 {
-                    capVertices.Add(v);
+                    capVertices.Add(Convert.ToUInt32(v));
                 }
             }
 

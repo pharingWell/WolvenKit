@@ -8,6 +8,7 @@ env:
   FINALOUT: ./publish
   NAME: WolvenKit
   MREPO: ${{github.repository}}
+  WINGET_ID: REDModding.WolvenKit.Nightly
 
 jobs:
   check_date:
@@ -137,6 +138,7 @@ jobs:
      
 
       - name: Release dispatch
+        id: release_dispatch
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.VERSION_APP }}
@@ -147,3 +149,5 @@ jobs:
           repository: WolvenKit/WolvenKit-nightly-releases
           token: ${{ secrets.RELEASE_TOKEN }}
           body: "This is a beta release so you may encounter bugs. Please report them.\n${{ steps.tag_version.outputs.changelog }}"
+          
+    

@@ -15,7 +15,6 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using Semver;
 using WolvenKit.App.Controllers;
 using WolvenKit.App.Extensions;
@@ -111,9 +110,33 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         _tweakDBService = tweakDBService;
         _parser = parserService;
 
+        _progressService.PropertyChanged += ProgressService_PropertyChanged;
+
         UpdateTitle();
 
         ShowFirstTimeSetup();
+    }
+
+    private void ProgressService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IProgressService<double>.Status))
+        {
+            Application.Current.Dispatcher.BeginInvoke(() =>
+            {
+                TaskStatus = _progressService.Status;
+                switch (TaskStatus)
+                {
+                    case EStatus.Running:
+                        Status = EAppStatus.Busy;
+                        break;
+                    case EStatus.Ready:
+                        Status = EAppStatus.Ready;
+                        break;
+                    default:
+                        break;
+                }
+            }, DispatcherPriority.ContextIdle);
+        }
     }
 
     #region init
@@ -138,85 +161,58 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         if (!TryLoadingArguments())
         {
             ShowHomePageSync();
-        }
-
-        AddDockedPanes();       
+        }    
 
         CheckForUpdatesCommand.SafeExecute(true);
     }
 
-    private void AddDockedPanes()
+    public bool AddDockedPane(string paneString)
     {
-        var fileExists = File.Exists(Path.Combine(ISettingsManager.GetAppData(), "DockPanes.txt"));
-        List<string> savedPanes = new();
-
-        if (fileExists)
+        if (Enum.TryParse<EDockedViews>(paneString, out var pane))
         {
-            savedPanes = File.ReadLines(Path.Combine(ISettingsManager.GetAppData(), "DockPanes.txt")).ToList();
-        }
-
-        // only add existing docked views
-        if (fileExists && savedPanes.Any())
-        {
-            foreach (var paneString in savedPanes)
+            switch (pane)
             {
-                if (Enum.TryParse<EDockedViews>(paneString, out var pane))
+                case EDockedViews.LogViewModel:
+                    DockedViews.Add(_paneViewModelFactory.LogViewModel());
+                    return true;
+                case EDockedViews.ProjectExplorerViewModel:
+                    DockedViews.Add(_paneViewModelFactory.ProjectExplorerViewModel(this));
+                    return true;
+                case EDockedViews.PropertiesViewModel:
+                    DockedViews.Add(_paneViewModelFactory.PropertiesViewModel());
+                    return true;
+                case EDockedViews.AssetBrowserViewModel:
+                    DockedViews.Add(_paneViewModelFactory.AssetBrowserViewModel(this));
+                    return true;
+                case EDockedViews.TweakBrowserViewModel:
+                    DockedViews.Add(_paneViewModelFactory.TweakBrowserViewModel(this));
+                    return true;
+                case EDockedViews.LocKeyBrowserViewModel:
+                    DockedViews.Add(_paneViewModelFactory.LocKeyBrowserViewModel());
+                    return true;
+                case EDockedViews.TextureImportViewModel:
                 {
-                    switch (pane)
-                    {
-                        case EDockedViews.LogViewModel:
-                            DockedViews.Add(_paneViewModelFactory.LogViewModel());
-                            break;
-                        case EDockedViews.ProjectExplorerViewModel:
-                            DockedViews.Add(_paneViewModelFactory.ProjectExplorerViewModel(this));
-                            break;
-                        case EDockedViews.PropertiesViewModel:
-                            DockedViews.Add(_paneViewModelFactory.PropertiesViewModel());
-                            break;
-                        case EDockedViews.AssetBrowserViewModel:
-                            DockedViews.Add(_paneViewModelFactory.AssetBrowserViewModel(this));
-                            break;
-                        case EDockedViews.TweakBrowserViewModel:
-                            DockedViews.Add(_paneViewModelFactory.TweakBrowserViewModel(this));
-                            break;
-                        case EDockedViews.LocKeyBrowserViewModel:
-                            DockedViews.Add(_paneViewModelFactory.LocKeyBrowserViewModel());
-                            break;
-                        case EDockedViews.TextureImportViewModel:
-                        {
-                            var vm = _paneViewModelFactory.TextureImportViewModel();
-                            vm.State = DockState.Dock;
-                            vm.SideInDockedMode = DockSide.Right;
-                            DockedViews.Add(vm);
-                            break;
-                        }
-                        case EDockedViews.TextureExportViewModel:
-                        {
-                            var vm = _paneViewModelFactory.TextureExportViewModel();
-                            vm.State = DockState.Dock;
-                            vm.SideInDockedMode = DockSide.Right;
-                            DockedViews.Add(vm);
-                            break;
-                        }
-                        default:
-                            break;
-                    }
+                    var vm = _paneViewModelFactory.TextureImportViewModel();
+                    vm.State = DockState.Dock;
+                    vm.SideInDockedMode = DockSide.Right;
+                    DockedViews.Add(vm);
+                    return true;
                 }
+                case EDockedViews.TextureExportViewModel:
+                {
+                    var vm = _paneViewModelFactory.TextureExportViewModel();
+                    vm.State = DockState.Dock;
+                    vm.SideInDockedMode = DockSide.Right;
+                    DockedViews.Add(vm);
+                    return true;
+                }
+                default:
+                    break;
             }
         }
-        else
-        {
-            DockedViews = new ObservableCollection<IDockElement> {
-                _paneViewModelFactory.LogViewModel(),
-                _paneViewModelFactory.ProjectExplorerViewModel(this),
-                _paneViewModelFactory.PropertiesViewModel(),
-                _paneViewModelFactory.AssetBrowserViewModel(this),
-                _paneViewModelFactory.TweakBrowserViewModel(this),
-                _paneViewModelFactory.LocKeyBrowserViewModel()
-            };
-        }
-    }
 
+        return false;
+    }
 
     private bool TryLoadingArguments()
     {
@@ -246,7 +242,7 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         // open files
         if (Enum.TryParse<ERedExtension>(Path.GetExtension(filePath)[1..], out var _))
         {
-            _ = OpenFileAsync(new FileModel(filePath, ActiveProject.NotNull())); // TODO
+            _ = OpenFileAsync(FileModel.Create(filePath, ActiveProject.NotNull())); // TODO
             return true;
         }
 
@@ -268,12 +264,34 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
 
     #region commands
 
-    [RelayCommand] private async Task PackMod() => await LaunchAsync(new LaunchProfile() { CreateBackup = true });
-    [RelayCommand] private async Task PackRedMod() => await LaunchAsync(new LaunchProfile() { CreateBackup = true, IsRedmod = true });
-    [RelayCommand] private async Task PackInstallMod() => await LaunchAsync(new LaunchProfile() { Install = true });
-    [RelayCommand] private async Task PackInstallRedMod() => await LaunchAsync(new LaunchProfile() { Install = true, IsRedmod = true });
-    [RelayCommand] private async Task PackInstallRun() => await LaunchAsync(new LaunchProfile() { Install = true, LaunchGame = true });
-    [RelayCommand] private async Task PackInstallRedModRun() => await LaunchAsync(new LaunchProfile() { Install = true, LaunchGame = true, IsRedmod = true, DeployWithRedmod = true });
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(PackModCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PackRedModCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PackInstallModCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PackInstallRedModCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PackInstallModCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PackInstallRunCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PackInstallRedModRunCommand))]
+    private EStatus _taskStatus;
+    private bool CanStartTask() => TaskStatus == EStatus.Ready;
+
+    [RelayCommand(CanExecute = nameof(CanStartTask))]
+    private async Task PackMod() => await LaunchAsync(new LaunchProfile() { CreateBackup = true });
+
+    [RelayCommand(CanExecute = nameof(CanStartTask))]
+    private async Task PackRedMod() => await LaunchAsync(new LaunchProfile() { CreateBackup = true, IsRedmod = true });
+
+    [RelayCommand(CanExecute = nameof(CanStartTask))]
+    private async Task PackInstallMod() => await LaunchAsync(new LaunchProfile() { Install = true });
+
+    [RelayCommand(CanExecute = nameof(CanStartTask))]
+    private async Task PackInstallRedMod() => await LaunchAsync(new LaunchProfile() { Install = true, IsRedmod = true });
+
+    [RelayCommand(CanExecute = nameof(CanStartTask))]
+    private async Task PackInstallRun() => await LaunchAsync(new LaunchProfile() { Install = true, LaunchGame = true });
+
+    [RelayCommand(CanExecute = nameof(CanStartTask))]
+    private async Task PackInstallRedModRun() => await LaunchAsync(new LaunchProfile() { Install = true, LaunchGame = true, IsRedmod = true, DeployWithRedmod = true });
 
     [RelayCommand]
     private async Task CheckForUpdates(bool checkForCheckForUpdates)
@@ -495,16 +513,14 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
                 // open an existing project
                 else
                 {
-                    CommonOpenFileDialog dlg = new()
+                    var dlg = new OpenFileDialog
                     {
-                        AllowNonFileSystemItems = false,
                         Multiselect = false,
-                        IsFolderPicker = false,
-                        Title = "Locate the WolvenKit project"
+                        Title = "Locate the WolvenKit project",
+                        Filter = "Cyberpunk 2077 Project|*.cpmodproj"
                     };
-                    dlg.Filters.Add(new CommonFileDialogFilter("Cyberpunk 2077 Project", "*.cpmodproj"));
 
-                    if (dlg.ShowDialog() != CommonFileDialogResult.Ok)
+                    if (dlg.ShowDialog() != true)
                     {
                         return;
                     }
@@ -573,11 +589,12 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
 
         if (project == null)
         {
-            CloseDialogCommand.Execute(null);
+            CloseDialog();
             return;
         }
-        CloseModalCommand.Execute(null);
-        await Task.Run(() => NewProjectTask(project));
+        CloseModal();
+        await NewProjectTask(project);
+        UpdateTitle();
     }
 
     private async Task NewProjectTask(ProjectWizardViewModel project)
@@ -604,22 +621,19 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
             // If the assets can't be found, stop here and notify the user in the log
             if (!File.Exists(_settingsManager.CP77ExecutablePath))
             {
-                UpdateTitle();
                 _loggerService.Warning($"Cyberpunk 2077 executable path is not set. Asset browser disabled.");
             }
             else
             {
-                await _gameControllerFactory.GetController().HandleStartup().ContinueWith(_ =>
-                {
-                    UpdateTitle();
-                    _notificationService.Success("Project " + project.ProjectName + " loaded!");
-                }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                await _gameControllerFactory.GetController().HandleStartup();
+                _notificationService.Success("Project " + project.ProjectName + " loaded!");
             }
         }
         catch (Exception ex)
         {
-            _loggerService.Error(ex.Message);
             _loggerService.Error("Failed to create a new project!");
+            _loggerService.Error(ex);
+            
         }
 
     }
@@ -811,7 +825,6 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         await Task.Run(() => OpenFromNewFileTask(file)).ContinueWith(async (result) =>
         {
             _watcherService.IsSuspended = false;
-            await _watcherService.RefreshAsync(ActiveProject);
             if (file.FullPath is not null)
             {
                 await RequestFileOpen(file.FullPath);
@@ -1003,7 +1016,7 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
         _watcherService.IsSuspended = true;
         await _gameControllerFactory.GetController().LaunchProject(profile);
         _watcherService.IsSuspended = false;
-        await _watcherService.RefreshAsync(ActiveProject);
+        _watcherService.QueueRefresh();
     }
 
     [RelayCommand]
@@ -1430,7 +1443,7 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
                 ActiveDocument?.SaveCommand.SafeExecute();
             }
             _watcherService.IsSuspended = false;
-            _ = _watcherService.RefreshAsync(ActiveProject);
+            _watcherService.QueueRefresh();
         }
         else
         {

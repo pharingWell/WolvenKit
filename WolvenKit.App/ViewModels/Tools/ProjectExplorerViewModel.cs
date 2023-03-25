@@ -61,8 +61,6 @@ public partial class ProjectExplorerViewModel : ToolViewModel
 
     #endregion fields
 
-    #region constructors
-
     public ProjectExplorerViewModel(
         AppViewModel appViewModel,
         IProjectManager projectManager,
@@ -95,11 +93,10 @@ public partial class ProjectExplorerViewModel : ToolViewModel
             .BindToObservableList(out _observableList)
             .Subscribe(OnNext);
 
-        _projectManager.ActiveProjectChanged += _projectManager_ActiveProjectChanged;
-
+        _projectManager.ActiveProjectChanged += ProjectManager_ActiveProjectChanged;
     }
 
-    private void _projectManager_ActiveProjectChanged(object? sender, ActiveProjectChangedEventArgs e)
+    private void ProjectManager_ActiveProjectChanged(object? sender, ActiveProjectChangedEventArgs e)
     {
         if (e.Project is not null)
         {
@@ -115,21 +112,60 @@ public partial class ProjectExplorerViewModel : ToolViewModel
         if (value is not null)
         {
             _mainViewModel.SelectFileCommand.SafeExecute(value);
+                
+            // toggle context menu buttons
+            if (SelectedItems is not null && SelectedItems.Any())
+            {
+                var selected = SelectedItems.OfType<FileModel>().ToList();
+                // if all are in raw folder, then enable convertFrom
+                if (selected.All(x => IsInRawFolder(x)))
+                {
+                    ConvertToIsEnabled = false;
+                    ConvertFromIsEnabled = true;
+                }
+                // if all are in archive folder, then enable convertTo
+                else if (selected.All(x => IsInArchiveFolder(x)))
+                {
+                    ConvertToIsEnabled = true;
+                    ConvertFromIsEnabled = false;
+                }
+                // else disable both
+                else
+                {
+                    ConvertToIsEnabled = false;
+                    ConvertFromIsEnabled = false;
+                }
+            }
+            else if (value is not null)
+            {
+                if (IsInRawFolder(value))
+                {
+                    ConvertToIsEnabled = false;
+                    ConvertFromIsEnabled = true;
+                }
+                // if all are in archive folder, then enable convertTo
+                else if (IsInArchiveFolder(value))
+                {
+                    ConvertToIsEnabled = true;
+                    ConvertFromIsEnabled = false;
+                }
+                // else disable both
+                else
+                {
+                    ConvertToIsEnabled = false;
+                    ConvertFromIsEnabled = false;
+                }
+            }
         }
     }
 
     private void OnNext(IChangeSet<FileModel, ulong> obj)
     {
-        Application.Current.Dispatcher.Invoke(new Action(delegate ()
+        Application.Current.Dispatcher.BeginInvoke(new Action(delegate ()
         {
-            BeforeDataSourceUpdate?.Invoke(this, EventArgs.Empty);
             BindGrid1 = new ObservableCollection<FileModel>(_observableList.Items);
-            AfterDataSourceUpdate?.Invoke(this, EventArgs.Empty);
         }), DispatcherPriority.ContextIdle);
     }
-
-
-    #endregion constructors
 
     #region properties
 
@@ -184,6 +220,9 @@ public partial class ProjectExplorerViewModel : ToolViewModel
 
     [ObservableProperty] private int _selectedTabIndex;
 
+    [ObservableProperty] private bool _convertToIsEnabled;
+    [ObservableProperty] private bool _convertFromIsEnabled;
+
     public FileModel? LastSelected => _watcherService.LastSelect;
 
     #endregion properties
@@ -209,7 +248,7 @@ public partial class ProjectExplorerViewModel : ToolViewModel
     /// </summary>
     private bool CanRefresh() => ActiveProject != null;
     [RelayCommand(CanExecute = nameof(CanRefresh))]
-    private Task Refresh() => _watcherService.RefreshAsync(ActiveProject.NotNull());
+    private void Refresh() => _watcherService.QueueRefresh();
 
     /// <summary>
     /// Opens the currently selected folder in the tab
@@ -277,7 +316,6 @@ public partial class ProjectExplorerViewModel : ToolViewModel
             }
 
             _watcherService.IsSuspended = false;
-            await _watcherService.RefreshAsync(ActiveProject.NotNull());
 
             _progressService.Completed();
         }
@@ -460,6 +498,7 @@ public partial class ProjectExplorerViewModel : ToolViewModel
 
     #region red4
 
+    private bool IsInArchiveFolder(FileModel model) => ActiveProject is not null && model.FullName.Contains(ActiveProject.ModDirectory);
     private bool IsInRawFolder(FileModel model) => ActiveProject is not null && model.FullName.Contains(ActiveProject.RawDirectory);
 
     private bool CanBk2Import() => SelectedItem != null && IsInRawFolder(SelectedItem) && SelectedItem.Extension.ToLower().Contains("avi") && ActiveProject is not null;
@@ -539,7 +578,6 @@ public partial class ProjectExplorerViewModel : ToolViewModel
         }
 
         _watcherService.IsSuspended = false;
-        await _watcherService.RefreshAsync(ActiveProject.NotNull());
 
         _progressService.Completed();
     }
@@ -601,7 +639,6 @@ public partial class ProjectExplorerViewModel : ToolViewModel
         }
 
         _watcherService.IsSuspended = false;
-        await _watcherService.RefreshAsync(ActiveProject.NotNull());
 
         _progressService.Completed();
     }
@@ -698,11 +735,6 @@ public partial class ProjectExplorerViewModel : ToolViewModel
     #region Methods
 
     public AppViewModel GetAppViewModel() => _mainViewModel;
-
-    public event EventHandler? BeforeDataSourceUpdate;
-    public event EventHandler? AfterDataSourceUpdate;
-
-    
 
     /// <summary>
     /// Initialize Avalondock specific defaults that are specific to this tool window.

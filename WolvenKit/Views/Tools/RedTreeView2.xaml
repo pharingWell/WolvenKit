@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="clr-namespace:WolvenKit.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:WolvenKit.Helpers"
     xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
@@ -37,6 +38,7 @@
         AllowEditing="False"
         AllowFiltering="True"
         AllowResizingColumns="True"
+        AllowTriStateSorting="True"
         AutoExpandMode="RootNodesExpanded"
         AutoGenerateColumnsMode="None"
         ChildPropertyName="Properties"
@@ -48,9 +50,32 @@
         SelectedItem="{Binding ElementName=uc, Path=SelectedItem}"
         SelectedItems="{Binding ElementName=uc, Path=SelectedItems}"
         SelectionMode="Extended">
+        <syncfusion:SfTreeGrid.Resources>
+            <Style TargetType="syncfusion:TreeGridRowControl">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Path=IsDefault}" Value="true">
+                        <Setter Property="Foreground" Value="Gray" />
+                        <Setter Property="FontStyle" Value="Italic" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Path=IsDefault}" Value="false">
+                        <Setter Property="Foreground" Value="White" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </syncfusion:SfTreeGrid.Resources>
+        <syncfusion:SfTreeGrid.ExpanderContextMenu>
+            <ContextMenu>
+                <MenuItem />
+            </ContextMenu>
+        </syncfusion:SfTreeGrid.ExpanderContextMenu>
         <syncfusion:SfTreeGrid.RecordContextMenu>
-            <ContextMenu />
+            <ContextMenu>
+                <MenuItem />
+            </ContextMenu>
         </syncfusion:SfTreeGrid.RecordContextMenu>
+        <syncfusion:SfTreeGrid.SortColumnDescriptions>
+            <syncfusion:SortColumnDescription ColumnName="DisplayName" SortDirection="Ascending" />
+        </syncfusion:SfTreeGrid.SortColumnDescriptions>
         <syncfusion:SfTreeGrid.Columns>
             <syncfusion:TreeGridColumns>
                 <syncfusion:TreeGridTextColumn HeaderText="Name" MappingName="DisplayName" />

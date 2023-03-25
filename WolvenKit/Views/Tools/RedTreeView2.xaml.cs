@@ -1,7 +1,9 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using Syncfusion.Data;
 using Syncfusion.UI.Xaml.TreeGrid;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.Helpers;
 
 namespace WolvenKit.Views.Tools;
 /// <summary>
@@ -45,7 +47,9 @@ public partial class RedTreeView2 : UserControl
     public RedTreeView2()
     {
         InitializeComponent();
-        
+
+        RedTreeView.SortComparers.Add(new SortComparer() { Comparer = new PropertyViewComparer(), PropertyName = "DisplayName" });
+
         RedTreeView.TreeGridContextMenuOpening += RedTreeView_OnTreeGridContextMenuOpening;
     }
 
@@ -70,6 +74,11 @@ public partial class RedTreeView2 : UserControl
         {
             e.ContextMenu.Items.Add(new MenuItem() { Header = "Add item", Command = arrayPropertyViewModel.AddArrayItemCommand });
             e.ContextMenu.Items.Add(new MenuItem() { Header = "Clear", Command = arrayPropertyViewModel.ClearArrayCommand });
+        }
+
+        if (e.ContextMenu.Items.Count == 0)
+        {
+            e.Handled = true;
         }
     }
 }

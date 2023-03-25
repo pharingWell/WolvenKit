@@ -16,7 +16,7 @@ public abstract partial class PropertyViewModel : ObservableObject
     [ObservableProperty] private string _displayValue = "";
     [ObservableProperty] private string _displayType = "";
 
-    public bool IsDefault => RedPropertyInfo.ExtendedPropertyInfo?.IsDefault(DataObject) ?? true;
+    public bool IsDefault { get; protected set; }
 
 
     public ObservableCollection<PropertyViewModel> Properties { get; } = new();
@@ -30,14 +30,27 @@ public abstract partial class PropertyViewModel : ObservableObject
         
         FetchProperties();
         UpdateInfos();
+        SetIsDefault();
 
         PropertyChanged += delegate(object? sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName == nameof(DataObject))
             {
-                OnPropertyChanged(nameof(IsDefault));
+                SetIsDefault();
             }
         };
+    }
+
+    private void SetIsDefault()
+    {
+        if (Parent == null)
+        {
+            IsDefault = false;
+        }
+        else
+        {
+            IsDefault = RedPropertyInfo.ExtendedPropertyInfo?.IsDefault(DataObject) ?? true;
+        }
     }
 
     protected abstract void FetchProperties();

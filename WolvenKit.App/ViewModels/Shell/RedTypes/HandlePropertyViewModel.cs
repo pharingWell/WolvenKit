@@ -12,20 +12,13 @@ public class HandlePropertyViewModel : PropertyViewModel<IRedBaseHandle>
 
     protected override void FetchProperties()
     {
-        if (_data == null)
+        var val = _data?.GetValue();
+        if (val == null)
         {
             return;
         }
 
-        ExtendedTypeInfo typeInfo;
-        if (_data != null && _data.GetValue() != null)
-        {
-            typeInfo = RedReflection.GetTypeInfo(_data.GetValue());
-        }
-        else
-        {
-            throw new ArgumentNullException(nameof(typeInfo));
-        }
+        var typeInfo = RedReflection.GetTypeInfo(val);
 
         Properties.Clear();
 
@@ -33,14 +26,14 @@ public class HandlePropertyViewModel : PropertyViewModel<IRedBaseHandle>
         {
             ArgumentNullException.ThrowIfNull(propertyInfo.RedName);
 
-            Properties.Add(Create(this, new RedPropertyInfo(propertyInfo), _data.GetValue().GetProperty(propertyInfo.RedName)));
+            Properties.Add(Create(this, new RedPropertyInfo(propertyInfo), val.GetProperty(propertyInfo.RedName)));
         }
 
         foreach (var propertyInfo in typeInfo.DynamicPropertyInfos)
         {
             ArgumentNullException.ThrowIfNull(propertyInfo.RedName);
 
-            Properties.Add(Create(this, new RedPropertyInfo(propertyInfo), _data.GetValue().GetProperty(propertyInfo.RedName)));
+            Properties.Add(Create(this, new RedPropertyInfo(propertyInfo), val.GetProperty(propertyInfo.RedName)));
         }
     }
 
@@ -48,7 +41,7 @@ public class HandlePropertyViewModel : PropertyViewModel<IRedBaseHandle>
     {
         base.UpdateInfos();
 
-        DisplayValue = _data?.GetValue() != null ? $"{{{PrettyValue(_data.GetValue().ToString())}}} {GetDisplayProperty()}" : "null";
+        DisplayValue = _data?.GetValue() != null ? $"{{{PrettyValue(_data.GetValue()!.ToString())}}} {GetDisplayProperty()}" : "null";
     }
 
     protected override string? GetDisplayProperty() => Properties.FirstOrDefault(x => x.DisplayName == "debugName")?.DisplayValue;

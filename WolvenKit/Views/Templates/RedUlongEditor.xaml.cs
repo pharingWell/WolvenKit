@@ -9,7 +9,7 @@ namespace WolvenKit.Views.Editors
     /// <summary>
     /// Interaction logic for RedFloatEditor.xaml
     /// </summary>
-    public partial class RedUlongEditor : UserControl
+    public partial class RedUlongEditor
     {
         public RedUlongEditor() => InitializeComponent();
 
@@ -30,28 +30,28 @@ namespace WolvenKit.Views.Editors
 
         private void SetRedValue(string value)
         {
-            switch (RedNumber)
+            switch (ViewModel.DataObject)
             {
                 case CRUID:
-                    SetCurrentValue(RedNumberProperty, (CRUID)ulong.Parse(value));
+                    ViewModel.DataObject = (CRUID)ulong.Parse(value);
                     break;
                 case CUInt64:
-                    SetCurrentValue(RedNumberProperty, (CUInt64)ulong.Parse(value));
+                    ViewModel.DataObject = (CUInt64)ulong.Parse(value);
                     break;
                 case TweakDBID:
-                    SetCurrentValue(RedNumberProperty, (TweakDBID)ulong.Parse(value));
+                    ViewModel.DataObject = (TweakDBID)ulong.Parse(value);
                     break;
                 default:
                     break;
             }
         }
 
-        private string GetValueFromRedValue() => RedNumber switch
+        private string GetValueFromRedValue() => ViewModel.DataObject switch
         {
             CRUID cruid => ((ulong)cruid).ToString(),
             CUInt64 uint64 => ((ulong)uint64).ToString(),
             TweakDBID tdbid => ((ulong)tdbid).ToString(),
-            _ => throw new ArgumentOutOfRangeException(nameof(RedNumber)),
+            _ => throw new ArgumentOutOfRangeException(nameof(ViewModel.DataObject)),
         };
 
         private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)

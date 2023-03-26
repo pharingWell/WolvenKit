@@ -10,6 +10,11 @@ public class ClassPropertyViewModel : PropertyViewModel<RedBaseClass>
     {
     }
 
+    protected override void SetValue(PropertyViewModel propertyViewModel)
+    {
+        _data?.SetProperty(propertyViewModel.DisplayName, (IRedType?)propertyViewModel.DataObject);
+    }
+
     protected override void FetchProperties()
     {
         if (_data == null)

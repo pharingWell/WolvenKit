@@ -6,7 +6,7 @@ namespace WolvenKit.Views.Editors
     /// <summary>
     /// Interaction logic for RedTypeView.xaml
     /// </summary>
-    public partial class RedTypeView : ReactiveUserControl<ChunkViewModel>
+    public partial class RedTypeView : ReactiveUserControl<PropertyViewModel>
     {
         public RedTypeView()
         {
@@ -14,7 +14,7 @@ namespace WolvenKit.Views.Editors
 
             this.WhenActivated(disposables =>
             {
-                if (DataContext is ChunkViewModel vm)
+                if (DataContext is PropertyViewModel vm)
                 {
                     SetCurrentValue(ViewModelProperty, vm);
                 }

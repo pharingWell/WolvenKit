@@ -36,9 +36,17 @@ public abstract partial class PropertyViewModel : ObservableObject
         {
             if (args.PropertyName == nameof(DataObject))
             {
+                Parent?.SetValue(this);
+
+                UpdateInfos();
                 SetIsDefault();
             }
         };
+    }
+
+    protected virtual void SetValue(PropertyViewModel propertyViewModel)
+    {
+
     }
 
     private void SetIsDefault()

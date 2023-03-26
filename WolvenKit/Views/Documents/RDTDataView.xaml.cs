@@ -46,14 +46,6 @@ namespace WolvenKit.Views.Documents
                       viewmodel => viewmodel.SelectedProperties,
                       view => view.RedTreeView.SelectedItems)
                   .DisposeWith(disposables);
-                this.OneWayBind(ViewModel,
-                      viewmodel => viewmodel.SelectedProperty,
-                      view => view.CustomPG.DataContext)
-                  .DisposeWith(disposables);
-                this.OneWayBind(ViewModel,
-                      viewmodel => viewmodel.SelectedProperty,
-                      view => view.CustomPG.ViewModel)
-                  .DisposeWith(disposables);
 
 
                 var globals = Locator.Current.GetService<IOptions<Globals>>();

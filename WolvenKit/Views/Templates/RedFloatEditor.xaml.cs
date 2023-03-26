@@ -12,10 +12,8 @@ namespace WolvenKit.Views.Editors
     /// <summary>
     /// Interaction logic for RedFloatEditor.xaml
     /// </summary>
-    public partial class RedFloatEditor : UserControl
+    public partial class RedFloatEditor
     {
-        public ChunkViewModel cvm => DataContext as ChunkViewModel;
-
         public RedFloatEditor()
         {
             InitializeComponent();
@@ -50,14 +48,7 @@ namespace WolvenKit.Views.Editors
         {
             try
             {
-                if (cvm != null)
-                {
-                    cvm.Data = (CFloat)float.Parse(value);
-                }
-                else
-                {
-                    SetCurrentValue(RedNumberProperty, (CFloat)float.Parse(value));
-                }
+                ViewModel.DataObject = (CFloat)float.Parse(value);
             }
             catch (FormatException)
             {
@@ -65,7 +56,7 @@ namespace WolvenKit.Views.Editors
             }
         }
 
-        private string GetValueFromRedValue() => cvm != null ? ((float)(CFloat)cvm.Data).ToString("G9") : ((float)RedNumber).ToString("G9");
+        private string GetValueFromRedValue() => ((float)(CFloat)ViewModel.DataObject).ToString("G9");
         private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
         {
             var tb = (TextBox)e.Source;

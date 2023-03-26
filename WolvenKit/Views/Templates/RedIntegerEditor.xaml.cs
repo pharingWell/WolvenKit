@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using ReactiveUI;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.Views.Editors
@@ -8,7 +9,7 @@ namespace WolvenKit.Views.Editors
     /// <summary>
     /// Interaction logic for RedIntegerEditor.xaml
     /// </summary>
-    public partial class RedIntegerEditor : UserControl
+    public partial class RedIntegerEditor
     {
         public RedIntegerEditor()
         {
@@ -41,16 +42,27 @@ namespace WolvenKit.Views.Editors
 
         #region methods
 
-        private int GetNumberDecimalDigits() => 0;
+        private int GetNumberDecimalDigits() => ViewModel.DataObject switch
+        {
+            CDouble => 17,
+            CUInt8 => 0,
+            CInt8 => 0,
+            CInt16 => 0,
+            CUInt16 => 0,
+            CInt32 => 0,
+            CUInt32 => 0,
+            CInt64 => 0,
+            CFloat  => 9,
+            _ => throw new ArgumentOutOfRangeException(nameof(ViewModel.DataObject)),
+        };
 
         private double GetMinValue()
         {
-            if (RedInteger != null)
+            if (ViewModel != null)
             {
-                return RedInteger switch
+                return ViewModel.DataObject switch
                 {
                     CDouble => double.MinValue,
-
                     CUInt8 => byte.MinValue,
                     CInt8 => sbyte.MinValue,
                     CInt16 => short.MinValue,
@@ -59,7 +71,7 @@ namespace WolvenKit.Views.Editors
                     CUInt32 => uint.MinValue,
                     CInt64 => long.MinValue,
                     CFloat => float.MinValue,
-                    _ => throw new ArgumentOutOfRangeException(nameof(RedInteger))
+                    _ => throw new ArgumentOutOfRangeException(nameof(ViewModel.DataObject))
                 };
             }
             return double.MinValue;
@@ -67,9 +79,9 @@ namespace WolvenKit.Views.Editors
 
         private double GetMaxValue()
         {
-            if (RedInteger != null)
+            if (ViewModel != null)
             {
-                return RedInteger switch
+                return ViewModel.DataObject switch
                 {
                     CDouble => double.MaxValue,
 
@@ -81,7 +93,7 @@ namespace WolvenKit.Views.Editors
                     CUInt32 => uint.MaxValue,
                     CInt64 => long.MaxValue,
                     CFloat => float.MaxValue,
-                    _ => throw new ArgumentOutOfRangeException(nameof(RedInteger))
+                    _ => throw new ArgumentOutOfRangeException(nameof(ViewModel.DataObject))
                 };
             }
             return double.MinValue;
@@ -89,34 +101,34 @@ namespace WolvenKit.Views.Editors
 
         private void SetRedValue(double value)
         {
-            switch (RedInteger)
+            switch (ViewModel.DataObject)
             {
                 case CDouble:
-                    SetCurrentValue(RedIntegerProperty, (CDouble)value);
+                    ViewModel.DataObject = (CDouble)value;
                     break;
                 case CFloat:
-                    SetCurrentValue(RedIntegerProperty, (CFloat)value);
+                    ViewModel.DataObject = (CFloat)value;
                     break;
                 case CUInt8:
-                    SetCurrentValue(RedIntegerProperty, (CUInt8)value);
+                    ViewModel.DataObject = (CUInt8)value;
                     break;
                 case CInt8:
-                    SetCurrentValue(RedIntegerProperty, (CInt8)value);
+                    ViewModel.DataObject = (CInt8)value;
                     break;
                 case CInt16:
-                    SetCurrentValue(RedIntegerProperty, (CInt16)value);
+                    ViewModel.DataObject = (CInt16)value;
                     break;
                 case CUInt16:
-                    SetCurrentValue(RedIntegerProperty, (CUInt16)value);
+                    ViewModel.DataObject = (CUInt16)value;
                     break;
                 case CInt32:
-                    SetCurrentValue(RedIntegerProperty, (CInt32)value);
+                    ViewModel.DataObject = (CInt32)value;
                     break;
                 case CUInt32:
-                    SetCurrentValue(RedIntegerProperty, (CUInt32)value);
+                    ViewModel.DataObject = (CUInt32)value;
                     break;
                 case CInt64:
-                    SetCurrentValue(RedIntegerProperty, (CInt64)value);
+                    ViewModel.DataObject = (CInt64)value;
                     break;
                 default:
                     break;
@@ -124,7 +136,7 @@ namespace WolvenKit.Views.Editors
 
         }
 
-        private double GetValueFromRedValue() => RedInteger switch
+        private double GetValueFromRedValue() => ViewModel.DataObject switch
         {
             CDouble cruid => (double)cruid,
             CUInt8 uint64 => uint64,
@@ -135,7 +147,7 @@ namespace WolvenKit.Views.Editors
             CUInt32 uint64 => uint64,
             CInt64 uint64 => uint64,
             CFloat uint64 => uint64,
-            _ => throw new ArgumentOutOfRangeException(nameof(RedInteger)),
+            _ => throw new ArgumentOutOfRangeException(nameof(ViewModel.DataObject)),
         };
 
         #endregion

@@ -1,22 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using WolvenKit.App.ViewModels.Shell;
-using WolvenKit.Views.Tools;
 
 namespace WolvenKit.Views.UserControls;
 /// <summary>
@@ -25,6 +13,7 @@ namespace WolvenKit.Views.UserControls;
 public partial class Breadcrumb : UserControl
 {
     public event EventHandler<EventArgs> SelectedItemChanged; 
+    public event EventHandler<TextPathEventArgs> TextPathChanged; 
 
     public static readonly DependencyProperty ItemsSourceProperty =
         DependencyProperty.Register(nameof(ItemsSource), typeof(List<PropertyViewModel>), typeof(Breadcrumb), new PropertyMetadata(OnItemsSourceChanged));
@@ -71,6 +60,7 @@ public partial class Breadcrumb : UserControl
 
     private void BuildPanel()
     {
+        HideEditor();
         SetCurrentValue(SelectedItemProperty, null);
 
         StackPanel.Children.Clear();
@@ -104,6 +94,11 @@ public partial class Breadcrumb : UserControl
         if (sender is not TextBlock block || block.Tag is not PropertyViewModel propertyViewModel)
         {
             return;
+        }
+
+        if (_popup != null)
+        {
+            _popup.SetCurrentValue(Popup.IsOpenProperty, false);
         }
 
         if (block.Text.Trim() != ">")
@@ -140,8 +135,66 @@ public partial class Breadcrumb : UserControl
         }
 
         _popup.SetCurrentValue(Popup.IsOpenProperty, false);
-        _popup = null;
 
         SetCurrentValue(SelectedItemProperty, propertyViewModel);
+    }
+
+    private void Browse_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (StackPanel.Visibility == Visibility.Collapsed)
+        {
+            HideEditor();
+        }
+        else
+        {
+            ShowEditor();
+        }
+    }
+
+    private void ShowEditor()
+    {
+        Editor.SetCurrentValue(VisibilityProperty, Visibility.Visible);
+        StackPanel.SetCurrentValue(VisibilityProperty, Visibility.Collapsed);
+
+        var parts = new List<string>();
+        foreach (var viewModel in ItemsSource)
+        {
+            parts.Add(viewModel.DisplayName);
+        }
+        Editor.SetCurrentValue(TextBox.TextProperty, string.Join('\\', parts));
+    }
+
+    private void HideEditor()
+    {
+        Editor.SetCurrentValue(VisibilityProperty, Visibility.Collapsed);
+        StackPanel.SetCurrentValue(VisibilityProperty, Visibility.Visible);
+    }
+
+    private void Editor_OnTextChanged(object sender, TextChangedEventArgs e)
+    {
+    }
+
+    private void Editor_OnKeyUp(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            var args = new TextPathEventArgs(Editor.Text);
+            TextPathChanged?.Invoke(this, args);
+            if (!args.Handled)
+            {
+                
+            }
+        }
+    }
+
+    public class TextPathEventArgs : EventArgs
+    {
+        public string Path { get; }
+        public bool Handled { get; set; }
+
+        public TextPathEventArgs(string path)
+        {
+            Path = path;
+        }
     }
 }

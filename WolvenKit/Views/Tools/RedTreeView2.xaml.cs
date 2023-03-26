@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -26,11 +27,11 @@ public partial class RedTreeView2 : UserControl
     #region DependencyProperties
 
     public static readonly DependencyProperty ItemsSourceProperty =
-        DependencyProperty.Register(nameof(ItemsSource), typeof(object), typeof(RedTreeView2), new PropertyMetadata(OnItemsSourceChanged));
+        DependencyProperty.Register(nameof(ItemsSource), typeof(List<PropertyViewModel>), typeof(RedTreeView2), new PropertyMetadata(OnItemsSourceChanged));
 
-    public object ItemsSource
+    public List<PropertyViewModel> ItemsSource
     {
-        get => GetValue(ItemsSourceProperty);
+        get => (List<PropertyViewModel>)GetValue(ItemsSourceProperty);
         set => SetValue(ItemsSourceProperty, value);
     }
 
@@ -80,6 +81,7 @@ public partial class RedTreeView2 : UserControl
 
         //Navigator.HierarchyNavigatorSelectedItemChanged += Navigator_OnHierarchyNavigatorSelectedItemChanged;
         Navigator.SelectedItemChanged += Navigator_OnSelectedItemChanged;
+        Navigator.TextPathChanged += Navigator_OnTextPathChanged;
 
         RedTreeView.SortComparers.Add(new SortComparer() { Comparer = new PropertyViewComparer(), PropertyName = "DisplayName" });
 
@@ -95,6 +97,33 @@ public partial class RedTreeView2 : UserControl
         }
 
         SelectTreeItem(propertyViewModel);
+    }
+
+    private void Navigator_OnTextPathChanged(object sender, Breadcrumb.TextPathEventArgs e)
+    {
+        var parts = e.Path.Split('\\');
+
+        PropertyViewModel item = null;
+        IList<PropertyViewModel> items = ItemsSource;
+        foreach (var part in parts)
+        {
+            var prop = items.FirstOrDefault(x => x.DisplayName == part);
+            if (prop != null)
+            {
+                item = prop;
+                items = prop.Properties;
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        if (item != null)
+        {
+            SelectTreeItem(item);
+            e.Handled = true;
+        }
     }
 
     private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

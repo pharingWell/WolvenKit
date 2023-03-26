@@ -1,13 +1,21 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using DynamicData;
+using SharpDX;
 using Syncfusion.Data;
 using Syncfusion.UI.Xaml.Grid;
 using Syncfusion.UI.Xaml.ScrollAxis;
 using Syncfusion.UI.Xaml.TreeGrid;
+using Syncfusion.UI.Xaml.TreeGrid.Filtering;
 using Syncfusion.Windows.Tools.Controls;
+using WolvenKit.App.Models;
 using WolvenKit.App.ViewModels.Shell;
 using WolvenKit.Helpers;
+using WolvenKit.Views.UserControls;
 
 namespace WolvenKit.Views.Tools;
 /// <summary>
@@ -18,7 +26,7 @@ public partial class RedTreeView2 : UserControl
     #region DependencyProperties
 
     public static readonly DependencyProperty ItemsSourceProperty =
-        DependencyProperty.Register(nameof(ItemsSource), typeof(object), typeof(RedTreeView2));
+        DependencyProperty.Register(nameof(ItemsSource), typeof(object), typeof(RedTreeView2), new PropertyMetadata(OnItemsSourceChanged));
 
     public object ItemsSource
     {
@@ -46,18 +54,57 @@ public partial class RedTreeView2 : UserControl
         set => SetValue(SelectedItemsProperty, value);
     }
 
+    public static readonly DependencyProperty SearchResultsProperty =
+        DependencyProperty.Register(nameof(SearchResults), typeof(ObservableCollection<SearchResult>), typeof(RedTreeView2));
+
+    public ObservableCollection<SearchResult> SearchResults
+    {
+        get => (ObservableCollection<SearchResult>)GetValue(SearchResultsProperty);
+        set => SetValue(SearchResultsProperty, value);
+    }
+
+    public static readonly DependencyProperty NavigationItemsSourceProperty =
+        DependencyProperty.Register(nameof(NavigationItemsSource), typeof(List<PropertyViewModel>), typeof(RedTreeView2));
+
+    public List<PropertyViewModel> NavigationItemsSource
+    {
+        get => (List<PropertyViewModel>)GetValue(NavigationItemsSourceProperty);
+        set => SetValue(NavigationItemsSourceProperty, value);
+    }
+
     #endregion DependencyProperties
 
     public RedTreeView2()
     {
         InitializeComponent();
 
-        Navigator.HierarchyNavigatorSelectedItemChanged += Navigator_OnHierarchyNavigatorSelectedItemChanged;
+        //Navigator.HierarchyNavigatorSelectedItemChanged += Navigator_OnHierarchyNavigatorSelectedItemChanged;
+        Navigator.SelectedItemChanged += Navigator_OnSelectedItemChanged;
 
         RedTreeView.SortComparers.Add(new SortComparer() { Comparer = new PropertyViewComparer(), PropertyName = "DisplayName" });
 
         RedTreeView.SelectionChanged += RedTreeView_OnSelectionChanged;
         RedTreeView.TreeGridContextMenuOpening += RedTreeView_OnTreeGridContextMenuOpening;
+    }
+
+    private void Navigator_OnSelectedItemChanged(object sender, EventArgs e)
+    {
+        if (Navigator.SelectedItem is not { } propertyViewModel)
+        {
+            return;
+        }
+
+        SelectTreeItem(propertyViewModel);
+    }
+
+    private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not RedTreeView2 view)
+        {
+            return;
+        }
+
+        view.Navigator.SetCurrentValue(Breadcrumb.ItemsSourceProperty, new List<PropertyViewModel>((List<PropertyViewModel>)view.ItemsSource));
     }
 
     private bool _selectionChanging;
@@ -66,20 +113,24 @@ public partial class RedTreeView2 : UserControl
     {
         if (e.AddedItems.Count == 1 && e.AddedItems[0] is TreeGridRowInfo info)
         {
-            if (_selectionChanging)
-            {
-                return;
-            }
+            var parts = new List<PropertyViewModel>();
 
-            _selectionChanging = true;
-            Navigator.SetCurrentValue(HierarchyNavigator.SelectedItemProperty, info.RowData);
-            _selectionChanging = false;
+            var property = (PropertyViewModel)info.RowData;
+            do
+            {
+                parts.Add(property);
+                property = property.Parent;
+            } while (property != null);
+
+            parts.Reverse();
+
+            Navigator.SetCurrentValue(Breadcrumb.ItemsSourceProperty, parts);
         }
     }
 
     private void SelectTreeItem()
     {
-        var items = Navigator.ItemsHost.Items;
+        /*var items = Navigator.ItemsHost.Items;
 
         if (items.Count < 2)
         {
@@ -97,7 +148,37 @@ public partial class RedTreeView2 : UserControl
 
         var rowIndex2 = RedTreeView.ResolveToRowIndex(lastItem);
         var columnIndex = RedTreeView.ResolveToStartColumnIndex();
-        RedTreeView.ScrollInView(new RowColumnIndex(rowIndex2, columnIndex));
+        RedTreeView.ScrollInView(new RowColumnIndex(rowIndex2, columnIndex));*/
+    }
+
+    private void SelectTreeItem(PropertyViewModel item)
+    {
+        var items = new List<PropertyViewModel>();
+        do
+        {
+            items.Add(item);
+            item = item.Parent;
+        } while (item != null);
+
+        items.Reverse();
+
+        if (items.Count > 0)
+        {
+            int rowIndex;
+            for (var i = 0; i < items.Count - 1; i++)
+            {
+                rowIndex = RedTreeView.ResolveToRowIndex(items[i]);
+                RedTreeView.ExpandNode(rowIndex);
+            }
+
+            var lastItem = items[^1];
+            RedTreeView.SetCurrentValue(SfGridBase.SelectedItemProperty, lastItem);
+
+            rowIndex = RedTreeView.ResolveToRowIndex(lastItem);
+            var columnIndex = RedTreeView.ResolveToStartColumnIndex();
+
+            RedTreeView.ScrollInView(new RowColumnIndex(rowIndex, columnIndex));
+        }
     }
 
     private void Navigator_OnHierarchyNavigatorSelectedItemChanged(object sender, HierarchyNavigatorSelectedItemChangedEventArgs e)
@@ -140,4 +221,75 @@ public partial class RedTreeView2 : UserControl
             e.Handled = true;
         }
     }
+
+    private IEnumerable<PropertyViewModel> FindItems(PropertyViewModel property, string text)
+    {
+        if (property.DisplayValue.Contains(text))
+        {
+            yield return property;
+        }
+
+        if (property.Properties.Count > 0)
+        {
+            foreach (var child in property.Properties)
+            {
+                foreach (var childProperty in FindItems(child, text))
+                {
+                    yield return childProperty;
+                }
+                
+            }
+        }
+    }
+
+    private string BuildPath(PropertyViewModel property)
+    {
+        var parts = new List<string>();
+
+        do
+        {
+            parts.Add(property.DisplayName);
+            property = property.Parent;
+        } while (property != null);
+
+        parts.Reverse();
+
+        return string.Join('\\', parts);
+    }
+
+    private void SearchTextBox_OnKeyUp(object sender, KeyEventArgs e)
+    {
+        if (ItemsSource is not List<PropertyViewModel> list || list.Count == 0)
+        {
+            return;
+        }
+
+        var root = list[0];
+
+        if (e.Key == Key.Enter)
+        {
+            if (SearchResults == null)
+            {
+                SetCurrentValue(SearchResultsProperty, new ObservableCollection<SearchResult>());
+            }
+
+            SearchResults!.Clear();
+            foreach (var propertyViewModel in FindItems(root, SearchTextBox.Text))
+            {
+                SearchResults.Add(new SearchResult($"{{{BuildPath(propertyViewModel)}}} {propertyViewModel.DisplayValue}", propertyViewModel));
+            }
+        }
+    }
+
+    private void OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not ListBoxItem item || item.Content is not SearchResult result)
+        {
+            return;
+        }
+
+        SelectTreeItem(result.Data);
+    }
+
+    public record SearchResult(string Name, PropertyViewModel Data);
 }

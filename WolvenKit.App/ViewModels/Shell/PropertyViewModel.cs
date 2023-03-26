@@ -63,13 +63,18 @@ public abstract partial class PropertyViewModel : ObservableObject
 
         if (RedPropertyInfo.Index != -1)
         {
-            DisplayName = $"[{RedPropertyInfo.Index}] ";
+            DisplayName = $"[{RedPropertyInfo.Index}]";
         }
 
         if (RedPropertyInfo.ExtendedPropertyInfo != null)
         {
             if (!string.IsNullOrEmpty(RedPropertyInfo.ExtendedPropertyInfo.RedName))
             {
+                if (!string.IsNullOrEmpty(DisplayName))
+                {
+                    DisplayName += " ";
+                }
+
                 DisplayName += RedPropertyInfo.ExtendedPropertyInfo.RedName;
             }
         }

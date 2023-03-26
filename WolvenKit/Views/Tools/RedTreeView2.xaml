@@ -8,6 +8,7 @@
     xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+    xmlns:userControls="clr-namespace:WolvenKit.Views.UserControls"
     x:Name="uc"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -21,33 +22,22 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" MaxHeight="200" />
         </Grid.RowDefinitions>
 
-        <syncfusion:HierarchyNavigator
-            x:Name="Navigator"
-            Grid.Row="0"
-            IsEnableEditMode="True"
-            IsEnableHistory="True"
-            ItemsSource="{Binding ElementName=uc, Path=ItemsSource, Mode=TwoWay}">
-            <syncfusion:HierarchyNavigator.ItemTemplate>
-                <HierarchicalDataTemplate ItemsSource="{Binding Properties}">
-                    <TextBlock Margin="2,0" Text="{Binding DisplayName}" />
-                </HierarchicalDataTemplate>
-            </syncfusion:HierarchyNavigator.ItemTemplate>
-        </syncfusion:HierarchyNavigator>
+
+        <userControls:Breadcrumb x:Name="Navigator" Grid.Row="0" />
 
         <syncfusion:SfTreeGrid
             x:Name="RedTreeView"
             Grid.Row="1"
             AllowEditing="False"
-            AllowFiltering="True"
             AllowResizingColumns="True"
             AllowTriStateSorting="True"
             AutoExpandMode="RootNodesExpanded"
             AutoGenerateColumnsMode="None"
             ChildPropertyName="Properties"
             ColumnSizer="Star"
-            FilterLevel="Extended"
             GridLinesVisibility="None"
             ItemsSource="{Binding ElementName=uc, Path=ItemsSource, Mode=TwoWay}"
             NavigationMode="Row"
@@ -100,9 +90,34 @@
                             </DataTemplate>
                         </syncfusion:TreeGridTemplateColumn.CellTemplate>
                     </syncfusion:TreeGridTemplateColumn>
-                    <!-- <syncfusion:TreeGridTextColumn ColumnSizer="SizeToCells" MappingName="Description" /> -->
                 </syncfusion:TreeGridColumns>
             </syncfusion:SfTreeGrid.Columns>
         </syncfusion:SfTreeGrid>
+
+        <Expander Grid.Row="2" Header="Search">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBox
+                    x:Name="SearchTextBox"
+                    Grid.Row="0"
+                    KeyUp="SearchTextBox_OnKeyUp" />
+                <ListBox Grid.Row="1" ItemsSource="{Binding ElementName=uc, Path=SearchResults}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <EventSetter Event="MouseDoubleClick" Handler="OnMouseDoubleClick" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Expander>
     </Grid>
 </UserControl>

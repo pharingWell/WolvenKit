@@ -9,6 +9,11 @@ public partial class ArrayPropertyViewModel : PropertyViewModel<IRedArray>
     {
     }
 
+    protected override void SetValue(PropertyViewModel propertyViewModel)
+    {
+        _data![propertyViewModel.RedPropertyInfo.Index] = propertyViewModel.DataObject;
+    }
+
     protected override void FetchProperties()
     {
         if (_data == null)
@@ -33,10 +38,8 @@ public partial class ArrayPropertyViewModel : PropertyViewModel<IRedArray>
         }
     }
 
-    protected override void UpdateInfos()
+    protected internal override void UpdateDisplayValue(string? suffix = null)
     {
-        base.UpdateInfos();
-
         DisplayValue = _data != null ? $"Count = {_data.Count}" : "null";
     }
 

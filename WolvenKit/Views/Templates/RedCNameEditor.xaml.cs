@@ -40,10 +40,21 @@ namespace WolvenKit.Views.Editors
             }
         }
 
+        private CName Value
+        {
+            get => (CName)ViewModel.DataObject;
+            set => ViewModel.DataObject = value;
+        }
+
         public string Text
         {
-            get => RedString;
-            set => SetValue(RedStringProperty, (CName)value);
+            get => Value;
+            set
+            {
+                Value = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Hash));
+            }
         }
 
         public string Hash
@@ -52,23 +63,25 @@ namespace WolvenKit.Views.Editors
             {
                 if (_settingsManager.ShowCNameAsHex)
                 {
-                    return ((ulong)RedString).ToString("X");
+                    return ((ulong)Value).ToString("X");
                 }
                 else
                 {
-                    return ((ulong)RedString).ToString();
+                    return ((ulong)Value).ToString();
                 }
             }
             set
             {
                 if (_settingsManager.ShowCNameAsHex)
                 {
-                    SetValue(RedStringProperty, (CName)ulong.Parse(value, NumberStyles.HexNumber));
+                    Value = ulong.Parse(value, NumberStyles.HexNumber);
                 }
                 else
                 {
-                    SetValue(RedStringProperty, (CName)ulong.Parse(value));
+                    Value = ulong.Parse(value);
                 }
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Text));
             }
         }
 

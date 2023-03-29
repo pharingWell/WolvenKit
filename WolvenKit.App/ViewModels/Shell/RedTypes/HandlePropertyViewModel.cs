@@ -37,12 +37,25 @@ public class HandlePropertyViewModel : PropertyViewModel<IRedBaseHandle>
         }
     }
 
-    protected override void UpdateInfos()
+    protected internal override void UpdateDisplayValue(string? suffix = null)
     {
-        base.UpdateInfos();
+        var displayValue = "null";
+        if (_data?.GetValue() != null)
+        {
+            displayValue = $"{{{PrettyValue(_data.GetValue()!.ToString())}}}";
+        }
 
-        DisplayValue = _data?.GetValue() != null ? $"{{{PrettyValue(_data.GetValue()!.ToString())}}} {GetDisplayProperty()}" : "null";
+        var additionalInfo = Properties.FirstOrDefault(x => x.DisplayName == "debugName")?.DisplayValue;
+        if (!string.IsNullOrEmpty(additionalInfo))
+        {
+            displayValue += $" {additionalInfo}";
+        }
+
+        if (!string.IsNullOrEmpty(suffix))
+        {
+            displayValue += $" {suffix}";
+        }
+
+        DisplayValue = displayValue;
     }
-
-    protected override string? GetDisplayProperty() => Properties.FirstOrDefault(x => x.DisplayName == "debugName")?.DisplayValue;
 }

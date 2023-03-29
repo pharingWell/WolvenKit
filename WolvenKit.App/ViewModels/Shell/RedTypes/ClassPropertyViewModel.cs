@@ -4,15 +4,16 @@ using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Shell;
 
-public class ClassPropertyViewModel : PropertyViewModel<RedBaseClass>
+public class ClassPropertyViewModel<T> : PropertyViewModel<T> where T : RedBaseClass
 {
-    public ClassPropertyViewModel(PropertyViewModel? parent, RedPropertyInfo redPropertyInfo, RedBaseClass? data) : base(parent, redPropertyInfo, data)
+    public ClassPropertyViewModel(PropertyViewModel? parent, RedPropertyInfo redPropertyInfo, T? data) : base(parent, redPropertyInfo, data)
     {
     }
 
     protected override void SetValue(PropertyViewModel propertyViewModel)
     {
-        _data?.SetProperty(propertyViewModel.DisplayName, (IRedType?)propertyViewModel.DataObject);
+        _data!.SetProperty(propertyViewModel.DisplayName, (IRedType?)propertyViewModel.DataObject);
+        OnPropertyChanged(nameof(DataObject));
     }
 
     protected override void FetchProperties()
@@ -53,5 +54,19 @@ public class ClassPropertyViewModel : PropertyViewModel<RedBaseClass>
         }
     }
 
-    protected override string? GetDisplayProperty() => Properties.FirstOrDefault(x => x.DisplayName == "debugName")?.DisplayValue;
+    protected internal override void UpdateDisplayValue(string? suffix = null)
+    {
+        DisplayValue = $"{PrettyValue(DataObject?.ToString())} {Properties.FirstOrDefault(x => x.DisplayName == "debugName")?.DisplayValue}";
+        if (!string.IsNullOrEmpty(suffix))
+        {
+            DisplayValue += $" {suffix}";
+        }
+    }
+}
+
+public class ClassPropertyViewModel : ClassPropertyViewModel<RedBaseClass>
+{
+    public ClassPropertyViewModel(PropertyViewModel? parent, RedPropertyInfo redPropertyInfo, RedBaseClass? data) : base(parent, redPropertyInfo, data)
+    {
+    }
 }

@@ -13,7 +13,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ReactiveUI;
+using Syncfusion.Data;
 using WolvenKit.App.ViewModels.Shell;
+using WolvenKit.Helpers;
 using WolvenKit.RED4.Types;
 using WolvenKit.Views.Tools;
 
@@ -36,7 +38,7 @@ public partial class RedTypeView2
     {
         InitializeComponent();
 
-        ViewHost.ViewLocator = new RedViewLocator();
+        RedDataGrid.SortComparers.Add(new SortComparer() { Comparer = new PropertyViewComparer(), PropertyName = "DisplayName" });
     }
 
     private static void OnSelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -46,6 +48,11 @@ public partial class RedTypeView2
             return;
         }
     }
+}
+
+public class RedViewModelViewHost : ViewModelViewHost
+{
+    public RedViewModelViewHost() => ViewLocator = new RedViewLocator();
 
     private class RedViewLocator : IViewLocator
     {
@@ -53,6 +60,10 @@ public partial class RedTypeView2
         {
             if (viewModel is DefaultPropertyViewModel propertyViewModel)
             {
+                if (propertyViewModel.RedPropertyInfo.BaseType.IsAssignableTo(typeof(CName)))
+                {
+                    return new RedCNameEditor();
+                }
                 if (propertyViewModel.RedPropertyInfo.BaseType.IsAssignableTo(typeof(CFloat)))
                 {
                     return new RedFloatEditor();

@@ -7,17 +7,16 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:reactiveUi="http://reactiveui.net"
     xmlns:shell="clr-namespace:WolvenKit.App.ViewModels.Shell;assembly=WolvenKit.App"
+    x:Name="UserControl"
     d:DesignHeight="100"
     d:DesignWidth="400"
     x:TypeArguments="shell:PropertyViewModel"
     mc:Ignorable="d">
 
-    <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:RedFloatEditor}}}">
-
+    <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
         <TextBox
             x:Name="TextBox"
             PreviewTextInput="NumberValidationTextBox"
             Text="{Binding Text}" />
-
     </Grid>
 </reactiveUi:ReactiveUserControl>

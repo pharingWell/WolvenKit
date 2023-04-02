@@ -16,15 +16,63 @@ namespace WolvenKit.App.Models;
 
 public class FileModel : ObservableObject
 {
+    private const string ArchiveDir = @"source\archive";
+    private const string RawDir = @"source\raw";
+    private const string ResourceDir = @"source\resources";
+
     private readonly string _extension = ".default";
 
     public const string s_moddir = "wkitmoddir";
-
     public const string s_rawdir = "wkitrawdir";
+
+    public FileModel(string name, string projectPath, string projectSystemPath, bool isDirectory)
+    {
+        Name = name;
+        FullName = Path.Combine(projectSystemPath, projectPath);
+        RelativePath = FullName;
+
+        IsDirectory = isDirectory;
+        Children = new FileCollection();
+        
+
+        if (IsDirectory)
+        {
+            _extension = ECustomImageKeys.OpenDirImageKey.ToString();
+        }
+        else
+        {
+            _extension = Path.GetExtension(name).TrimStart('.');
+        }
+        
+        if (projectPath.StartsWith(ArchiveDir))
+        {
+            RelativePath = Path.GetRelativePath(ArchiveDir, projectPath);
+            Hash = FNV1A64HashAlgorithm.HashString(RelativePath);
+            if (IsDirectory)
+            {
+                _extension = Constants.ModDirectoryTop;
+            }
+        }
+        if (projectPath.StartsWith(RawDir))
+        {
+            RelativePath = Path.GetRelativePath(RawDir, projectPath);
+            if (IsDirectory)
+            {
+                _extension = Constants.ResourceDirectoryTop;
+            }
+        }
+        if (projectPath.StartsWith(ResourceDir))
+        {
+            RelativePath = Path.GetRelativePath(ResourceDir, projectPath);
+            if (IsDirectory)
+            {
+                _extension = Constants.ResourceDirectoryTop;
+            }
+        }
+    }
 
     public FileModel(FileSystemInfo fileSystemInfo, Cp77Project project)
     {
-        Project = project;
         FullName = fileSystemInfo.FullName;
         Name = fileSystemInfo.Name;
 
@@ -77,8 +125,6 @@ public class FileModel : ObservableObject
     [Display(Name = "Hash")] public string HashStr => Hash.ToString();
 
 
-    [Browsable(false)] public Cp77Project Project { get; }
-
     [Browsable(false)] public ulong Hash { get; }
 
     [Browsable(false)] public bool IsDirectory { get; }
@@ -86,6 +132,8 @@ public class FileModel : ObservableObject
     [Browsable(false)] public ulong ParentHash { get; }
 
     [Browsable(false)] public bool IsExpanded { get; set; }
+
+    [Browsable(false)] public FileCollection Children { get; } = new();
 
     [Browsable(false)]
     public bool IsConvertable => !IsDirectory 

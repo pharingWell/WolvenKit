@@ -1,12 +1,11 @@
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using WolvenKit.App.Models;
-using WolvenKit.App.Models.ProjectManagement.Project;
 using WolvenKit.Core.Extensions;
 
 namespace WolvenKit.App.Services;
@@ -20,15 +19,17 @@ public class WatcherService : ObservableObject, IWatcherService
 
     private readonly SourceCache<FileModel, ulong> _files = new(_ => _.Hash);
     public IObservableCache<FileModel, ulong> Files => _files;
+    public FileCollection NewFiles { get; } = new ();
 
     private readonly IProjectManager _projectManager;
 
+    private string? _baseDir;
+
+    private readonly ConcurrentQueue<FileSystemEventArgs> _events = new();
     private FileSystemWatcher? _modsWatcher;
+    private Thread? _thread;
 
     public FileModel? LastSelect { get; set; }
-
-    private readonly Timer _timer;
-    private const int s_waitTime = 100;
 
     private readonly List<string> _ignoredExtensions = new()
     {
@@ -38,22 +39,12 @@ public class WatcherService : ObservableObject, IWatcherService
 
     #endregion
 
+    public bool IsSuspended { get; set; }
+
     public WatcherService(IProjectManager projectManager)
     {
         _projectManager = projectManager;
         _projectManager.PropertyChanged += ProjectManager_PropertyChanged;
-
-        _timer = new Timer(OnTimer);
-    }
-
-    public void ForceStopTimer() => _timer.Change(-1, -1);
-
-    // HACK remove after e3 -S. Eberoth
-    private async void OnTimer(object? state)
-    {
-        _timer.Change(-1, -1);
-
-        await RefreshAsync(_projectManager.ActiveProject);
     }
 
     private void ProjectManager_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -74,7 +65,12 @@ public class WatcherService : ObservableObject, IWatcherService
 
     private void WatchLocation(string location)
     {
-        _modsWatcher = new FileSystemWatcher(location, "*")
+        NewFiles.Clear();
+        _events.Clear();
+
+        _baseDir = location;
+
+        _modsWatcher = new FileSystemWatcher(_baseDir, "*")
         {
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Attributes | NotifyFilters.DirectoryName,
             IncludeSubdirectories = true
@@ -83,84 +79,91 @@ public class WatcherService : ObservableObject, IWatcherService
         _modsWatcher.Changed += OnChanged;
         _modsWatcher.Deleted += OnChanged;
         _modsWatcher.Renamed += OnRenamed;
+
+        foreach (var file in Directory.GetFileSystemEntries(_baseDir, "*.*", SearchOption.AllDirectories))
+        {
+            var directory = Path.GetDirectoryName(file)!;
+            var fileName = Path.GetFileName(file);
+            _events.Enqueue(new FileSystemEventArgs(WatcherChangeTypes.Created, directory, fileName));
+        }
+
         _modsWatcher.EnableRaisingEvents = true;
+
+        _thread = new Thread(Processor);
+        _thread.Start();
     }
 
     private void UnwatchLocation()
     {
-        if (_modsWatcher == null)
+        if (_modsWatcher != null)
         {
-            return;
+            _modsWatcher.EnableRaisingEvents = false;
+            _modsWatcher.Created -= OnChanged;
+            _modsWatcher.Changed -= OnChanged;
+            _modsWatcher.Deleted -= OnChanged;
+            _modsWatcher.Renamed -= OnRenamed;
         }
-
-        _modsWatcher.EnableRaisingEvents = false;
-
-        _modsWatcher.Created -= OnChanged;
-        _modsWatcher.Changed -= OnChanged;
-        _modsWatcher.Deleted -= OnChanged;
-        _modsWatcher.Renamed -= OnRenamed;
-        _modsWatcher.EnableRaisingEvents = false;
-
-        //_files.Clear();
+        _thread = null;
+        _events.Clear();
     }
 
-    private bool _isSuspended;
-
-    public bool IsSuspended
+    private void ProcessEvent(FileSystemEventArgs args)
     {
-        get => _isSuspended;
-        set
+        ArgumentNullException.ThrowIfNull(_baseDir);
+
+        var newRelativePath = Path.GetRelativePath(_baseDir, args.FullPath);
+
+        if (args is RenamedEventArgs ren)
         {
-            _isSuspended = value;
-            if (!_isSuspended)
+            NewFiles.RemoveEntry(Path.GetRelativePath(_baseDir, ren.OldFullPath));
+            NewFiles.AddEntry(newRelativePath, _baseDir);
+        }
+        else
+        {
+            if (args.ChangeType == WatcherChangeTypes.Created)
             {
-                QueueRefresh();
+                NewFiles.AddEntry(newRelativePath, _baseDir);
+            }
+            else if (args.ChangeType == WatcherChangeTypes.Deleted)
+            {
+                NewFiles.RemoveEntry(newRelativePath);
             }
         }
     }
 
-    public void QueueRefresh() => _timer.Change(s_waitTime, -1);
+    private void Processor()
+    {
+        while (true)
+        {
+            if (IsSuspended || !_events.TryDequeue(out var args))
+            {
+                Thread.Sleep(50);
+                continue;
+            }
+
+            try
+            {
+                ProcessEvent(args);
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+        }
+    }
+
+    public void QueueRefresh()
+    {
+
+    }
+
+    public FileModel? GetFileModelFromHash(ulong hash) => null;
 
     /// <summary>
-    /// initial refresh
+    /// 
     /// </summary>
-    public async Task RefreshAsync(Cp77Project? proj)
-    {
-        if (proj == null)
-        {
-            return;
-        }
-
-        await Task.Run(() => DetectProjectFiles(proj));
-    }
-
-    private bool _isRefreshing;
-
-    private void DetectProjectFiles(Cp77Project proj)
-    {
-        if (_isRefreshing)
-        {
-            return;
-        }
-        _isRefreshing = true;
-
-        var allFiles = new DirectoryInfo(proj.ProjectDirectory).GetFileSystemInfos("*", SearchOption.AllDirectories);
-
-        _files.Edit(innerList =>
-        {
-            innerList.Load(allFiles.Select(_ => new FileModel(_, proj)));
-        });
-
-        _isRefreshing = false;
-    }
-
-    public FileModel? GetFileModelFromHash(ulong hash)
-    {
-        var lookup = _files.Items.ToLookup(x => x.Hash);
-
-        return lookup[hash].FirstOrDefault();
-    }
-
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
         if (_projectManager.ActiveProject is null)
@@ -168,53 +171,7 @@ public class WatcherService : ObservableObject, IWatcherService
             return;
         }
 
-        if (IsSuspended)
-        {
-            return;
-        }
-
-        var extension = Path.GetExtension(e.Name);
-        if (!string.IsNullOrEmpty(extension) && _ignoredExtensions.Contains(extension.ToUpper()))
-        {
-            return;
-        }
-
-        _timer.Change(s_waitTime, -1);
-
-        /*switch (e.ChangeType)
-        {
-            case WatcherChangeTypes.Created:
-            {
-                try
-                {
-                    LastSelect = new FileModel(e.FullPath, _projectManager.ActiveProject);
-                    _files.AddOrUpdate(LastSelect);
-                }
-                catch (Exception)
-                {
-                    // reading too fast?
-                }
-                break;
-            }
-            case WatcherChangeTypes.Deleted:
-            {
-                var key = FileModel.GenerateKey(e.FullPath, _projectManager.ActiveProject);
-                _files.Edit(inner =>
-                {
-                    inner.RemoveKeys(GetChildrenKeysRecursive(key));
-                    inner.Remove(key);
-                });
-                break;
-            }
-            case WatcherChangeTypes.All:
-                break;
-            case WatcherChangeTypes.Changed:
-                break;
-            case WatcherChangeTypes.Renamed:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }*/
+        _events.Enqueue(e);
     }
 
     /// <summary>
@@ -229,50 +186,6 @@ public class WatcherService : ObservableObject, IWatcherService
             return;
         }
 
-        if (IsSuspended)
-        {
-            return;
-        }
-
-        var extension = Path.GetExtension(e.Name);
-        if (!string.IsNullOrEmpty(extension) && _ignoredExtensions.Contains(extension.ToUpper()))
-        {
-            return;
-        }
-
-        _timer.Change(s_waitTime, -1);
-
-        /*var extension = Path.GetExtension(e.Name);
-        if (string.IsNullOrEmpty(extension))
-        {
-            return;
-        }
-
-        var newIsTempFile = extension.ToUpper().Equals(".TMP", StringComparison.Ordinal) || extension.ToUpper().Equals(".PDNSAVE", StringComparison.Ordinal);
-        switch (e.ChangeType)
-        {
-            case WatcherChangeTypes.Renamed:
-            {
-                var key = FileModel.GenerateKey(e.OldFullPath, _projectManager.ActiveProject);
-                _files.RemoveKey(key);
-
-                if (!newIsTempFile)
-                {
-                    _files.AddOrUpdate(new FileModel(e.FullPath, _projectManager.ActiveProject));
-                }
-                break;
-            }
-
-            case WatcherChangeTypes.Created:
-                break;
-            case WatcherChangeTypes.Deleted:
-                break;
-            case WatcherChangeTypes.Changed:
-                break;
-            case WatcherChangeTypes.All:
-                break;
-            default:
-                break;
-        }*/
+        _events.Enqueue(e);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -57,7 +58,6 @@ public partial class ProjectExplorerViewModel : ToolViewModel
     private IPluginService _pluginService;
 
     private readonly ISettingsManager _settingsManager;
-    private readonly IObservableList<FileModel> _observableList;
 
     #endregion fields
 
@@ -87,11 +87,16 @@ public partial class ProjectExplorerViewModel : ToolViewModel
 
         SetupToolDefaults();
 
-        _watcherService.Files
-            .Connect()
-            //.ObserveOn(RxApp.MainThreadScheduler)
-            .BindToObservableList(out _observableList)
-            .Subscribe(OnNext);
+        BindGrid1 = _watcherService.NewFiles;
+        BindGrid1.CollectionChanged += delegate(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+
+        };
+
+        _watcherService.NewFiles.CollectionChanged += delegate(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+
+        };
 
         _projectManager.ActiveProjectChanged += ProjectManager_ActiveProjectChanged;
     }
@@ -103,7 +108,7 @@ public partial class ProjectExplorerViewModel : ToolViewModel
             DispatcherHelper.RunOnMainThread( () => 
             {
                 ActiveProject = e.Project;
-            }, DispatcherPriority.ContextIdle);
+            }, DispatcherPriority.Normal);
         }
     }
 
@@ -159,14 +164,6 @@ public partial class ProjectExplorerViewModel : ToolViewModel
         }
     }
 
-    private void OnNext(IChangeSet<FileModel, ulong> obj)
-    {
-        DispatcherHelper.RunOnMainThread(() =>
-        {
-            BindGrid1 = new ObservableCollection<FileModel>(_observableList.Items);
-        }, DispatcherPriority.ContextIdle);
-    }
-
     #region properties
 
     public bool IsKeyUpEventAssigned { get; set; }
@@ -175,7 +172,7 @@ public partial class ProjectExplorerViewModel : ToolViewModel
 
 
     [ObservableProperty]
-    private ObservableCollection<FileModel> _bindGrid1 = new();
+    private FileCollection _bindGrid1 = new();
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RefreshCommand))]

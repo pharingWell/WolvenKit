@@ -162,9 +162,9 @@ namespace WolvenKit.Views.Tools
                         }
                         else
                         {
-                            BeforeDataSourceUpdate();
+                            //BeforeDataSourceUpdate();
                             SetCurrentValue(TreeItemSourceProperty, ViewModel.BindGrid1);
-                            AfterDataSourceUpdate();
+                            //AfterDataSourceUpdate();
                         }
                     });
             });
@@ -360,16 +360,16 @@ namespace WolvenKit.Views.Tools
                 switch (tabControl.SelectedIndex)
                 {
                     case 0:
-                        includeFile = fm.FullName.StartsWith(fm.Project.FileDirectory);
+                        includeFile = fm.FullName.StartsWith(ViewModel.ActiveProject.FileDirectory);
                         break;
                     case 1:
-                        includeFile = fm.FullName.StartsWith(fm.Project.ModDirectory);
+                        includeFile = fm.FullName.StartsWith(ViewModel.ActiveProject.ModDirectory);
                         break;
                     case 2:
-                        includeFile = fm.FullName.ToLower().StartsWith(fm.Project.RawDirectory.ToLower());
+                        includeFile = fm.FullName.ToLower().StartsWith(ViewModel.ActiveProject.RawDirectory.ToLower());
                         break;
                     case 3:
-                        includeFile = fm.FullName.StartsWith(fm.Project.ResourcesDirectory);
+                        includeFile = fm.FullName.StartsWith(ViewModel.ActiveProject.ResourcesDirectory);
                         break;
                     default:
                         break;

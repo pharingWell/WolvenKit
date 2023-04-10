@@ -38,6 +38,8 @@ namespace WolvenKit.Modkit.RED4.GeneralStructs
         public uint[] tex1Offsets { get; set; }
         public uint[] unknownOffsets { get; set; }
         public uint[] indicesOffsets { get; set; }
+        public uint[] vehicleDmgNormalOffsets { get; set; }
+        public uint[] vehicleDmgPositionOffsets { get; set; }
         public uint[] vpStrides { get; set; }
         public uint[] weightCounts { get; set; }
         public bool[] garmentSupportExists { get; set; }
@@ -65,6 +67,8 @@ namespace WolvenKit.Modkit.RED4.GeneralStructs
             tex1Offsets = new uint[meshCount];
             unknownOffsets = new uint[meshCount];
             indicesOffsets = new uint[meshCount];
+            vehicleDmgNormalOffsets = new uint[meshCount];
+            vehicleDmgPositionOffsets = new uint[meshCount];
             vpStrides = new uint[meshCount];
             weightCounts = new uint[meshCount];
             garmentSupportExists = new bool[meshCount];
@@ -82,6 +86,8 @@ namespace WolvenKit.Modkit.RED4.GeneralStructs
         public Vector4[]? tangents { get; set; }
         public Vector4[]? colors0 { get; set; }
         public Vector4[]? colors1 { get; set; }
+        public Vector3[]? vehicleDmgNormals { get; set; }
+        public Vector3[]? vehicleDmgPositions { get; set; }
         public float[,]? weights { get; set; }
         public ushort[,]? boneindices { get; set; }
         public Vector3[]? garmentMorph { get; set; }

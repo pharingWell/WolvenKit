@@ -529,6 +529,41 @@ public partial class PropertiesViewModel : ToolViewModel
             };
 
             list.Add(sm);
+
+            if (mesh.vehicleDmgPositions?.Length > 0)
+            {
+                var vehicleDmgPositions = new Vector3Collection(mesh.vehicleDmgPositions.Length);
+                for (var i = 0; i < mesh.vehicleDmgPositions.Length; i++)
+                {
+                    vehicleDmgPositions.Add(mesh.vehicleDmgPositions[i].ToVector3());
+                }
+
+                var vehicleDmgNormals = new Vector3Collection(mesh.vehicleDmgNormals!.Length);
+                for (var i = 0; i < mesh.vehicleDmgNormals.Length; i++)
+                {
+                    vehicleDmgNormals.Add(mesh.vehicleDmgNormals[i].ToVector3());
+                }
+
+                var vsm = new SubmeshComponent()
+                {
+                    Name = $"submesh_{index:D2}_LOD_{meshesinfo.LODLvl[index]:D2}_damaged",
+                    LOD = meshesinfo.LODLvl[index],
+                    IsRendering = (chunkMask & 1UL << index) > 0 && meshesinfo.LODLvl[index] == SelectedLOD,
+                    EnabledWithMask = (chunkMask & 1UL << index) > 0,
+                    Geometry = new MeshGeometry3D()
+                    {
+                        Positions = vehicleDmgPositions,
+                        Indices = indices,
+                        Normals = vehicleDmgNormals
+                    },
+                    DepthBias = -index * 2,
+                    Material = material,
+                    FillMode = ShowWireFrame ? SharpDX.Direct3D11.FillMode.Wireframe : SharpDX.Direct3D11.FillMode.Solid
+                };
+
+                list.Add(vsm);
+            }
+
             index++;
         }
 

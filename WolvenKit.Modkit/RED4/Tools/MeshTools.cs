@@ -271,6 +271,14 @@ namespace WolvenKit.Modkit.RED4.Tools
                             meshesInfo.tex1Offsets[i] = cv.ByteOffsets[element.StreamIndex];
                         }
                     }
+                    if (element.Usage == GpuWrapApiVertexPackingePackingUsage.PS_VehicleDmgNormal)
+                    {
+                        meshesInfo.vehicleDmgNormalOffsets[i] = cv.ByteOffsets[element.StreamIndex];
+                    }
+                    if (element.Usage == GpuWrapApiVertexPackingePackingUsage.PS_VehicleDmgPosition)
+                    {
+                        meshesInfo.vehicleDmgPositionOffsets[i] = cv.ByteOffsets[element.StreamIndex];
+                    }
                 }
 
                 if (info.ChunkIndices.TeOffset == 0)
@@ -495,6 +503,43 @@ namespace WolvenKit.Modkit.RED4.Tools
                     {
                         gfs.Position = info.colorOffsets[index] + (i * stride);
                         meshContainer.colors0[i] = new Vec4(gbr.ReadByte() / 255f, gbr.ReadByte() / 255f, gbr.ReadByte() / 255f, gbr.ReadByte() / 255f);
+                    }
+                }
+
+                if (info.vehicleDmgNormalOffsets[index] != 0)
+                {
+                    meshContainer.vehicleDmgNormals = new Vec3[info.vertCounts[index]];
+
+                    gfs.Position = info.vehicleDmgNormalOffsets[index];
+                    for (var i = 0; i < info.vertCounts[index]; i++)
+                    {
+                        var read = gbr.ReadUInt32();
+                        var vec = Converters.TenBitShifted(read);
+
+                        // Z up to Y up and LHCS to RHCS
+                        meshContainer.vehicleDmgNormals[i] = new Vec3(vec.X, vec.Z, -vec.Y);
+                        meshContainer.vehicleDmgNormals[i] = Vec3.Normalize(meshContainer.normals[i]);
+
+                        gfs.Position += 16;
+                    }
+                }
+
+                if (info.vehicleDmgPositionOffsets[index] != 0)
+                {
+                    meshContainer.vehicleDmgPositions = new Vec3[info.vertCounts[index]];
+
+                    gfs.Position = info.vehicleDmgPositionOffsets[index];
+                    for (var i = 0; i < info.vertCounts[index]; i++)
+                    {
+                        gfs.Position += 4;
+
+                        var x = gbr.ReadSingle() * 100;
+                        var y = gbr.ReadSingle() * 100;
+                        var z = gbr.ReadSingle() * 100;
+                        var w = gbr.ReadSingle() * 100;
+
+                        // Z up to Y up and LHCS to RHCS
+                        meshContainer.vehicleDmgPositions[i] = new Vec3(x, z, -y);
                     }
                 }
 

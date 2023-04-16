@@ -20,6 +20,7 @@ public partial class CR2WWriter
 
     static CR2WWriter()
     {
+        s_preProcessors.Add(typeof(appearanceAppearanceDefinition), typeof(appearanceAppearanceDefinitionPreProcessor));
         s_preProcessors.Add(typeof(CMesh), typeof(CMeshPreProcessor));
         s_preProcessors.Add(typeof(entEntityTemplate), typeof(entEntityTemplatePreProcessor));
     }
@@ -388,6 +389,18 @@ public partial class CR2WWriter
             using var transformWriter = new WorldTransformsWriter(ms);
 
             transformWriter.WriteBuffer(wtb);
+
+            var newData = ms.ToArray();
+
+            buffer.SetBytes(newData);
+        }
+
+        if (buffer.Data is CR2WWrapper wrapper)
+        {
+            using var ms = new MemoryStream();
+            using var wrapperWriter = new CR2WWrapperWriter(ms) { LoggerService = LoggerService };
+
+            wrapperWriter.Write(wrapper);
 
             var newData = ms.ToArray();
 

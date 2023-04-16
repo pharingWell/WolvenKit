@@ -12,11 +12,6 @@ public class CMeshPreProcessor : IPreProcessor
 
     public void Process(RedBaseClass cls)
     {
-        if (_loggerService == null)
-        {
-            return;
-        }
-
         var mesh = (CMesh)cls;
 
         // Need to create LocalMaterialBuffer.RawData else the materials won't get written
@@ -31,6 +26,11 @@ public class CMeshPreProcessor : IPreProcessor
                     Parent = mesh.LocalMaterialBuffer
                 }
             };
+        }
+
+        /*if (_loggerService == null)
+        {
+            return;
         }
 
         // make sure that the mesh is using either localMaterials or preloadLocalMaterials
@@ -54,8 +54,8 @@ public class CMeshPreProcessor : IPreProcessor
         }
         var sumOfExternal = mesh.ExternalMaterials.Count + mesh.PreloadExternalMaterials.Count;
 
-        var localIndexList = new Dictionary<ushort, int>();
-        var materialNames = new List<string>();
+        var usedLocalIndices = new HashSet<ushort>();
+        var materialNames = new Dictionary<string, int>();
 
         for (var i = 0; i < mesh.MaterialEntries.Count; i++)
         {
@@ -63,7 +63,10 @@ public class CMeshPreProcessor : IPreProcessor
 
             // Put all material names into a list - we'll use it to verify the appearances later
             var name = materialEntry.Name.ToString() ?? "";
-            materialNames.Add(name);
+            if (!materialNames.TryAdd(name, i))
+            {
+                _loggerService.Warning($"materialEntries[{i}] ({materialEntry.Name}) is already defined in materialEntries[{materialNames[name]}]");
+            }
             
             if (materialEntry.IsLocalInstance)
             {
@@ -73,12 +76,11 @@ public class CMeshPreProcessor : IPreProcessor
                                            $"{materialEntry.Index}, but there are only {sumOfLocal} entries.");
                 }
 
-                if (localIndexList.ContainsKey(materialEntry.Index))
+                if (!usedLocalIndices.Add(materialEntry.Index))
                 {
                     _loggerService.Warning($"materialEntries[{i}] ({materialEntry.Name}) is overwriting an already-defined " +
                                            $"material index: {materialEntry.Index}. Your material assignments might not work as expected.");
                 }
-                localIndexList.Add(materialEntry.Index, i);
             }
             else
             {
@@ -151,7 +153,7 @@ public class CMeshPreProcessor : IPreProcessor
 
             foreach (var chunkName in appearance.ChunkMaterials)
             {
-                if (chunkName.GetResolvedText() is {} assignedMaterialName && !materialNames.Contains(assignedMaterialName))
+                if (chunkName.GetResolvedText() is {} assignedMaterialName && !materialNames.ContainsKey(assignedMaterialName))
                 {
                     _loggerService.Warning($"Appearance {appearance.Name}: Chunk material {assignedMaterialName} doesn't exist, " +
                                            "submesh will render as invisible.");
@@ -220,6 +222,6 @@ public class CMeshPreProcessor : IPreProcessor
                         break;
                 }
             }
-        }
+        }*/
     }
 }

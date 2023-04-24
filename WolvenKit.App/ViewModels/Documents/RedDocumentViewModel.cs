@@ -280,20 +280,11 @@ public partial class RedDocumentViewModel : DocumentViewModel
         {
             TabItemViewModels.Add(_documentTabViewmodelFactory.RDTMeshViewModel(wsb, this));
         }
-        if (cls is graphGraphResource ggr)
+
+        if (_globals.Value.ENABLE_NODE_EDITOR && cls is graphGraphResource or scnSceneResource)
         {
-            if (_globals.Value.ENABLE_NODE_EDITOR)
-            {
-                TabItemViewModels.Add(new RDTGraphViewModel(ggr, this));
-            }
+            TabItemViewModels.Add(new RDTGraphViewModel2(cls, this));
         }
-        //if (cls is scnSceneResource ssr)
-        //{
-        //    if (_globals.Value.ENABLE_NODE_EDITOR)
-        //    {
-        //        TabItemViewModels.Add(new RDTGraphViewModel(ssr, this));
-        //    }
-        //}
     }
 
     public void PopulateItems()

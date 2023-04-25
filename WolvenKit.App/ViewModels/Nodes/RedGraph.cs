@@ -8,14 +8,18 @@ using Microsoft.Msagl.Core.Routing;
 using Microsoft.Msagl.Layout.Layered;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.App.ViewModels.Nodes.Scene;
+using WolvenKit.Common;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes;
 
-public class GraphViewModel
+public class RedGraph
 {
+    public string Title { get; }
     public ObservableCollection<NodeViewModel> Nodes { get; } = new();
     public ObservableCollection<ConnectionViewModel> Connections { get; } = new();
+
+    public RedGraph(string title) => Title = title;
 
     public void ArrangeNodes(double xOffset = 0, double yOffset = 0)
     {
@@ -54,16 +58,16 @@ public class GraphViewModel
                 node.Center.X - graph.BoundingBox.Center.X - (nvm.Size.Width / 2) + xOffset,
                 node.Center.Y - graph.BoundingBox.Center.Y - (nvm.Size.Height / 2) + yOffset);
 
-            if (nvm is questPhaseNodeDefinitionWrapper questPhase)
+            /*if (nvm is questPhaseNodeDefinitionWrapper questPhase)
             {
                 questPhase.MainGraph.ArrangeNodes(node.Center.X - graph.BoundingBox.Center.X + xOffset, node.Center.Y - graph.BoundingBox.Center.Y + yOffset);
-            }
+            }*/
         }
     }
 
-    public static GraphViewModel GenerateQuestGraph(graphGraphDefinition questGraph)
+    public static RedGraph GenerateQuestGraph(string title, graphGraphDefinition questGraph, IArchiveManager archiveManager)
     {
-        var graph = new GraphViewModel();
+        var graph = new RedGraph(title);
 
         var socketNodeLookup = new Dictionary<int, int>();
         var connectionCache = new Dictionary<int, graphGraphConnectionDefinition>();
@@ -78,26 +82,15 @@ public class GraphViewModel
             BaseQuestViewModel nvm;
             if (node is questPhaseNodeDefinition questPhase)
             {
-                var subGraph = new GraphViewModel();
-                if (questPhase.PhaseGraph is { Chunk: { } questPhaseGraph })
-                {
-                    subGraph = GenerateQuestGraph(questPhaseGraph);
-
-                    /*foreach (var subNode in subGraph.Nodes)
-                    {
-                        graph.Nodes.Add(subNode);
-                    }
-
-                    foreach (var subConnection in subGraph.Connections)
-                    {
-                        graph.Connections.Add(subConnection);
-                    }*/
-                }
-                nvm = new questPhaseNodeDefinitionWrapper(questPhase, subGraph);
+                nvm = new questPhaseNodeDefinitionWrapper(questPhase, archiveManager);
             }
             else if (node is questRandomizerNodeDefinition randomizerNode)
             {
                 nvm = new questRandomizerNodeDefinitionWrapper(randomizerNode);
+            }
+            else if (node is questInputNodeDefinition inputNode)
+            {
+                nvm = new questInputNodeDefinitionWrapper(inputNode);
             }
             else if (node is questNodeDefinition questNode)
             {
@@ -137,9 +130,9 @@ public class GraphViewModel
         return graph;
     }
 
-    public static GraphViewModel GenerateSceneGraph(scnSceneResource sceneResource)
+    public static RedGraph GenerateSceneGraph(string title, scnSceneResource sceneResource)
     {
-        var graph = new GraphViewModel();
+        var graph = new RedGraph(title);
 
         var nodeCache = new Dictionary<uint, BaseSceneViewModel>();
         foreach (var nodeHandle in sceneResource.SceneGraph.Chunk!.Graph)

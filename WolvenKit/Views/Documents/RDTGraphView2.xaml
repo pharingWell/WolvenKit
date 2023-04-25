@@ -14,6 +14,20 @@
     x:TypeArguments="documents:RDTGraphViewModel2"
     mc:Ignorable="d">
     <Grid>
-        <nodes:GraphView DataContext="{Binding MainGraph}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel
+            x:Name="Breadcrumb"
+            Grid.Row="0"
+            VerticalAlignment="Center"
+            Orientation="Horizontal" />
+
+        <nodes:GraphView
+            x:Name="Editor"
+            Grid.Row="1"
+            Source="{Binding MainGraph}" />
     </Grid>
 </reactiveUi:ReactiveUserControl>

@@ -13,6 +13,7 @@ using Microsoft.Msagl.Layout.Layered;
 using WolvenKit.App.ViewModels.Nodes;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.App.ViewModels.Nodes.Scene;
+using WolvenKit.Common;
 using WolvenKit.RED4.Types;
 
 
@@ -20,39 +21,43 @@ namespace WolvenKit.App.ViewModels.Documents;
 
 public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
 {
+    private readonly IArchiveManager _archiveManager;
+
     protected readonly IRedType _data;
 
     [ObservableProperty]
-    private GraphViewModel _mainGraph;
+    private RedGraph _mainGraph;
 
-    public RDTGraphViewModel2(IRedType data, RedDocumentViewModel file) : base(file, "Graph View")
+    public RDTGraphViewModel2(IRedType data, RedDocumentViewModel file, IArchiveManager archiveManager) : base(file, "Graph View")
     {
+        _archiveManager = archiveManager;
+
         _data = data;
-        _mainGraph = new GraphViewModel();
+        _mainGraph = new RedGraph("ERROR");
     }
 
     public override ERedDocumentItemType DocumentItemType => ERedDocumentItemType.MainFile;
 
     public void Load()
     {
-        GraphViewModel? mainGraph = null;
+        RedGraph? mainGraph = null;
 
         if (_data is graphGraphResource questResource)
         {
             if (questResource.Graph.Chunk is { } questGraph)
             {
-                mainGraph = GraphViewModel.GenerateQuestGraph(questGraph);
+                mainGraph = RedGraph.GenerateQuestGraph(Parent.Header, questGraph, _archiveManager);
             }
         }
 
         if (_data is scnSceneResource sceneResource)
         {
-            mainGraph = GraphViewModel.GenerateSceneGraph(sceneResource);
+            mainGraph = RedGraph.GenerateSceneGraph(Parent.Header, sceneResource);
         }
 
         if (mainGraph == null)
         {
-            mainGraph = new GraphViewModel();
+            mainGraph = new RedGraph("ERROR");
         }
 
         MainGraph = mainGraph;

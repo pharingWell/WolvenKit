@@ -21,6 +21,8 @@ public abstract class BaseQuestViewModel : NodeViewModel
 
 public class BaseQuestViewModel<T> : BaseQuestViewModel where T : graphGraphNodeDefinition
 {
+    protected T _castedData => (T)_data;
+
     public BaseQuestViewModel(graphGraphNodeDefinition graphGraphNodeDefinition) : base(graphGraphNodeDefinition)
     {
     }

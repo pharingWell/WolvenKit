@@ -95,6 +95,10 @@ public class GraphViewModel
                 }
                 nvm = new questPhaseNodeDefinitionWrapper(questPhase, subGraph);
             }
+            else if (node is questRandomizerNodeDefinition randomizerNode)
+            {
+                nvm = new questRandomizerNodeDefinitionWrapper(randomizerNode);
+            }
             else if (node is questNodeDefinition questNode)
             {
                 nvm = new questNodeDefinitionWrapper(questNode);
@@ -121,11 +125,11 @@ public class GraphViewModel
         {
             var source = (uint)socketNodeLookup[connection.Source.Chunk!.GetHashCode()];
             var srcNode = nodeCache[source];
-            var srcConnector = srcNode.Output.First(x => x.Title == connection.Source.Chunk!.Name);
+            var srcConnector = srcNode.Output.First(x => x.Name == connection.Source.Chunk!.Name);
 
             var target = (uint)socketNodeLookup[connection.Destination.Chunk!.GetHashCode()];
             var targetNode = nodeCache[target];
-            var targetConnector = targetNode.Input.First(x => x.Title == connection.Destination.Chunk!.Name);
+            var targetConnector = targetNode.Input.First(x => x.Name == connection.Destination.Chunk!.Name);
 
             graph.Connections.Add(new Nodes.ConnectionViewModel(srcConnector, targetConnector));
         }

@@ -115,7 +115,7 @@ namespace WolvenKit.Views.Shell
             // add default profiles
             if (_settingsManager.LaunchProfiles is null || _settingsManager.LaunchProfiles.Count == 0)
             {
-                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(@"WolvenKit.Resources.launchprofiles.json");
+                using var stream = Application.GetResourceStream(new Uri("pack://application:,,,/WolvenKit;component/Resources/launchprofiles.json"))!.Stream;
                 var defaultprofiles = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, LaunchProfile>>(stream, new System.Text.Json.JsonSerializerOptions()
                 {
                     WriteIndented = true,

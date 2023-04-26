@@ -107,21 +107,27 @@ namespace WolvenKit.Views.Shell
 
         private bool LoadLayout(string filePath)
         {
-            if (DataContext is not AppViewModel appViewModel)
+            if (!File.Exists(filePath))
             {
                 return false;
             }
 
-            if (!File.Exists(filePath))
+            using var fs = File.Open(filePath, FileMode.Open);
+            return LoadLayout(fs);
+        }
+
+        private bool LoadLayout(Stream inStream)
+        {
+            if (DataContext is not AppViewModel appViewModel)
             {
                 return false;
             }
 
             var logger = Locator.Current.GetService<ILoggerService>();
 
-            var reader = XmlReader.Create(filePath);
+            var reader = XmlReader.Create(inStream);
 
-            var defaultXmlSerializer = DockingManager.CreateDefaultXmlSerializer(typeof (List<DockingParams>));
+            var defaultXmlSerializer = DockingManager.CreateDefaultXmlSerializer(typeof(List<DockingParams>));
             if (!defaultXmlSerializer.CanDeserialize(reader))
             {
                 return false;
@@ -153,7 +159,8 @@ namespace WolvenKit.Views.Shell
                 }
 
                 reader.Close();
-                reader = XmlReader.Create(filePath);
+                inStream.Position = 0;
+                reader = XmlReader.Create(inStream);
 
                 var isSuccess = PART_DockingManager.LoadDockState(reader);
 
@@ -165,7 +172,7 @@ namespace WolvenKit.Views.Shell
             {
                 logger.Error(e);
             }
-            
+
             reader.Close();
 
             return false;
@@ -215,13 +222,12 @@ namespace WolvenKit.Views.Shell
 
             try
             {
-                var reader = XmlReader.Create("DockStatesDefault.xml");
-
                 logger.Info($"Trying to load default layout from {Path.GetFullPath("DockStatesDefault.xml")}...");
-                var isSuccessful = LoadLayout("DockStatesDefault.xml");
-                logger.Debug($"...Default layout load returned {isSuccessful}");
 
-                reader.Close();
+                using var stream = Application.GetResourceStream(new Uri("pack://application:,,,/WolvenKit;component/Resources/DockStatesDefault.xml"))!.Stream;
+                var isSuccessful = LoadLayout(stream);
+
+                logger.Debug($"...Default layout load returned {isSuccessful}");
             }
             catch (Exception e)
             {

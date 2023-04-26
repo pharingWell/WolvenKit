@@ -7,6 +7,7 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using System.Xml;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -128,8 +129,7 @@ namespace WolvenKit
             foreach (var customHighlightName in customHighlightNames)
             {
                 // Load our custom highlighting definition
-                IHighlightingDefinition customHighlighting;
-                using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream($"WolvenKit.Resources.SyntaxHighlighting.{customHighlightName}.xshd");
+                using var s = Application.GetResourceStream(new Uri($"pack://application:,,,/WolvenKit;component/Resources/SyntaxHighlighting/{customHighlightName}.xshd"))!.Stream;
                 if (s == null)
                 {
                     throw new InvalidOperationException("Could not find embedded resource");
@@ -137,7 +137,7 @@ namespace WolvenKit
 
                 using XmlReader reader = new XmlTextReader(s);
                 var hlXshdDef = HighlightingLoader.LoadXshd(reader);
-                customHighlighting = HighlightingLoader.Load(hlXshdDef, HighlightingManager.Instance);
+                var customHighlighting = HighlightingLoader.Load(hlXshdDef, HighlightingManager.Instance);
 
                 // and register it in the HighlightingManager
                 HighlightingManager.Instance.RegisterHighlighting(hlXshdDef.Name, hlXshdDef.Extensions.ToArray(), customHighlighting);

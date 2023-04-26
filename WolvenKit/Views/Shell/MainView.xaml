@@ -18,7 +18,7 @@
     AllowsTransparency="True"
     Background="Transparent"
     Closing="ChromelessWindow_Closing"
-    Icon="TaskBarIcon.ico"
+    Icon="pack://application:,,,/Resources/Media/Images/Icons/Application/TaskBarIcon.ico"
     IconAlignment="Left"
     LeftHeaderItemsSource="{DynamicResource leftHeaderItems}"
     Loaded="ChromelessWindow_Loaded"

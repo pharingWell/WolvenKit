@@ -22,6 +22,7 @@ public class DocumentViewmodelFactory : IDocumentViewmodelFactory
     private readonly IWatcherService _watcherService;
     private readonly IArchiveManager _archiveManager;
     private readonly ExtendedScriptService _scriptService;
+    private readonly INodeWrapperFactory _nodeWrapperFactory;
     
 
     public DocumentViewmodelFactory(
@@ -34,7 +35,8 @@ public class DocumentViewmodelFactory : IDocumentViewmodelFactory
         Red4ParserService parserService,
         IWatcherService watcherService,
         IArchiveManager archiveManager,
-        ExtendedScriptService scriptService)
+        ExtendedScriptService scriptService,
+        INodeWrapperFactory nodeWrapperFactory)
     {
         _tabViewmodelFactory = tabViewmodelFactory;
         _paneViewModelFactory = paneViewModelFactory;
@@ -46,10 +48,11 @@ public class DocumentViewmodelFactory : IDocumentViewmodelFactory
         _watcherService = watcherService;
         _archiveManager = archiveManager;
         _scriptService = scriptService;
+        _nodeWrapperFactory = nodeWrapperFactory;
         
     }
     public RedDocumentViewModel RedDocumentViewModel(CR2WFile file, string path, AppViewModel appViewModel) 
-        => new(file, path, appViewModel, _tabViewmodelFactory, _chunkViewmodelFactory, _projectManager, _loggerService, _globals, _parserService, _watcherService, _archiveManager, _scriptService);
+        => new(file, path, appViewModel, _tabViewmodelFactory, _chunkViewmodelFactory, _projectManager, _loggerService, _globals, _parserService, _watcherService, _archiveManager, _scriptService, _nodeWrapperFactory);
 
     public WScriptDocumentViewModel WScriptDocumentViewModel(string path) 
         => new(path, _projectManager, _loggerService, _parserService, _watcherService, _archiveManager, _scriptService, _paneViewModelFactory);

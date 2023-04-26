@@ -43,6 +43,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
     private readonly IWatcherService _watcherService;
     private readonly IArchiveManager _archiveManager;
     private readonly ExtendedScriptService _scriptService;
+    private readonly INodeWrapperFactory _nodeWrapperFactory;
 
     private readonly AppViewModel _appViewModel;
 
@@ -59,7 +60,8 @@ public partial class RedDocumentViewModel : DocumentViewModel
         Red4ParserService parserService,
         IWatcherService watcherService,
         IArchiveManager archiveManager,
-        ExtendedScriptService scriptService) : base(path)
+        ExtendedScriptService scriptService,
+        INodeWrapperFactory nodeWrapperFactory) : base(path)
     {
         _documentTabViewmodelFactory = documentTabViewmodelFactory;
         _chunkViewmodelFactory = chunkViewmodelFactory;
@@ -70,6 +72,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
         _watcherService = watcherService;
         _archiveManager = archiveManager;
         _scriptService = scriptService;
+        _nodeWrapperFactory = nodeWrapperFactory;
 
         _appViewModel = appViewModel;
         _embedHashSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -283,7 +286,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
 
         if (_globals.Value.ENABLE_NODE_EDITOR && cls is graphGraphResource or scnSceneResource)
         {
-            TabItemViewModels.Add(new RDTGraphViewModel2(cls, this, _archiveManager));
+            TabItemViewModels.Add(new RDTGraphViewModel2(cls, this, _nodeWrapperFactory));
         }
     }
 

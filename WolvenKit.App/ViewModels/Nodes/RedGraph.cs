@@ -6,6 +6,7 @@ using Microsoft.Msagl.Core.Geometry.Curves;
 using Microsoft.Msagl.Core.Layout;
 using Microsoft.Msagl.Core.Routing;
 using Microsoft.Msagl.Layout.Layered;
+using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.App.ViewModels.Nodes.Scene;
 using WolvenKit.Common;
@@ -57,15 +58,10 @@ public class RedGraph
             nvm.Location = new System.Windows.Point(
                 node.Center.X - graph.BoundingBox.Center.X - (nvm.Size.Width / 2) + xOffset,
                 node.Center.Y - graph.BoundingBox.Center.Y - (nvm.Size.Height / 2) + yOffset);
-
-            /*if (nvm is questPhaseNodeDefinitionWrapper questPhase)
-            {
-                questPhase.MainGraph.ArrangeNodes(node.Center.X - graph.BoundingBox.Center.X + xOffset, node.Center.Y - graph.BoundingBox.Center.Y + yOffset);
-            }*/
         }
     }
 
-    public static RedGraph GenerateQuestGraph(string title, graphGraphDefinition questGraph, IArchiveManager archiveManager)
+    public static RedGraph GenerateQuestGraph(string title, graphGraphDefinition questGraph, INodeWrapperFactory nodeWrapperFactory)
     {
         var graph = new RedGraph(title);
 
@@ -82,7 +78,11 @@ public class RedGraph
             BaseQuestViewModel nvm;
             if (node is questPhaseNodeDefinition questPhase)
             {
-                nvm = new questPhaseNodeDefinitionWrapper(questPhase, archiveManager);
+                nvm = nodeWrapperFactory.QuestPhaseNodeDefinitionWrapper(questPhase);
+            }
+            else if (node is questSceneNodeDefinition scene)
+            {
+                nvm = nodeWrapperFactory.QuestSceneNodeDefinitionWrapper(scene);
             }
             else if (node is questRandomizerNodeDefinition randomizerNode)
             {

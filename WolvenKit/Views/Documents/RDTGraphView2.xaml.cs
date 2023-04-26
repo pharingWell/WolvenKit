@@ -35,10 +35,10 @@ public partial class RDTGraphView2 : ReactiveUserControl<RDTGraphViewModel2>
     {
         if (e.Key == Key.Tab && Editor.SelectedNode != null)
         {
-            if (Editor.SelectedNode is questPhaseNodeDefinitionWrapper phase)
+            if (Editor.SelectedNode is IGraphProvider provider)
             {
-                _history.Add(phase.Graph);
-                Editor.SetCurrentValue(GraphView.SourceProperty, phase.Graph);
+                _history.Add(provider.Graph);
+                Editor.SetCurrentValue(GraphView.SourceProperty, provider.Graph);
 
                 BuildBreadcrumb();
             }

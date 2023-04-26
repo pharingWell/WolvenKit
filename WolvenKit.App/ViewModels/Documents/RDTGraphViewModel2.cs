@@ -10,6 +10,7 @@ using Microsoft.Msagl.Core.Layout;
 using Microsoft.Msagl.Core.Routing;
 using Microsoft.Msagl.Layout.LargeGraphLayout;
 using Microsoft.Msagl.Layout.Layered;
+using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.App.ViewModels.Nodes.Scene;
@@ -21,16 +22,16 @@ namespace WolvenKit.App.ViewModels.Documents;
 
 public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
 {
-    private readonly IArchiveManager _archiveManager;
+    private readonly INodeWrapperFactory _nodeWrapperFactory;
 
     protected readonly IRedType _data;
 
     [ObservableProperty]
     private RedGraph _mainGraph;
 
-    public RDTGraphViewModel2(IRedType data, RedDocumentViewModel file, IArchiveManager archiveManager) : base(file, "Graph View")
+    public RDTGraphViewModel2(IRedType data, RedDocumentViewModel file, INodeWrapperFactory nodeWrapperFactory) : base(file, "Graph View")
     {
-        _archiveManager = archiveManager;
+        _nodeWrapperFactory = nodeWrapperFactory;
 
         _data = data;
         _mainGraph = new RedGraph("ERROR");
@@ -46,7 +47,7 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
         {
             if (questResource.Graph.Chunk is { } questGraph)
             {
-                mainGraph = RedGraph.GenerateQuestGraph(Parent.Header, questGraph, _archiveManager);
+                mainGraph = RedGraph.GenerateQuestGraph(Parent.Header, questGraph, _nodeWrapperFactory);
             }
         }
 

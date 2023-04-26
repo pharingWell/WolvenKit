@@ -8,7 +8,7 @@ using EFileReadErrorCodes = WolvenKit.RED4.Archive.IO.EFileReadErrorCodes;
 
 namespace WolvenKit.App.ViewModels.Nodes.Quest;
 
-public class questPhaseNodeDefinitionWrapper : BaseQuestViewModel<questPhaseNodeDefinition>, IGraphProvider
+public class questSceneNodeDefinitionWrapper : BaseQuestViewModel<questSceneNodeDefinition>, IGraphProvider
 {
     private readonly INodeWrapperFactory _nodeWrapperFactory;
     private readonly IArchiveManager _archiveManager;
@@ -27,28 +27,23 @@ public class questPhaseNodeDefinitionWrapper : BaseQuestViewModel<questPhaseNode
         }
     }
 
-
-    public questPhaseNodeDefinitionWrapper(questPhaseNodeDefinition questPhaseNodeDefinition, INodeWrapperFactory nodeWrapperFactory, IArchiveManager archiveManager) : base(questPhaseNodeDefinition)
+    public questSceneNodeDefinitionWrapper(questSceneNodeDefinition nodeDefinition, INodeWrapperFactory nodeWrapperFactory, IArchiveManager archiveManager) : base(nodeDefinition)
     {
         _nodeWrapperFactory = nodeWrapperFactory;
         _archiveManager = archiveManager;
 
-        Title = $"{Title} [{questPhaseNodeDefinition.Id}]";
-        if (_castedData.PhaseResource.DepotPath != ResourcePath.Empty && _castedData.PhaseResource.DepotPath.IsResolvable)
+        Title = $"{Title} [{nodeDefinition.Id}]";
+        if (_castedData.SceneFile.DepotPath != ResourcePath.Empty && _castedData.SceneFile.DepotPath.IsResolvable)
         {
-            Details.Add("Filename", Path.GetFileName(_castedData.PhaseResource.DepotPath.GetResolvedText())!);
+            Details.Add("Filename", Path.GetFileName(_castedData.SceneFile.DepotPath.GetResolvedText())!);
         }
     }
 
     private void GenerateSubGraph()
     {
-        if (_castedData.PhaseGraph != null && _castedData.PhaseGraph.Chunk != null)
+        if (_castedData.SceneFile.DepotPath != ResourcePath.Empty && _castedData.SceneFile.DepotPath.IsResolvable)
         {
-            _graph = RedGraph.GenerateQuestGraph(Title, _castedData.PhaseGraph.Chunk, _nodeWrapperFactory);
-        }
-        else if (_castedData.PhaseResource.DepotPath != ResourcePath.Empty)
-        {
-            var file = _archiveManager.Lookup(_castedData.PhaseResource.DepotPath);
+            var file = _archiveManager.Lookup(_castedData.SceneFile.DepotPath);
             if (!file.HasValue)
             {
                 throw new Exception();
@@ -64,12 +59,12 @@ public class questPhaseNodeDefinitionWrapper : BaseQuestViewModel<questPhaseNode
                 throw new Exception();
             }
 
-            if (cr2w!.RootChunk is not questQuestPhaseResource res || res.Graph == null || res.Graph.Chunk == null)
+            if (cr2w!.RootChunk is not scnSceneResource res)
             {
                 throw new Exception();
             }
 
-            _graph = RedGraph.GenerateQuestGraph(Path.GetFileName(file.Value.FileName), res.Graph.Chunk, _nodeWrapperFactory);
+            _graph = RedGraph.GenerateSceneGraph(Path.GetFileName(file.Value.FileName), res);
         }
         else
         {

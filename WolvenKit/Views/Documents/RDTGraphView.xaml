@@ -94,11 +94,12 @@
             <editors:AutomaticNodifyEditor.ConnectionTemplate>
                 <DataTemplate>
                     <nodify:Connection
-                        OffsetMode="Edge"
                         Source="{Binding Source.Anchor}"
                         SourceOffset="7,0"
+                        SourceOffsetMode="Edge"
                         Target="{Binding Destination.Anchor}"
-                        TargetOffset="7,0">
+                        TargetOffset="7,0"
+                        TargetOffsetMode="Edge">
                         <nodify:Connection.Style>
                             <Style TargetType="{x:Type nodify:BaseConnection}">
                                 <Setter Property="Cursor" Value="Hand" />

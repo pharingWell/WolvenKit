@@ -145,11 +145,12 @@
                 <DataTemplate>
                     <nodify:Connection
                         Direction="Forward"
-                        OffsetMode="Edge"
                         Source="{Binding Source.Anchor}"
                         SourceOffset="12,0"
+                        SourceOffsetMode="Edge"
                         Target="{Binding Destination.Anchor}"
-                        TargetOffset="12,0">
+                        TargetOffset="12,0"
+                        TargetOffsetMode="Edge">
                         <nodify:Connection.Style>
                             <Style TargetType="{x:Type nodify:BaseConnection}">
                                 <Setter Property="Cursor" Value="Hand" />

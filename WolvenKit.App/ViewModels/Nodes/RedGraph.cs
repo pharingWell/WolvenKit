@@ -415,6 +415,15 @@ public class RedGraph
 
                 foreach (var destination in sceneOutputConnector.Data.Destinations)
                 {
+                    var targetNode = nodeCache[destination.NodeId.Id];
+                    if (targetNode is IDynamicInputNode dynamicInputNode)
+                    {
+                        while (dynamicInputNode.Input.Count <= destination.IsockStamp.Ordinal)
+                        {
+                            dynamicInputNode.AddInput();
+                        }
+                    }
+
                     graph.Connections.Add(new SceneConnectionViewModel(outputConnector, nodeCache[destination.NodeId.Id].Input[destination.IsockStamp.Ordinal]));
                 }
             }

@@ -1,10 +1,28 @@
-﻿using WolvenKit.RED4.Types;
+﻿using DynamicData;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
 
-public class scnDeletionMarkerNodeWrapper : BaseSceneViewModel<scnDeletionMarkerNode>
+public class scnDeletionMarkerNodeWrapper : BaseSceneViewModel<scnDeletionMarkerNode>, IDynamicInputNode
 {
     public scnDeletionMarkerNodeWrapper(scnDeletionMarkerNode scnSceneGraphNode) : base(scnSceneGraphNode)
     {
     }
+
+    internal override void GenerateSockets()
+    {
+        for (var i = 0; i < Data.OutputSockets.Count; i++)
+        {
+            Output.Add(new SceneOutputConnectorViewModel($"Out{i}", $"Out{i}", NodeId, Data.OutputSockets[i]));
+        }
+    }
+
+    public void AddInput()
+    {
+        var index = (ushort)Input.Count;
+
+        Input.Add(new SceneInputConnectorViewModel($"In{index}", $"In{index}", NodeId, index));
+    }
+
+    public void RemoveInput() => Input.Remove(Input[^1]);
 }

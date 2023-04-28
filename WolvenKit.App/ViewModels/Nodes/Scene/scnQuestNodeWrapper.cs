@@ -1,4 +1,5 @@
-﻿using WolvenKit.RED4.Types;
+﻿using System;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
 
@@ -19,7 +20,11 @@ public class scnQuestNodeWrapper : BaseSceneViewModel<scnQuestNode>
 
         for (var i = 0; i < _castedData.OutputSockets.Count; i++)
         {
-            var name = _castedData.OsockMappings[i].GetResolvedText()!;
+            var name = $"Out{i}";
+            if (_castedData.OsockMappings.Count > i)
+            {
+                name = _castedData.OsockMappings[i].GetResolvedText()!;
+            }
 
             Output.Add(new SceneOutputConnectorViewModel(name, name, NodeId, _castedData.OutputSockets[i]));
         }

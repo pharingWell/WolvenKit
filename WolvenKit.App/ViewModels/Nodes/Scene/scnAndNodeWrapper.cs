@@ -12,7 +12,7 @@ public class scnAndNodeWrapper : BaseSceneViewModel<scnAndNode>
     {
         for (ushort i = 0; i < _castedData.NumInSockets; i++)
         {
-            Input.Add(new SceneInputConnectorViewModel($"Out{i}", $"Out{i}", NodeId, i));
+            Input.Add(new SceneInputConnectorViewModel($"In{i}", $"In{i}", NodeId, i));
         }
 
         for (var i = 0; i < Data.OutputSockets.Count; i++)

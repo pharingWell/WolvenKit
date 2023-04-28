@@ -10,11 +10,11 @@ public class scnQuestNodeWrapper : BaseSceneViewModel<scnQuestNode>
 
     internal override void GenerateSockets()
     {
-        foreach (var isockMapping in _castedData.IsockMappings)
+        for (ushort i = 0; i < _castedData.IsockMappings.Count; i++)
         {
-            var name = isockMapping.GetResolvedText()!;
+            var name = _castedData.IsockMappings[i].GetResolvedText()!;
 
-            Input.Add(new SceneInputConnectorViewModel(name, name, NodeId, 0));
+            Input.Add(new SceneInputConnectorViewModel(name, name, NodeId, i));
         }
 
         for (var i = 0; i < _castedData.OutputSockets.Count; i++)

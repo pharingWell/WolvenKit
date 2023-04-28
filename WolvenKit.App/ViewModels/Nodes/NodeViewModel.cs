@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
-using WolvenKit.RED4.Types;
 using Point = System.Windows.Point;
 
 namespace WolvenKit.App.ViewModels.Nodes;
@@ -21,7 +20,6 @@ public abstract partial class NodeViewModel : ObservableObject
 
     public ObservableCollection<InputConnectorViewModel> Input { get; } = new();
     public ObservableCollection<OutputConnectorViewModel> Output { get; } = new();
-
-    protected abstract void GenerateInputSockets();
-    protected abstract void GenerateOutputSockets();
+    
+    internal abstract void GenerateSockets();
 }

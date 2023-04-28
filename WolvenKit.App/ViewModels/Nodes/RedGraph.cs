@@ -9,18 +9,144 @@ using Microsoft.Msagl.Layout.Layered;
 using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.App.ViewModels.Nodes.Scene;
-using WolvenKit.Common;
 using WolvenKit.RED4.Types;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace WolvenKit.App.ViewModels.Nodes;
 
 public class RedGraph
 {
+    private readonly IRedType _data;
+
     public string Title { get; }
     public ObservableCollection<NodeViewModel> Nodes { get; } = new();
     public ObservableCollection<ConnectionViewModel> Connections { get; } = new();
+    public PendingConnectionViewModel PendingConnection { get; }
 
-    public RedGraph(string title) => Title = title;
+    public ICommand ConnectCommand { get; }
+    public ICommand DisconnectCommand { get; }
+
+    public RedGraph(string title, IRedType data)
+    {
+        _data = data;
+
+        Title = title;
+        PendingConnection = new PendingConnectionViewModel();
+
+        ConnectCommand = new RelayCommand(Connect);
+        DisconnectCommand = new RelayCommand<BaseConnectorViewModel>(Disconnect);
+    }
+
+    public void Connect()
+    {
+        if (PendingConnection.Target == null)
+        {
+            return;
+        }
+
+        if (_data is graphGraphDefinition questDefinition)
+        {
+            var sceneSource = (QuestOutputConnectorViewModel)PendingConnection.Source;
+            var sceneTarget = (QuestInputConnectorViewModel)PendingConnection.Target;
+
+            var graphGraphConnectionDefinition = new graphGraphConnectionDefinition
+            {
+                Source = new CWeakHandle<graphGraphSocketDefinition>(sceneSource.Data),
+                Destination = new CWeakHandle<graphGraphSocketDefinition>(sceneTarget.Data)
+            };
+            var handle = new CHandle<graphGraphConnectionDefinition>(graphGraphConnectionDefinition);
+
+            sceneSource.Data.Connections.Add(handle);
+            sceneTarget.Data.Connections.Add(handle);
+
+            Connections.Add(new ConnectionViewModel(sceneSource, sceneTarget));
+        }
+
+        if (_data is scnSceneResource sceneResource)
+        {
+            var sceneSource = (SceneOutputConnectorViewModel)PendingConnection.Source;
+            var sceneTarget = (SceneInputConnectorViewModel)PendingConnection.Target;
+
+            var input = new scnInputSocketId
+            {
+                NodeId = new scnNodeId
+                {
+                    Id = sceneTarget.OwnerId
+                },
+                IsockStamp = new scnInputSocketStamp
+                {
+                    Name = 0,
+                    Ordinal = sceneTarget.Ordinal
+                }
+            };
+
+            sceneSource.Data.Destinations.Add(input);
+            Connections.Add(new ConnectionViewModel(sceneSource, sceneTarget));
+        }
+
+        //Connections.Add(new ConnectionViewModel(source, target));
+    }
+
+    private void Disconnect(BaseConnectorViewModel? baseConnectorViewModel)
+    {
+        if (baseConnectorViewModel is OutputConnectorViewModel outputConnector)
+        {
+            for (var i = Connections.Count - 1; i >= 0; i--)
+            {
+                if (Connections[i].Source == outputConnector)
+                {
+                    RemoveConnection(Connections[i]);
+                }
+            }
+        }
+
+        if (baseConnectorViewModel is InputConnectorViewModel inputConnector)
+        {
+            for (var i = Connections.Count - 1; i >= 0; i--)
+            {
+                if (Connections[i].Target == inputConnector)
+                {
+                    RemoveConnection(Connections[i]);
+                }
+            }
+        }
+    }
+
+    private void RemoveConnection(ConnectionViewModel connection)
+    {
+        if (connection is QuestConnectionViewModel questConnection)
+        {
+            var questSource = (QuestOutputConnectorViewModel)connection.Source;
+            var questDestination = (QuestInputConnectorViewModel)connection.Target;
+
+            for (var i = questSource.Data.Connections.Count - 1; i >= 0; i--)
+            {
+                if (ReferenceEquals(questSource.Data.Connections[i].Chunk, questConnection.ConnectionDefinition))
+                {
+                    questSource.Data.Connections.RemoveAt(i);
+                }
+            }
+
+            for (var i = questDestination.Data.Connections.Count - 1; i >= 0; i--)
+            {
+                if (ReferenceEquals(questDestination.Data.Connections[i].Chunk, questConnection.ConnectionDefinition))
+                {
+                    questDestination.Data.Connections.RemoveAt(i);
+                }
+            }
+            Connections.Remove(connection);
+        }
+
+        if (_data is scnSceneResource sceneResource)
+        {
+            var sceneSource = (SceneOutputConnectorViewModel)connection.Source;
+            var sceneDestination = sceneSource.Data.Destinations.FirstOrDefault(x => x.NodeId.Id == connection.Target.OwnerId);
+
+            sceneSource.Data.Destinations.Remove(sceneDestination);
+            Connections.Remove(connection);
+        }
+    }
 
     public void ArrangeNodes(double xOffset = 0, double yOffset = 0)
     {
@@ -54,7 +180,7 @@ public class RedGraph
 
         foreach (var node in graph.Nodes)
         {
-            var nvm = (Nodes.NodeViewModel)node.UserData;
+            var nvm = (NodeViewModel)node.UserData;
             nvm.Location = new System.Windows.Point(
                 node.Center.X - graph.BoundingBox.Center.X - (nvm.Size.Width / 2) + xOffset,
                 node.Center.Y - graph.BoundingBox.Center.Y - (nvm.Size.Height / 2) + yOffset);
@@ -63,9 +189,9 @@ public class RedGraph
 
     public static RedGraph GenerateQuestGraph(string title, graphGraphDefinition questGraph, INodeWrapperFactory nodeWrapperFactory)
     {
-        var graph = new RedGraph(title);
+        var graph = new RedGraph(title, questGraph);
 
-        var socketNodeLookup = new Dictionary<int, int>();
+        var socketNodeLookup = new Dictionary<graphGraphSocketDefinition, QuestInputConnectorViewModel>();
         var connectionCache = new Dictionary<int, graphGraphConnectionDefinition>();
 
         var nodeCache = new Dictionary<uint, BaseQuestViewModel>();
@@ -92,6 +218,10 @@ public class RedGraph
             {
                 nvm = new questInputNodeDefinitionWrapper(inputNode);
             }
+            else if (node is questPauseConditionNodeDefinition pauseConditionNode)
+            {
+                nvm = new questNodeDefinitionWrapper(pauseConditionNode);
+            }
             else if (node is questNodeDefinition questNode)
             {
                 nvm = new questNodeDefinitionWrapper(questNode);
@@ -104,27 +234,28 @@ public class RedGraph
             nodeCache.Add(nvm.UniqueId, nvm);
             graph.Nodes.Add(nvm);
 
-            foreach (var socketHandle in node.Sockets)
+            foreach (var inputConnector in nvm.Input)
             {
-                socketNodeLookup.Add(socketHandle.Chunk!.GetHashCode(), node.GetHashCode());
-                foreach (var connection in socketHandle.Chunk!.Connections)
-                {
-                    connectionCache.TryAdd(connection.GetHashCode(), connection.Chunk!);
-                }
+                var questInputConnector = (QuestInputConnectorViewModel)inputConnector;
+                socketNodeLookup.Add(questInputConnector.Data, questInputConnector);
             }
         }
 
-        foreach (var (hash, connection) in connectionCache)
+        foreach (var node in graph.Nodes)
         {
-            var source = (uint)socketNodeLookup[connection.Source.Chunk!.GetHashCode()];
-            var srcNode = nodeCache[source];
-            var srcConnector = srcNode.Output.First(x => x.Name == connection.Source.Chunk!.Name);
+            var questNode = (BaseQuestViewModel)node;
 
-            var target = (uint)socketNodeLookup[connection.Destination.Chunk!.GetHashCode()];
-            var targetNode = nodeCache[target];
-            var targetConnector = targetNode.Input.First(x => x.Name == connection.Destination.Chunk!.Name);
+            foreach (var outputConnector in questNode.Output)
+            {
+                var questOutputConnector = (QuestOutputConnectorViewModel)outputConnector;
 
-            graph.Connections.Add(new Nodes.ConnectionViewModel(srcConnector, targetConnector));
+                foreach (var connectionHandle in questOutputConnector.Data.Connections)
+                {
+                    var connection = connectionHandle.Chunk!;
+
+                    graph.Connections.Add(new QuestConnectionViewModel(questOutputConnector, socketNodeLookup[connection.Destination.Chunk!], connection));
+                }
+            }
         }
 
         return graph;
@@ -132,7 +263,7 @@ public class RedGraph
 
     public static RedGraph GenerateSceneGraph(string title, scnSceneResource sceneResource)
     {
-        var graph = new RedGraph(title);
+        var graph = new RedGraph(title, sceneResource);
 
         var nodeCache = new Dictionary<uint, BaseSceneViewModel>();
         foreach (var nodeHandle in sceneResource.SceneGraph.Chunk!.Graph)
@@ -187,11 +318,15 @@ public class RedGraph
 
         foreach (var node in graph.Nodes)
         {
-            foreach (var outputConnector in node.Output)
+            var sceneNode = (BaseSceneViewModel)node;
+
+            foreach (var outputConnector in sceneNode.Output)
             {
-                foreach (var targetId in outputConnector.TargetIds)
+                var sceneOutputConnector = (SceneOutputConnectorViewModel)outputConnector;
+
+                foreach (var destination in sceneOutputConnector.Data.Destinations)
                 {
-                    graph.Connections.Add(new Nodes.ConnectionViewModel(outputConnector, nodeCache[targetId.Item1].Input[targetId.Item2]));
+                    graph.Connections.Add(new ConnectionViewModel(outputConnector, nodeCache[destination.NodeId.Id].Input[destination.IsockStamp.Ordinal]));
                 }
             }
         }

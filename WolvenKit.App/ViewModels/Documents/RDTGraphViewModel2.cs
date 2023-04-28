@@ -1,20 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Net.Sockets;
-using CommunityToolkit.Mvvm.ComponentModel;
-using DynamicData;
-using Microsoft.Msagl.Core.Geometry.Curves;
-using Microsoft.Msagl.Core.Layout;
-using Microsoft.Msagl.Core.Routing;
-using Microsoft.Msagl.Layout.LargeGraphLayout;
-using Microsoft.Msagl.Layout.Layered;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes;
-using WolvenKit.App.ViewModels.Nodes.Quest;
-using WolvenKit.App.ViewModels.Nodes.Scene;
-using WolvenKit.Common;
 using WolvenKit.RED4.Types;
 
 
@@ -34,7 +20,7 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
         _nodeWrapperFactory = nodeWrapperFactory;
 
         _data = data;
-        _mainGraph = new RedGraph("ERROR");
+        _mainGraph = new RedGraph("ERROR", new RedDummy());
     }
 
     public override ERedDocumentItemType DocumentItemType => ERedDocumentItemType.MainFile;
@@ -58,7 +44,7 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
 
         if (mainGraph == null)
         {
-            mainGraph = new RedGraph("ERROR");
+            mainGraph = new RedGraph("ERROR", new RedDummy());
         }
 
         MainGraph = mainGraph;

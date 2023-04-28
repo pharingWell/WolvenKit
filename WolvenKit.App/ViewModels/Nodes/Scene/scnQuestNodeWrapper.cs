@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using WolvenKit.RED4.Types;
+﻿using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
 
@@ -9,25 +8,20 @@ public class scnQuestNodeWrapper : BaseSceneViewModel<scnQuestNode>
     {
     }
 
-    protected override void GenerateInputSockets()
+    internal override void GenerateSockets()
     {
         foreach (var isockMapping in _castedData.IsockMappings)
         {
-            Input.Add(new InputConnectorViewModel(isockMapping.GetResolvedText()!, NodeId));
+            var name = isockMapping.GetResolvedText()!;
+
+            Input.Add(new SceneInputConnectorViewModel(name, name, NodeId, 0));
         }
-    }
 
-    protected override void GenerateOutputSockets()
-    {
-        for (var i = 0; i < _data.OutputSockets.Count; i++)
+        for (var i = 0; i < _castedData.OutputSockets.Count; i++)
         {
-            var targets = new List<(uint, ushort)>();
-            foreach (var destination in _data.OutputSockets[i].Destinations)
-            {
-                targets.Add((destination.NodeId.Id, destination.IsockStamp.Ordinal));
-            }
+            var name = _castedData.OsockMappings[i].GetResolvedText()!;
 
-            Output.Add(new OutputConnectorViewModel(_castedData.OsockMappings[i].GetResolvedText()!, NodeId, targets));
+            Output.Add(new SceneOutputConnectorViewModel(name, name, NodeId, _castedData.OutputSockets[i]));
         }
     }
 }

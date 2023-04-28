@@ -1,11 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using DynamicData;
-using ICSharpCode.AvalonEdit.Document;
 using ReactiveUI;
-using WolvenKit.App.ViewModels.Documents;
 using WolvenKit.App.ViewModels.Nodes;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.Views.Nodes;
@@ -14,7 +10,7 @@ namespace WolvenKit.Views.Documents;
 /// <summary>
 /// Interaktionslogik für RDTGraphView2.xaml
 /// </summary>
-public partial class RDTGraphView2 : ReactiveUserControl<RDTGraphViewModel2>
+public partial class RDTGraphView2
 {
     private readonly List<RedGraph> _history = new();
 

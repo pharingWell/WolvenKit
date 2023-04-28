@@ -18,9 +18,11 @@
             x:Name="Editor"
             Background="{StaticResource ContentBackground}"
             Connections="{Binding ElementName=uc, Path=Source.Connections}"
+            DisconnectConnectorCommand="{Binding ElementName=uc, Path=Source.DisconnectCommand}"
             DisplayConnectionsOnTop="True"
             EnableRealtimeSelection="True"
             ItemsSource="{Binding ElementName=uc, Path=Source.Nodes}"
+            PendingConnection="{Binding ElementName=uc, Path=Source.PendingConnection}"
             SelectedItem="{Binding ElementName=uc, Path=SelectedNode}">
             <nodify:NodifyEditor.Resources>
                 <DataTemplate x:Key="HeaderTemplate">
@@ -163,6 +165,15 @@
                     </nodify:Connection>
                 </DataTemplate>
             </nodify:NodifyEditor.ConnectionTemplate>
+            <nodify:NodifyEditor.PendingConnectionTemplate>
+                <DataTemplate DataType="{x:Type nodes:PendingConnectionViewModel}">
+                    <nodify:PendingConnection
+                        AllowOnlyConnectors="True"
+                        CompletedCommand="{Binding ElementName=uc, Path=Source.ConnectCommand}"
+                        Source="{Binding Source, Mode=OneWayToSource}"
+                        Target="{Binding Target, Mode=OneWayToSource}" />
+                </DataTemplate>
+            </nodify:NodifyEditor.PendingConnectionTemplate>
             <nodify:NodifyEditor.ItemContainerStyle>
                 <Style BasedOn="{StaticResource {x:Type nodify:ItemContainer}}" TargetType="{x:Type nodify:ItemContainer}">
                     <Setter Property="Location" Value="{Binding Location}" />

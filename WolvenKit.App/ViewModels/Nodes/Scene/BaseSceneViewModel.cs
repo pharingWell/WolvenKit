@@ -1,46 +1,39 @@
-﻿using System.Collections.Generic;
-using WolvenKit.RED4.Types;
+﻿using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
 
 public abstract class BaseSceneViewModel : NodeViewModel
 {
-    protected scnSceneGraphNode _data;
+    public scnSceneGraphNode Data { get; }
 
     protected BaseSceneViewModel(scnSceneGraphNode scnSceneGraphNode)
     {
-        _data = scnSceneGraphNode;
+        Data = scnSceneGraphNode;
 
         UniqueId = NodeId;
-        Title = $"{_data.GetType().Name[3..^4]} [{NodeId}]";
+        Title = $"{Data.GetType().Name[3..^4]} [{NodeId}]";
 
-        GenerateInputSockets();
-        GenerateOutputSockets();
+        GenerateSockets();
     }
 
-    public uint NodeId => _data.NodeId.Id;
+    public uint NodeId => Data.NodeId.Id;
 }
 
 public abstract class BaseSceneViewModel<T> : BaseSceneViewModel where T : scnSceneGraphNode
 {
-    protected T _castedData => (T)_data;
+    protected T _castedData => (T)Data;
 
     public BaseSceneViewModel(scnSceneGraphNode scnSceneGraphNode) : base(scnSceneGraphNode)
     {
     }
 
-    protected override void GenerateInputSockets() => Input.Add(new InputConnectorViewModel("In", NodeId));
-    protected override void GenerateOutputSockets()
+    internal override void GenerateSockets()
     {
-        for (var i = 0; i < _data.OutputSockets.Count; i++)
-        {
-            var targets = new List<(uint, ushort)>();
-            foreach (var destination in _data.OutputSockets[i].Destinations)
-            {
-                targets.Add((destination.NodeId.Id, destination.IsockStamp.Ordinal));
-            }
+        Input.Add(new SceneInputConnectorViewModel("In", "In", NodeId, 0));
 
-            Output.Add(new OutputConnectorViewModel($"Out{i}", NodeId, targets));
+        for (var i = 0; i < Data.OutputSockets.Count; i++)
+        {
+            Output.Add(new SceneOutputConnectorViewModel($"Out{i}", $"Out{i}", NodeId, Data.OutputSockets[i]));
         }
     }
 }

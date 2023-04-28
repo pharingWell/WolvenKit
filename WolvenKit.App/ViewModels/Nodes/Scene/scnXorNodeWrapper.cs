@@ -8,9 +8,14 @@ public class scnXorNodeWrapper : BaseSceneViewModel<scnXorNode>
     {
     }
 
-    protected override void GenerateInputSockets()
+    internal override void GenerateSockets()
     {
-        Input.Add(new InputConnectorViewModel("In0", NodeId));
-        Input.Add(new InputConnectorViewModel("In1", NodeId));
+        Input.Add(new SceneInputConnectorViewModel("In0", "In0", NodeId, 0));
+        Input.Add(new SceneInputConnectorViewModel("In1", "In1", NodeId, 1));
+
+        for (var i = 0; i < Data.OutputSockets.Count; i++)
+        {
+            Output.Add(new SceneOutputConnectorViewModel($"Out{i}", $"Out{i}", NodeId, Data.OutputSockets[i]));
+        }
     }
 }

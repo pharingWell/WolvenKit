@@ -20,7 +20,7 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
         _nodeWrapperFactory = nodeWrapperFactory;
 
         _data = data;
-        _mainGraph = new RedGraph("ERROR", new RedDummy());
+        _mainGraph = new RedGraph("ERROR", RedGraphType.Invalid);
     }
 
     public override ERedDocumentItemType DocumentItemType => ERedDocumentItemType.MainFile;
@@ -44,7 +44,7 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
 
         if (mainGraph == null)
         {
-            mainGraph = new RedGraph("ERROR", new RedDummy());
+            mainGraph = new RedGraph("ERROR", RedGraphType.Invalid);
         }
 
         MainGraph = mainGraph;

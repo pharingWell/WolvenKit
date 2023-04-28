@@ -333,18 +333,21 @@ public class RedGraph
             var node = nodeHandle.Chunk;
 
             BaseSceneViewModel nvm;
-            if (node is scnRandomizerNode randomizerNode)
+            if (node is scnAndNode andNode)
             {
-                nvm = new scnRandomizerNodeWrapper(randomizerNode);
+                nvm = new scnAndNodeWrapper(andNode);
             }
-            else if (node is scnStartNode startNode)
+            else if (node is scnChoiceNode choiceNode)
             {
-                var startName = sceneResource
-                    .EntryPoints
-                    .FirstOrDefault(x => x.NodeId.Id == startNode.NodeId.Id)!
-                    .Name.GetResolvedText()!;
-
-                nvm = new scnStartNodeWrapper(startNode, startName);
+                nvm = new scnChoiceNodeWrapper(choiceNode);
+            }
+            else if (node is scnCutControlNode cutControlNode)
+            {
+                nvm = new scnCutControlNodeWrapper(cutControlNode);
+            }
+            else if (node is scnDeletionMarkerNode deletionMarkerNode)
+            {
+                nvm = new scnDeletionMarkerNodeWrapper(deletionMarkerNode);
             }
             else if (node is scnEndNode endNode)
             {
@@ -355,20 +358,46 @@ public class RedGraph
 
                 nvm = new scnEndNodeWrapper(endNode, endName);
             }
-            else if (node is scnXorNode xorNode)
+            else if (node is scnHubNode hubNode)
             {
-                nvm = new scnXorNodeWrapper(xorNode);
+                nvm = new scnHubNodeWrapper(hubNode);
+            }
+            else if (node is scnInterruptManagerNode interruptManagerNode)
+            {
+                nvm = new scnInterruptManagerNodeWrapper(interruptManagerNode);
             }
             else if (node is scnQuestNode questNode)
             {
                 nvm = new scnQuestNodeWrapper(questNode);
             }
+            else if (node is scnRandomizerNode randomizerNode)
+            {
+                nvm = new scnRandomizerNodeWrapper(randomizerNode);
+            }
+            else if (node is scnRewindableSectionNode rewindableSectionNode)
+            {
+                nvm = new scnRewindableSectionNodeWrapper(rewindableSectionNode);
+            }
             else if (node is scnSectionNode sectionNode)
             {
                 nvm = new scnSectionNodeWrapper(sectionNode);
             }
+            else if (node is scnStartNode startNode)
+            {
+                var startName = sceneResource
+                    .EntryPoints
+                    .FirstOrDefault(x => x.NodeId.Id == startNode.NodeId.Id)!
+                    .Name.GetResolvedText()!;
+
+                nvm = new scnStartNodeWrapper(startNode, startName);
+            }
+            else if (node is scnXorNode xorNode)
+            {
+                nvm = new scnXorNodeWrapper(xorNode);
+            }
             else
             {
+                // shouldn't happen, just for failsafe
                 nvm = new scnSceneGraphNodeWrapper(node);
             }
 

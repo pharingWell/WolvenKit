@@ -17,11 +17,14 @@ public class scnDeletionMarkerNodeWrapper : BaseSceneViewModel<scnDeletionMarker
         }
     }
 
-    public void AddInput()
+    public BaseConnectorViewModel AddInput()
     {
         var index = (ushort)Input.Count;
+        var input = new SceneInputConnectorViewModel($"In{index}", $"In{index}", NodeId, index);
 
-        Input.Add(new SceneInputConnectorViewModel($"In{index}", $"In{index}", NodeId, index));
+        Input.Add(input);
+
+        return input;
     }
 
     public void RemoveInput() => Input.Remove(Input[^1]);

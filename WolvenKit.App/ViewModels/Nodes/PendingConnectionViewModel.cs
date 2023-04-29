@@ -3,5 +3,5 @@
 public class PendingConnectionViewModel
 {
     public BaseConnectorViewModel Source { get; set; } = default!;
-    public BaseConnectorViewModel? Target { get; set; }
+    public object? Target { get; set; }
 }

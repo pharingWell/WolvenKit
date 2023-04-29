@@ -10,10 +10,14 @@ public abstract class BaseSceneViewModel : NodeViewModel
     {
         Data = scnSceneGraphNode;
 
+        UpdateInfo();
+        GenerateSockets();
+    }
+
+    internal void UpdateInfo()
+    {
         UniqueId = NodeId;
         Title = $"{Data.GetType().Name[3..^4]} [{NodeId}]";
-
-        GenerateSockets();
     }
 
     public uint NodeId => Data.NodeId.Id;

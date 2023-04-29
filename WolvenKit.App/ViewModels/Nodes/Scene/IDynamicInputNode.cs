@@ -6,6 +6,6 @@ public interface IDynamicInputNode
 {
     public ObservableCollection<InputConnectorViewModel> Input { get; }
 
-    public void AddInput();
+    public BaseConnectorViewModel AddInput();
     public void RemoveInput();
 }

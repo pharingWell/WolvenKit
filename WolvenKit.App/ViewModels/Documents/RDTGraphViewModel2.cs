@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes;
 using WolvenKit.RED4.Types;
@@ -20,7 +21,7 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
         _nodeWrapperFactory = nodeWrapperFactory;
 
         _data = data;
-        _mainGraph = new RedGraph("ERROR", RedGraphType.Invalid);
+        _mainGraph = new RedGraph("ERROR", new RedDummy());
     }
 
     public override ERedDocumentItemType DocumentItemType => ERedDocumentItemType.MainFile;
@@ -29,22 +30,29 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
     {
         RedGraph? mainGraph = null;
 
-        if (_data is graphGraphResource questResource)
+        try
         {
-            if (questResource.Graph.Chunk is { } questGraph)
+            if (_data is graphGraphResource questResource)
             {
-                mainGraph = RedGraph.GenerateQuestGraph(Parent.Header, questGraph, _nodeWrapperFactory);
+                if (questResource.Graph.Chunk is { } questGraph)
+                {
+                    mainGraph = RedGraph.GenerateQuestGraph(Parent.Header, questGraph, _nodeWrapperFactory);
+                }
+            }
+
+            if (_data is scnSceneResource sceneResource)
+            {
+                mainGraph = RedGraph.GenerateSceneGraph(Parent.Header, sceneResource);
             }
         }
-
-        if (_data is scnSceneResource sceneResource)
+        catch (Exception)
         {
-            mainGraph = RedGraph.GenerateSceneGraph(Parent.Header, sceneResource);
+            throw;
         }
 
         if (mainGraph == null)
         {
-            mainGraph = new RedGraph("ERROR", RedGraphType.Invalid);
+            mainGraph = new RedGraph("ERROR", new RedDummy());
         }
 
         MainGraph = mainGraph;

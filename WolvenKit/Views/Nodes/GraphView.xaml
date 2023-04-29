@@ -18,6 +18,7 @@
             x:Name="Editor"
             Background="{StaticResource ContentBackground}"
             Connections="{Binding ElementName=uc, Path=Source.Connections}"
+            ContextMenuOpening="Editor_OnContextMenuOpening"
             DisconnectConnectorCommand="{Binding ElementName=uc, Path=Source.DisconnectCommand}"
             DisplayConnectionsOnTop="True"
             EnableRealtimeSelection="True"
@@ -100,10 +101,15 @@
 
                 <DataTemplate DataType="{x:Type nodes:NodeViewModel}">
                     <nodify:Node
+                        ContextMenuOpening="Node_ContextMenuOpening"
                         Header="{Binding}"
                         HeaderTemplate="{StaticResource DetailedHeaderTemplate}"
                         Input="{Binding Input}"
                         Output="{Binding Output}">
+                        <nodify:Node.ContextMenu>
+                            <ContextMenu />
+                        </nodify:Node.ContextMenu>
+
                         <nodify:Node.Style>
                             <Style BasedOn="{StaticResource {x:Type nodify:Node}}" TargetType="{x:Type nodify:Node}">
                                 <Style.Triggers>
@@ -168,7 +174,7 @@
             <nodify:NodifyEditor.PendingConnectionTemplate>
                 <DataTemplate DataType="{x:Type nodes:PendingConnectionViewModel}">
                     <nodify:PendingConnection
-                        AllowOnlyConnectors="True"
+                        AllowOnlyConnectors="False"
                         CompletedCommand="{Binding ElementName=uc, Path=Source.ConnectCommand}"
                         Source="{Binding Source, Mode=OneWayToSource}"
                         Target="{Binding Target, Mode=OneWayToSource}" />
@@ -181,9 +187,7 @@
                 </Style>
             </nodify:NodifyEditor.ItemContainerStyle>
             <nodify:NodifyEditor.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Click="MenuItem_OnClick" Header="Arrange Nodes" />
-                </ContextMenu>
+                <ContextMenu />
             </nodify:NodifyEditor.ContextMenu>
         </nodify:NodifyEditor>
     </Grid>

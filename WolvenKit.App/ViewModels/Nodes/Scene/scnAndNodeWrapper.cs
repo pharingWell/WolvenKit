@@ -2,7 +2,7 @@
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
 
-public class scnAndNodeWrapper : BaseSceneViewModel<scnAndNode>
+public class scnAndNodeWrapper : BaseSceneViewModel<scnAndNode>, IDynamicInputNode
 {
     public scnAndNodeWrapper(scnAndNode scnSceneGraphNode) : base(scnSceneGraphNode)
     {
@@ -19,5 +19,22 @@ public class scnAndNodeWrapper : BaseSceneViewModel<scnAndNode>
         {
             Output.Add(new SceneOutputConnectorViewModel($"Out{i}", $"Out{i}", NodeId, Data.OutputSockets[i]));
         }
+    }
+
+    public BaseConnectorViewModel AddInput()
+    {
+        var index = (ushort)Input.Count;
+        var input = new SceneInputConnectorViewModel($"In{index}", $"In{index}", NodeId, index);
+
+        Input.Add(input);
+        _castedData.NumInSockets++;
+
+        return input;
+    }
+
+    public void RemoveInput()
+    {
+        Input.Remove(Input[^1]);
+        _castedData.NumInSockets--;
     }
 }

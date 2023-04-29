@@ -22,9 +22,13 @@ public enum RedGraphType
     Scene
 }
 
-public class RedGraph
+public partial class RedGraph
 {
-    public RedGraphType GraphType { get; }
+    private IRedType _data;
+
+    private uint _currentSceneNodeId;
+
+    public RedGraphType GraphType { get; } = RedGraphType.Invalid;
 
     public string Title { get; }
     public ObservableCollection<NodeViewModel> Nodes { get; } = new();
@@ -34,9 +38,17 @@ public class RedGraph
     public ICommand ConnectCommand { get; }
     public ICommand DisconnectCommand { get; }
 
-    public RedGraph(string title, RedGraphType graphType)
+    public RedGraph(string title, IRedType data)
     {
-        GraphType = graphType;
+        _data = data;
+        if (_data is graphGraphDefinition)
+        {
+            GraphType = RedGraphType.Quest;
+        }
+        else if (_data is scnSceneResource)
+        {
+            GraphType = RedGraphType.Scene;
+        }
 
         Title = title;
         PendingConnection = new PendingConnectionViewModel();
@@ -54,8 +66,21 @@ public class RedGraph
 
         if (GraphType == RedGraphType.Quest)
         {
+            QuestInputConnectorViewModel questTarget;
+            if (PendingConnection.Target is QuestInputConnectorViewModel questInput)
+            {
+                questTarget = questInput;
+            } 
+            else if (PendingConnection.Target is IDynamicInputNode dynamicInput)
+            {
+                questTarget = (QuestInputConnectorViewModel)dynamicInput.AddInput();
+            }
+            else
+            {
+                return;
+            }
+
             var questSource = (QuestOutputConnectorViewModel)PendingConnection.Source;
-            var questTarget = (QuestInputConnectorViewModel)PendingConnection.Target;
 
             for (var i = Connections.Count - 1; i >= 0; i--)
             {
@@ -101,8 +126,21 @@ public class RedGraph
 
         if (GraphType == RedGraphType.Scene)
         {
+            SceneInputConnectorViewModel sceneTarget;
+            if (PendingConnection.Target is SceneInputConnectorViewModel questInput)
+            {
+                sceneTarget = questInput;
+            }
+            else if (PendingConnection.Target is IDynamicInputNode dynamicInput)
+            {
+                sceneTarget = (SceneInputConnectorViewModel)dynamicInput.AddInput();
+            }
+            else
+            {
+                return;
+            }
+
             var sceneSource = (SceneOutputConnectorViewModel)PendingConnection.Source;
-            var sceneTarget = (SceneInputConnectorViewModel)PendingConnection.Target;
 
             for (var i = Connections.Count - 1; i >= 0; i--)
             {
@@ -208,6 +246,19 @@ public class RedGraph
         }
     }
 
+    public void RemoveNode(NodeViewModel node)
+    {
+        if (!Nodes.Contains(node))
+        {
+            return;
+        }
+
+        if (GraphType == RedGraphType.Scene && node is BaseSceneViewModel sceneNode)
+        {
+            RemoveSceneNode(sceneNode);
+        }
+    }
+
     public void ArrangeNodes(double xOffset = 0, double yOffset = 0)
     {
         var graph = new GeometryGraph();
@@ -249,7 +300,7 @@ public class RedGraph
 
     public static RedGraph GenerateQuestGraph(string title, graphGraphDefinition questGraph, INodeWrapperFactory nodeWrapperFactory)
     {
-        var graph = new RedGraph(title, RedGraphType.Quest);
+        var graph = new RedGraph(title, questGraph);
 
         var socketNodeLookup = new Dictionary<graphGraphSocketDefinition, QuestInputConnectorViewModel>();
         var connectionCache = new Dictionary<int, graphGraphConnectionDefinition>();
@@ -314,117 +365,6 @@ public class RedGraph
                     var connection = connectionHandle.Chunk!;
 
                     graph.Connections.Add(new QuestConnectionViewModel(questOutputConnector, socketNodeLookup[connection.Destination.Chunk!], connection));
-                }
-            }
-        }
-
-        return graph;
-    }
-
-    public static RedGraph GenerateSceneGraph(string title, scnSceneResource sceneResource)
-    {
-        var graph = new RedGraph(title, RedGraphType.Scene);
-
-        var nodeCache = new Dictionary<uint, BaseSceneViewModel>();
-        foreach (var nodeHandle in sceneResource.SceneGraph.Chunk!.Graph)
-        {
-            ArgumentNullException.ThrowIfNull(nodeHandle.Chunk);
-
-            var node = nodeHandle.Chunk;
-
-            BaseSceneViewModel nvm;
-            if (node is scnAndNode andNode)
-            {
-                nvm = new scnAndNodeWrapper(andNode);
-            }
-            else if (node is scnChoiceNode choiceNode)
-            {
-                nvm = new scnChoiceNodeWrapper(choiceNode);
-            }
-            else if (node is scnCutControlNode cutControlNode)
-            {
-                nvm = new scnCutControlNodeWrapper(cutControlNode);
-            }
-            else if (node is scnDeletionMarkerNode deletionMarkerNode)
-            {
-                nvm = new scnDeletionMarkerNodeWrapper(deletionMarkerNode);
-            }
-            else if (node is scnEndNode endNode)
-            {
-                var endName = sceneResource
-                    .ExitPoints
-                    .FirstOrDefault(x => x.NodeId.Id == endNode.NodeId.Id)!
-                    .Name.GetResolvedText()!;
-
-                nvm = new scnEndNodeWrapper(endNode, endName);
-            }
-            else if (node is scnHubNode hubNode)
-            {
-                nvm = new scnHubNodeWrapper(hubNode);
-            }
-            else if (node is scnInterruptManagerNode interruptManagerNode)
-            {
-                nvm = new scnInterruptManagerNodeWrapper(interruptManagerNode);
-            }
-            else if (node is scnQuestNode questNode)
-            {
-                nvm = new scnQuestNodeWrapper(questNode);
-            }
-            else if (node is scnRandomizerNode randomizerNode)
-            {
-                nvm = new scnRandomizerNodeWrapper(randomizerNode);
-            }
-            else if (node is scnRewindableSectionNode rewindableSectionNode)
-            {
-                nvm = new scnRewindableSectionNodeWrapper(rewindableSectionNode);
-            }
-            else if (node is scnSectionNode sectionNode)
-            {
-                nvm = new scnSectionNodeWrapper(sectionNode);
-            }
-            else if (node is scnStartNode startNode)
-            {
-                var startName = sceneResource
-                    .EntryPoints
-                    .FirstOrDefault(x => x.NodeId.Id == startNode.NodeId.Id)!
-                    .Name.GetResolvedText()!;
-
-                nvm = new scnStartNodeWrapper(startNode, startName);
-            }
-            else if (node is scnXorNode xorNode)
-            {
-                nvm = new scnXorNodeWrapper(xorNode);
-            }
-            else
-            {
-                // shouldn't happen, just for failsafe
-                nvm = new scnSceneGraphNodeWrapper(node);
-            }
-
-            nodeCache.Add(nvm.UniqueId, nvm);
-            graph.Nodes.Add(nvm);
-        }
-
-        foreach (var node in graph.Nodes)
-        {
-            var sceneNode = (BaseSceneViewModel)node;
-
-            foreach (var outputConnector in sceneNode.Output)
-            {
-                var sceneOutputConnector = (SceneOutputConnectorViewModel)outputConnector;
-
-                foreach (var destination in sceneOutputConnector.Data.Destinations)
-                {
-                    var targetNode = nodeCache[destination.NodeId.Id];
-                    if (targetNode is IDynamicInputNode dynamicInputNode)
-                    {
-                        while (dynamicInputNode.Input.Count <= destination.IsockStamp.Ordinal)
-                        {
-                            dynamicInputNode.AddInput();
-                        }
-                    }
-
-                    graph.Connections.Add(new SceneConnectionViewModel(outputConnector, nodeCache[destination.NodeId.Id].Input[destination.IsockStamp.Ordinal]));
                 }
             }
         }

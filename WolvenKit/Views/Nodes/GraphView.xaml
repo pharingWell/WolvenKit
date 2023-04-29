@@ -9,6 +9,7 @@
     xmlns:nodify="https://miroiu.github.io/nodify"
     xmlns:quest="clr-namespace:WolvenKit.App.ViewModels.Nodes.Quest;assembly=WolvenKit.App"
     xmlns:reactiveUi="http://reactiveui.net"
+    xmlns:scene="clr-namespace:WolvenKit.App.ViewModels.Nodes.Scene;assembly=WolvenKit.App"
     x:Name="uc"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -24,7 +25,8 @@
             EnableRealtimeSelection="True"
             ItemsSource="{Binding ElementName=uc, Path=Source.Nodes}"
             PendingConnection="{Binding ElementName=uc, Path=Source.PendingConnection}"
-            SelectedItem="{Binding ElementName=uc, Path=SelectedNode}">
+            SelectedItem="{Binding ElementName=uc, Path=SelectedNode}"
+            ViewportLocation="{Binding ElementName=uc, Path=ViewportLocation}">
             <nodify:NodifyEditor.Resources>
                 <DataTemplate x:Key="HeaderTemplate">
                     <TextBlock Margin="0" Text="{Binding}" />
@@ -57,50 +59,31 @@
                     </StackPanel>
                 </DataTemplate>
 
-                <!-- <DataTemplate DataType="{x:Type quest:questPhaseNodeDefinitionWrapper}">
-                    <nodify:GroupingNode
-                        Background="#33282828"
-                        Header="{Binding Title}"
-                        HeaderBrush="#33282828"
-                        HeaderTemplate="{StaticResource HeaderTemplate}"
-                        MovementMode="Self">
-                        <Grid>
-                            <local:GraphView DataContext="{Binding MainGraph}" />
+                <local:NodeTemplateSelector x:Key="nodeTemplateSelector">
+                    <local:NodeTemplateSelector.Default>
+                        <DataTemplate />
+                    </local:NodeTemplateSelector.Default>
+                    <local:NodeTemplateSelector.SceneStartNode>
+                        <DataTemplate DataType="{x:Type scene:scnStartNodeWrapper}">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <ItemsControl ItemsSource="{Binding Input}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <nodify:NodeInput
-                                                Anchor="{Binding Anchor, Mode=OneWayToSource}"
-                                                Header="{Binding Title}"
-                                                IsConnected="{Binding IsConnected}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <ItemsControl Grid.Column="2" ItemsSource="{Binding Output}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <nodify:NodeOutput
-                                                Anchor="{Binding Anchor, Mode=OneWayToSource}"
-                                                Header="{Binding Title}"
-                                                IsConnected="{Binding IsConnected}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <TextBox Text="{Binding Name}" />
                             </Grid>
-                        </Grid>
-                    </nodify:GroupingNode>
-                </DataTemplate>-->
+                        </DataTemplate>
+                    </local:NodeTemplateSelector.SceneStartNode>
+                    <local:NodeTemplateSelector.SceneEndNode>
+                        <DataTemplate DataType="{x:Type scene:scnEndNodeWrapper}">
+                            <StackPanel Orientation="Vertical">
+                                <TextBox Text="{Binding Name}" />
+                                <ComboBox ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </local:NodeTemplateSelector.SceneEndNode>
+                </local:NodeTemplateSelector>
 
                 <DataTemplate DataType="{x:Type nodes:NodeViewModel}">
                     <nodify:Node
+                        Content="{Binding}"
+                        ContentTemplateSelector="{DynamicResource nodeTemplateSelector}"
                         ContextMenuOpening="Node_ContextMenuOpening"
                         Header="{Binding}"
                         HeaderTemplate="{StaticResource DetailedHeaderTemplate}"

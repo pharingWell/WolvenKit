@@ -21,6 +21,7 @@ using WolvenKit.App.ViewModels.Nodes;
 using WolvenKit.App.ViewModels.Nodes.Scene;
 using WolvenKit.RED4.Types;
 using WolvenKit.Views.Others;
+using Point = System.Windows.Point;
 
 namespace WolvenKit.Views.Nodes;
 /// <summary>
@@ -54,6 +55,7 @@ public partial class GraphView
     }
 
     public NodeViewModel SelectedNode { get; set; }
+    public Point ViewportLocation { get; set; }
 
     public GraphView()
     {
@@ -98,7 +100,10 @@ public partial class GraphView
             addMenu.Items.Add(CreateMenuItem("Randomizer", () => Source.CreateSceneNode<scnRandomizerNode>()));
             addMenu.Items.Add(CreateMenuItem("Rewindable Section", () => Source.CreateSceneNode<scnRewindableSectionNode>()));
             addMenu.Items.Add(CreateMenuItem("Section", () => Source.CreateSceneNode<scnSectionNode>()));
-            addMenu.Items.Add(CreateMenuItem("Start", () => Source.CreateSceneNode<scnStartNode>()));
+            addMenu.Items.Add(CreateMenuItem("Start", () =>
+            {
+                Source.CreateSceneNode<scnStartNode>(ViewportLocation);
+            }));
             addMenu.Items.Add(CreateMenuItem("Xor", () => Source.CreateSceneNode<scnXorNode>()));
 
             nodifyEditor.ContextMenu.Items.Add(addMenu);

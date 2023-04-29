@@ -9,15 +9,20 @@ namespace WolvenKit.App.ViewModels.Nodes;
 
 public partial class RedGraph
 {
-    public void CreateSceneNode<T>() where T : scnSceneGraphNode
+    public void CreateSceneNode<T>() where T : scnSceneGraphNode => CreateSceneNode<T>(new System.Windows.Point());
+
+    public void CreateSceneNode<T>(System.Windows.Point point) where T : scnSceneGraphNode
     {
         var instance = System.Activator.CreateInstance<T>();
 
         instance.NodeId.Id = ++_currentSceneNodeId;
         instance.OutputSockets.Add(new scnOutputSocket { Stamp = new scnOutputSocketStamp { Name = 0, Ordinal = 0 } });
 
+        var wrappedInstance = WrapSceneNode(instance);
+        wrappedInstance.Location = point;
+
         ((scnSceneResource)_data).SceneGraph.Chunk!.Graph.Add(new CHandle<scnSceneGraphNode>(instance));
-        Nodes.Add(WrapSceneNode(instance));
+        Nodes.Add(wrappedInstance);
     }
 
     private void RemoveSceneNode(BaseSceneViewModel node)
@@ -105,12 +110,23 @@ public partial class RedGraph
 
         if (node is scnEndNode endNode)
         {
-            var endName = sceneResource
+            var endPoint = sceneResource
                 .ExitPoints
-                .FirstOrDefault(x => x.NodeId.Id == endNode.NodeId.Id)!
-                .Name.GetResolvedText()!;
+                .FirstOrDefault(x => x.NodeId.Id == endNode.NodeId.Id);
 
-            return new scnEndNodeWrapper(endNode, endName);
+            if (endPoint == null)
+            {
+                endPoint = new scnExitPoint
+                {
+                    NodeId = new scnNodeId
+                    {
+                        Id = endNode.NodeId.Id
+                    }
+                };
+                sceneResource.ExitPoints.Add(endPoint);
+            }
+
+            return new scnEndNodeWrapper(endNode, endPoint);
         }
 
         if (node is scnHubNode hubNode)
@@ -145,12 +161,22 @@ public partial class RedGraph
 
         if (node is scnStartNode startNode)
         {
-            var startName = sceneResource
+            var entryPoint = sceneResource
                 .EntryPoints
-                .FirstOrDefault(x => x.NodeId.Id == startNode.NodeId.Id)!
-                .Name.GetResolvedText()!;
+                .FirstOrDefault(x => x.NodeId.Id == startNode.NodeId.Id);
 
-            return new scnStartNodeWrapper(startNode, startName);
+            if (entryPoint == null)
+            {
+                entryPoint = new scnEntryPoint { 
+                    NodeId = new scnNodeId
+                    {
+                        Id = startNode.NodeId.Id
+                    }
+                };
+                sceneResource.EntryPoints.Add(entryPoint);
+            }
+
+            return new scnStartNodeWrapper(startNode, entryPoint);
         }
 
         if (node is scnXorNode xorNode)

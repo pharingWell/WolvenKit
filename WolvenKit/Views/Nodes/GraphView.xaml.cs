@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,7 +20,6 @@ using System.Windows.Threading;
 using Nodify;
 using ReactiveUI;
 using WolvenKit.App.ViewModels.Nodes;
-using WolvenKit.App.ViewModels.Nodes.Scene;
 using WolvenKit.RED4.Types;
 using WolvenKit.Views.Others;
 using Point = System.Windows.Point;
@@ -27,7 +28,7 @@ namespace WolvenKit.Views.Nodes;
 /// <summary>
 /// Interaktionslogik für GraphView.xaml
 /// </summary>
-public partial class GraphView
+public partial class GraphView : INotifyPropertyChanged
 {
     public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
         nameof(Source), typeof(RedGraph), typeof(GraphView), new PropertyMetadata(null, OnSourceChanged));
@@ -54,7 +55,14 @@ public partial class GraphView
         set => SetValue(SourceProperty, value);
     }
 
-    public NodeViewModel SelectedNode { get; set; }
+    private NodeViewModel _selectedNode;
+
+    public NodeViewModel SelectedNode
+    {
+        get => _selectedNode;
+        set => SetField(ref _selectedNode, value);
+    }
+
     public Point ViewportLocation { get; set; }
 
     public GraphView()
@@ -89,22 +97,19 @@ public partial class GraphView
         {
             var addMenu = new MenuItem { Header = "Add..."};
 
-            addMenu.Items.Add(CreateMenuItem("And", () => Source.CreateSceneNode<scnAndNode>()));
-            addMenu.Items.Add(CreateMenuItem("Choice", () => Source.CreateSceneNode<scnChoiceNode>()));
-            addMenu.Items.Add(CreateMenuItem("Cut Control", () => Source.CreateSceneNode<scnCutControlNode>()));
-            addMenu.Items.Add(CreateMenuItem("Deletion Marker", () => Source.CreateSceneNode<scnDeletionMarkerNode>()));
-            addMenu.Items.Add(CreateMenuItem("End", () => Source.CreateSceneNode<scnEndNode>()));
-            addMenu.Items.Add(CreateMenuItem("Hub", () => Source.CreateSceneNode<scnHubNode>()));
-            addMenu.Items.Add(CreateMenuItem("Interrupt Manager", () => Source.CreateSceneNode<scnInterruptManagerNode>()));
-            addMenu.Items.Add(CreateMenuItem("Quest", () => Source.CreateSceneNode<scnQuestNode>()));
-            addMenu.Items.Add(CreateMenuItem("Randomizer", () => Source.CreateSceneNode<scnRandomizerNode>()));
-            addMenu.Items.Add(CreateMenuItem("Rewindable Section", () => Source.CreateSceneNode<scnRewindableSectionNode>()));
-            addMenu.Items.Add(CreateMenuItem("Section", () => Source.CreateSceneNode<scnSectionNode>()));
-            addMenu.Items.Add(CreateMenuItem("Start", () =>
-            {
-                Source.CreateSceneNode<scnStartNode>(ViewportLocation);
-            }));
-            addMenu.Items.Add(CreateMenuItem("Xor", () => Source.CreateSceneNode<scnXorNode>()));
+            addMenu.Items.Add(CreateMenuItem("And", () => Source.CreateSceneNode<scnAndNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Choice", () => Source.CreateSceneNode<scnChoiceNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Cut Control", () => Source.CreateSceneNode<scnCutControlNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Deletion Marker", () => Source.CreateSceneNode<scnDeletionMarkerNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("End", () => Source.CreateSceneNode<scnEndNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Hub", () => Source.CreateSceneNode<scnHubNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Interrupt Manager", () => Source.CreateSceneNode<scnInterruptManagerNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Quest", () => Source.CreateSceneNode<scnQuestNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Randomizer", () => Source.CreateSceneNode<scnRandomizerNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Rewindable Section", () => Source.CreateSceneNode<scnRewindableSectionNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Section", () => Source.CreateSceneNode<scnSectionNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Start", () => Source.CreateSceneNode<scnStartNode>(ViewportLocation)));
+            addMenu.Items.Add(CreateMenuItem("Xor", () => Source.CreateSceneNode<scnXorNode>(ViewportLocation)));
 
             nodifyEditor.ContextMenu.Items.Add(addMenu);
         }
@@ -146,4 +151,25 @@ public partial class GraphView
         item.Click += (_, _) => click();
         return item;
     }
+
+    #region INotifyPropertyChanged
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => 
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return false;
+        }
+
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+
+    #endregion
 }

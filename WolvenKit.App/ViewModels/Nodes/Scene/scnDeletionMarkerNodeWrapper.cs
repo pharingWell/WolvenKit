@@ -1,4 +1,5 @@
 ﻿using DynamicData;
+using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
@@ -11,16 +12,16 @@ public class scnDeletionMarkerNodeWrapper : BaseSceneViewModel<scnDeletionMarker
 
     internal override void GenerateSockets()
     {
-        for (var i = 0; i < Data.OutputSockets.Count; i++)
+        for (var i = 0; i < _castedData.OutputSockets.Count; i++)
         {
-            Output.Add(new SceneOutputConnectorViewModel($"Out{i}", $"Out{i}", NodeId, Data.OutputSockets[i]));
+            Output.Add(new SceneOutputConnectorViewModel($"Out{i}", $"Out{i}", UniqueId, _castedData.OutputSockets[i]));
         }
     }
 
     public BaseConnectorViewModel AddInput()
     {
         var index = (ushort)Input.Count;
-        var input = new SceneInputConnectorViewModel($"In{index}", $"In{index}", NodeId, index);
+        var input = new SceneInputConnectorViewModel($"In{index}", $"In{index}", UniqueId, index);
 
         Input.Add(input);
 

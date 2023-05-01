@@ -1,25 +1,21 @@
 ﻿using WolvenKit.RED4.Types;
 
-namespace WolvenKit.App.ViewModels.Nodes.Quest;
+namespace WolvenKit.App.ViewModels.Nodes.Quest.Internal;
 
 public abstract class BaseQuestViewModel : NodeViewModel
 {
-    protected graphGraphNodeDefinition _data;
+    public override uint UniqueId { get; }
 
-    protected BaseQuestViewModel(graphGraphNodeDefinition graphGraphNodeDefinition)
+    protected BaseQuestViewModel(graphGraphNodeDefinition graphGraphNodeDefinition) : base(graphGraphNodeDefinition)
     {
-        _data = graphGraphNodeDefinition;
-
         UniqueId = (uint)graphGraphNodeDefinition.GetHashCode();
-        Title = $"{_data.GetType().Name[5..^14]}";
-
-        GenerateSockets();
+        Title = $"{graphGraphNodeDefinition.GetType().Name[5..^14]}";
     }
 }
 
 public class BaseQuestViewModel<T> : BaseQuestViewModel where T : graphGraphNodeDefinition
 {
-    protected T _castedData => (T)_data;
+    protected T _castedData => (T)Data;
 
     public BaseQuestViewModel(graphGraphNodeDefinition graphGraphNodeDefinition) : base(graphGraphNodeDefinition)
     {
@@ -27,7 +23,7 @@ public class BaseQuestViewModel<T> : BaseQuestViewModel where T : graphGraphNode
 
     internal override void GenerateSockets()
     {
-        foreach (var socketHandle in _data.Sockets)
+        foreach (var socketHandle in _castedData.Sockets)
         {
             if (socketHandle.Chunk is questSocketDefinition socketDefinition)
             {

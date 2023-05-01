@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 
-namespace WolvenKit.App.ViewModels.Nodes.Scene;
+namespace WolvenKit.App.ViewModels.Nodes;
 
 public interface IDynamicInputNode
 {

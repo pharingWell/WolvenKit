@@ -1,4 +1,5 @@
-﻿using WolvenKit.RED4.Types;
+﻿using WolvenKit.App.ViewModels.Nodes.Quest.Internal;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Quest;
 
@@ -19,7 +20,7 @@ public class questRandomizerNodeDefinitionWrapper : BaseQuestViewModel<questRand
         }
 
         var index = 0;
-        foreach (var socketHandle in _data.Sockets)
+        foreach (var socketHandle in _castedData.Sockets)
         {
             if (socketHandle.Chunk is questSocketDefinition socketDefinition)
             {

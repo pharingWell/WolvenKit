@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using WolvenKit.RED4.Types;
+using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
 
@@ -25,5 +26,5 @@ public class scnEndNodeWrapper : BaseSceneViewModel<scnEndNode>
 
     public scnEndNodeWrapper(scnEndNode scnEndNode, scnExitPoint exitPoint) : base(scnEndNode) => _scnExitPoint = exitPoint;
 
-    internal override void GenerateSockets() => Input.Add(new SceneInputConnectorViewModel("In", "In", NodeId, 0));
+    internal override void GenerateSockets() => Input.Add(new SceneInputConnectorViewModel("In", "In", UniqueId, 0));
 }

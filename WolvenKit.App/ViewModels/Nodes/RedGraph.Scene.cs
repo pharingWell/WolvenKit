@@ -4,6 +4,7 @@ using System.Linq;
 using WolvenKit.App.ViewModels.Nodes.Scene;
 using WolvenKit.RED4.Types;
 using SharpDX.DXGI;
+using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 
 namespace WolvenKit.App.ViewModels.Nodes;
 
@@ -59,7 +60,7 @@ public partial class RedGraph
                     var connectionSource = (SceneOutputConnectorViewModel)Connections[i].Source;
                     for (var k = connectionSource.Data.Destinations.Count - 1; k >= 0; k--)
                     {
-                        if (connectionSource.Data.Destinations[k].NodeId.Id == node.NodeId)
+                        if (connectionSource.Data.Destinations[k].NodeId.Id == node.UniqueId)
                         {
                             connectionSource.Data.Destinations.RemoveAt(k);
                         }
@@ -88,27 +89,24 @@ public partial class RedGraph
     {
         var sceneResource = (scnSceneResource)_data;
 
+        BaseSceneViewModel nodeWrapper;
         if (node is scnAndNode andNode)
         {
-            return new scnAndNodeWrapper(andNode);
-        }
-
-        if (node is scnChoiceNode choiceNode)
+            nodeWrapper = new scnAndNodeWrapper(andNode);
+        } 
+        else if (node is scnChoiceNode choiceNode)
         {
-            return new scnChoiceNodeWrapper(choiceNode);
-        }
-
-        if (node is scnCutControlNode cutControlNode)
+            nodeWrapper = new scnChoiceNodeWrapper(choiceNode, sceneResource);
+        } 
+        else if (node is scnCutControlNode cutControlNode)
         {
-            return new scnCutControlNodeWrapper(cutControlNode);
-        }
-
-        if (node is scnDeletionMarkerNode deletionMarkerNode)
+            nodeWrapper = new scnCutControlNodeWrapper(cutControlNode);
+        } 
+        else if (node is scnDeletionMarkerNode deletionMarkerNode)
         {
-            return new scnDeletionMarkerNodeWrapper(deletionMarkerNode);
+            nodeWrapper = new scnDeletionMarkerNodeWrapper(deletionMarkerNode);
         }
-
-        if (node is scnEndNode endNode)
+        else if (node is scnEndNode endNode)
         {
             var endPoint = sceneResource
                 .ExitPoints
@@ -126,40 +124,33 @@ public partial class RedGraph
                 sceneResource.ExitPoints.Add(endPoint);
             }
 
-            return new scnEndNodeWrapper(endNode, endPoint);
+            nodeWrapper = new scnEndNodeWrapper(endNode, endPoint);
         }
-
-        if (node is scnHubNode hubNode)
+        else if (node is scnHubNode hubNode)
         {
-            return new scnHubNodeWrapper(hubNode);
+            nodeWrapper = new scnHubNodeWrapper(hubNode);
         }
-
-        if (node is scnInterruptManagerNode interruptManagerNode)
+        else if (node is scnInterruptManagerNode interruptManagerNode)
         {
-            return new scnInterruptManagerNodeWrapper(interruptManagerNode);
+            nodeWrapper = new scnInterruptManagerNodeWrapper(interruptManagerNode);
         }
-
-        if (node is scnQuestNode questNode)
+        else if (node is scnQuestNode questNode)
         {
-            return new scnQuestNodeWrapper(questNode);
+            nodeWrapper = new scnQuestNodeWrapper(questNode);
         }
-
-        if (node is scnRandomizerNode randomizerNode)
+        else if (node is scnRandomizerNode randomizerNode)
         {
-            return new scnRandomizerNodeWrapper(randomizerNode);
+            nodeWrapper = new scnRandomizerNodeWrapper(randomizerNode);
         }
-
-        if (node is scnRewindableSectionNode rewindableSectionNode)
+        else if (node is scnRewindableSectionNode rewindableSectionNode)
         {
-            return new scnRewindableSectionNodeWrapper(rewindableSectionNode);
+            nodeWrapper = new scnRewindableSectionNodeWrapper(rewindableSectionNode);
         }
-
-        if (node is scnSectionNode sectionNode)
+        else if (node is scnSectionNode sectionNode)
         {
-            return new scnSectionNodeWrapper(sectionNode);
+            nodeWrapper = new scnSectionNodeWrapper(sectionNode);
         }
-
-        if (node is scnStartNode startNode)
+        else if (node is scnStartNode startNode)
         {
             var entryPoint = sceneResource
                 .EntryPoints
@@ -176,16 +167,21 @@ public partial class RedGraph
                 sceneResource.EntryPoints.Add(entryPoint);
             }
 
-            return new scnStartNodeWrapper(startNode, entryPoint);
+            nodeWrapper = new scnStartNodeWrapper(startNode, entryPoint);
         }
-
-        if (node is scnXorNode xorNode)
+        else if (node is scnXorNode xorNode)
         {
-            return new scnXorNodeWrapper(xorNode);
+            nodeWrapper = new scnXorNodeWrapper(xorNode);
+        }
+        else
+        {
+            // shouldn't happen, just for failsafe
+            nodeWrapper = new scnSceneGraphNodeWrapper(node);
         }
 
-        // shouldn't happen, just for failsafe
-        return new scnSceneGraphNodeWrapper(node);
+        nodeWrapper.GenerateSockets();
+
+        return nodeWrapper;
     }
 
     public static RedGraph GenerateSceneGraph(string title, scnSceneResource sceneResource)
@@ -204,7 +200,7 @@ public partial class RedGraph
             nodeCache.Add(nvm.UniqueId, nvm);
             graph.Nodes.Add(nvm);
 
-            graph._currentSceneNodeId = Math.Max(graph._currentSceneNodeId, nvm.NodeId);
+            graph._currentSceneNodeId = Math.Max(graph._currentSceneNodeId, nvm.UniqueId);
         }
 
         foreach (var node in graph.Nodes)

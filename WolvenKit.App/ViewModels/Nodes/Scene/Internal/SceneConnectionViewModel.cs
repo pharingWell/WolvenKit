@@ -1,4 +1,4 @@
-﻿namespace WolvenKit.App.ViewModels.Nodes.Scene;
+﻿namespace WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 
 public class SceneConnectionViewModel : ConnectionViewModel
 {

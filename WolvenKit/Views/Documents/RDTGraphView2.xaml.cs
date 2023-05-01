@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using ReactiveUI;
+using Syncfusion.Windows.PropertyGrid;
 using WolvenKit.App.ViewModels.Nodes;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.Views.Nodes;
@@ -109,5 +110,13 @@ public partial class RDTGraphView2
         }
 
         BuildBreadcrumb();
+    }
+
+    private void PropertyGrid_OnAutoGeneratingPropertyGridItem(object sender, AutoGeneratingPropertyGridItemEventArgs e)
+    {
+        if (e.DisplayName is ("UniqueId" or "Size" or "Title" or "Details" or "Input" or "Output" or "Data" or "IsDynamic" or "Location" or "Graph" or "NodeId"))
+        {
+            e.Cancel = true;
+        }
     }
 }

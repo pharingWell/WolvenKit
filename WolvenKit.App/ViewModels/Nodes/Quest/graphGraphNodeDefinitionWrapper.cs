@@ -1,4 +1,5 @@
-﻿using WolvenKit.RED4.Types;
+﻿using WolvenKit.App.ViewModels.Nodes.Quest.Internal;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Quest;
 

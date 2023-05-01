@@ -21,6 +21,16 @@ public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBase
                 continue;
             }
 
+            if (propertyInfo.Type.IsAssignableTo(typeof(IRedHandle)))
+            {
+                if (System.Activator.CreateInstance(propertyInfo.Type) is not IRedHandle result)
+                {
+                    throw new Exception();
+                }
+
+                InternalSetPropertyValue(propertyInfo.RedName, result);
+            }
+
             if (propertyInfo.Type.IsValueType)
             {
                 if (propertyInfo.Type.IsAssignableTo(typeof(IRedEnum)))

@@ -8,10 +8,11 @@ using Microsoft.Msagl.Core.Routing;
 using Microsoft.Msagl.Layout.Layered;
 using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes.Quest;
-using WolvenKit.App.ViewModels.Nodes.Scene;
 using WolvenKit.RED4.Types;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using WolvenKit.App.ViewModels.Nodes.Quest.Internal;
+using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 
 namespace WolvenKit.App.ViewModels.Nodes;
 
@@ -275,7 +276,7 @@ public partial class RedGraph
             graph.Nodes.Add(msaglNode);
         }
 
-        foreach (var connection in Connections)
+        foreach (var connection in Connections.Reverse())
         {
             graph.Edges.Add(new Edge(msaglNodes[connection.Source.OwnerId], msaglNodes[connection.Target.OwnerId]));
         }
@@ -296,79 +297,5 @@ public partial class RedGraph
                 node.Center.X - graph.BoundingBox.Center.X - (nvm.Size.Width / 2) + xOffset,
                 node.Center.Y - graph.BoundingBox.Center.Y - (nvm.Size.Height / 2) + yOffset);
         }
-    }
-
-    public static RedGraph GenerateQuestGraph(string title, graphGraphDefinition questGraph, INodeWrapperFactory nodeWrapperFactory)
-    {
-        var graph = new RedGraph(title, questGraph);
-
-        var socketNodeLookup = new Dictionary<graphGraphSocketDefinition, QuestInputConnectorViewModel>();
-        var connectionCache = new Dictionary<int, graphGraphConnectionDefinition>();
-
-        var nodeCache = new Dictionary<uint, BaseQuestViewModel>();
-        foreach (var nodeHandle in questGraph.Nodes)
-        {
-            ArgumentNullException.ThrowIfNull(nodeHandle.Chunk);
-
-            var node = nodeHandle.Chunk;
-
-            BaseQuestViewModel nvm;
-            if (node is questPhaseNodeDefinition questPhase)
-            {
-                nvm = nodeWrapperFactory.QuestPhaseNodeDefinitionWrapper(questPhase);
-            }
-            else if (node is questSceneNodeDefinition scene)
-            {
-                nvm = nodeWrapperFactory.QuestSceneNodeDefinitionWrapper(scene);
-            }
-            else if (node is questRandomizerNodeDefinition randomizerNode)
-            {
-                nvm = new questRandomizerNodeDefinitionWrapper(randomizerNode);
-            }
-            else if (node is questInputNodeDefinition inputNode)
-            {
-                nvm = new questInputNodeDefinitionWrapper(inputNode);
-            }
-            else if (node is questPauseConditionNodeDefinition pauseConditionNode)
-            {
-                nvm = new questNodeDefinitionWrapper(pauseConditionNode);
-            }
-            else if (node is questNodeDefinition questNode)
-            {
-                nvm = new questNodeDefinitionWrapper(questNode);
-            }
-            else
-            {
-                nvm = new graphGraphNodeDefinitionWrapper(node);
-            }
-
-            nodeCache.Add(nvm.UniqueId, nvm);
-            graph.Nodes.Add(nvm);
-
-            foreach (var inputConnector in nvm.Input)
-            {
-                var questInputConnector = (QuestInputConnectorViewModel)inputConnector;
-                socketNodeLookup.Add(questInputConnector.Data, questInputConnector);
-            }
-        }
-
-        foreach (var node in graph.Nodes)
-        {
-            var questNode = (BaseQuestViewModel)node;
-
-            foreach (var outputConnector in questNode.Output)
-            {
-                var questOutputConnector = (QuestOutputConnectorViewModel)outputConnector;
-
-                foreach (var connectionHandle in questOutputConnector.Data.Connections)
-                {
-                    var connection = connectionHandle.Chunk!;
-
-                    graph.Connections.Add(new QuestConnectionViewModel(questOutputConnector, socketNodeLookup[connection.Destination.Chunk!], connection));
-                }
-            }
-        }
-
-        return graph;
     }
 }

@@ -8,6 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:nodes="clr-namespace:WolvenKit.Views.Nodes"
     xmlns:reactiveUi="http://reactiveui.net"
+    xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+    xmlns:tools="clr-namespace:WolvenKit.Views.Tools"
     d:DataContext="{d:DesignInstance Type={x:Type documents:RDTGraphViewModel2}}"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -19,15 +21,36 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
         <StackPanel
             x:Name="Breadcrumb"
             Grid.Row="0"
+            Grid.Column="0"
             VerticalAlignment="Center"
             Orientation="Horizontal" />
 
         <nodes:GraphView
             x:Name="Editor"
             Grid.Row="1"
+            Grid.Column="0"
             Source="{Binding MainGraph}" />
+
+        <syncfusion:SfGridSplitter
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            Margin="0,-2,0,-3"
+            HorizontalAlignment="Stretch" />
+
+        <local:RedTypeView2
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            Grid.Column="2"
+            Source="{Binding ElementName=Editor, Path=SelectedNode.Data}" />
     </Grid>
 </reactiveUi:ReactiveUserControl>

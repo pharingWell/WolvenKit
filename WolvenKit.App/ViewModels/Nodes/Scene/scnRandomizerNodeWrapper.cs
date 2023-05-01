@@ -1,4 +1,5 @@
-﻿using WolvenKit.RED4.Types;
+﻿using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
 
@@ -10,7 +11,7 @@ public class scnRandomizerNodeWrapper : BaseSceneViewModel<scnRandomizerNode>
 
     internal override void GenerateSockets()
     {
-        Input.Add(new SceneInputConnectorViewModel("In", "In", NodeId, 0));
+        Input.Add(new SceneInputConnectorViewModel("In", "In", UniqueId, 0));
 
         var names = new string[_castedData.NumOutSockets];
 
@@ -28,7 +29,7 @@ public class scnRandomizerNodeWrapper : BaseSceneViewModel<scnRandomizerNode>
 
         for (var i = 0; i < _castedData.OutputSockets.Count; i++)
         {
-            Output.Add(new SceneOutputConnectorViewModel(names[i], names[i], NodeId, _castedData.OutputSockets[i]));
+            Output.Add(new SceneOutputConnectorViewModel(names[i], names[i], UniqueId, _castedData.OutputSockets[i]));
         }
     }
 }

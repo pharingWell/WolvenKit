@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using WolvenKit.App.Factories;
+using WolvenKit.App.ViewModels.Nodes.Quest.Internal;
 using WolvenKit.Common;
 using WolvenKit.RED4.Archive.IO;
 using WolvenKit.RED4.Types;

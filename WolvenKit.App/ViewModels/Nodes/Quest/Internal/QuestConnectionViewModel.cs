@@ -1,6 +1,6 @@
 ﻿using WolvenKit.RED4.Types;
 
-namespace WolvenKit.App.ViewModels.Nodes.Quest;
+namespace WolvenKit.App.ViewModels.Nodes.Quest.Internal;
 
 public class QuestConnectionViewModel : ConnectionViewModel
 {

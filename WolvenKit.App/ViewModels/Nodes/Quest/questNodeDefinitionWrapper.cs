@@ -1,11 +1,11 @@
-﻿using WolvenKit.RED4.Types;
+﻿using WolvenKit.App.ViewModels.Nodes.Quest.Internal;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Quest;
 
-public class questNodeDefinitionWrapper : BaseQuestViewModel<questNodeDefinition>
+public class questNodeDefinitionWrapper : BaseQuestNodeDefinitionWrapper<questNodeDefinition>
 {
     public questNodeDefinitionWrapper(questNodeDefinition questNodeDefinition) : base(questNodeDefinition)
     {
-        Title = $"{Title} [{questNodeDefinition.Id}]";
     }
 }

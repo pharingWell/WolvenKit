@@ -1,0 +1,125 @@
+﻿<UserControl
+    x:Class="WolvenKit.Views.Documents.RedTypeView2"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Syncfusion="http://schemas.syncfusion.com/wpf"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WolvenKit.Views.Documents"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:nodes="clr-namespace:WolvenKit.Views.Nodes"
+    x:Name="uc"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Grid>
+        <Syncfusion:SfTreeGrid
+            x:Name="TreeGrid"
+            AllowResizingColumns="True"
+            AutoGenerateColumns="False"
+            ChildPropertyName="Properties"
+            ColumnSizer="Star"
+            EditTrigger="OnDoubleTap"
+            ItemsSource="{Binding ElementName=uc, Path=Nodes}"
+            NodeExpanded="TreeGrid_OnNodeExpanded">
+            <Syncfusion:SfTreeGrid.Resources>
+                <nodes:CBoolToBoolConverter x:Key="CBoolToBoolConverter" />
+                <nodes:CNameToStringConverter x:Key="CNameToStringConverter" />
+                <nodes:CStringToStringConverter x:Key="CStringToStringConverter" />
+                <nodes:CInt32ToInt32Converter x:Key="CInt32ToInt32Converter" />
+                <nodes:NodeRefToStringConverter x:Key="NodeRefToStringConverter" />
+
+                <nodes:RedTypeCellTemplateSelector x:Key="CellTemplateSelector">
+                    <nodes:RedTypeCellTemplateSelector.CBool>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding Value, Converter={StaticResource CBoolToBoolConverter}}" />
+                        </DataTemplate>
+                    </nodes:RedTypeCellTemplateSelector.CBool>
+                    <nodes:RedTypeCellTemplateSelector.Done>
+                        <DataTemplate>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Background="Green"
+                                Text="{Binding DisplayValue}"
+                                TextAlignment="Left" />
+                        </DataTemplate>
+                    </nodes:RedTypeCellTemplateSelector.Done>
+                    <nodes:RedTypeCellTemplateSelector.NotDone>
+                        <DataTemplate>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Background="Red"
+                                Text="{Binding DisplayValue}"
+                                TextAlignment="Left" />
+                        </DataTemplate>
+                    </nodes:RedTypeCellTemplateSelector.NotDone>
+                    <nodes:RedTypeCellTemplateSelector.ReadOnly>
+                        <DataTemplate>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="{Binding DisplayValue}"
+                                TextAlignment="Left" />
+                        </DataTemplate>
+                    </nodes:RedTypeCellTemplateSelector.ReadOnly>
+                </nodes:RedTypeCellTemplateSelector>
+                <nodes:RedTypeEditTemplateSelector x:Key="EditTemplateSelector">
+                    <nodes:RedTypeEditTemplateSelector.CBool>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding Value, Converter={StaticResource CBoolToBoolConverter}}" />
+                        </DataTemplate>
+                    </nodes:RedTypeEditTemplateSelector.CBool>
+                    <nodes:RedTypeEditTemplateSelector.CName>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Value, Converter={StaticResource CNameToStringConverter}}" />
+                        </DataTemplate>
+                    </nodes:RedTypeEditTemplateSelector.CName>
+                    <nodes:RedTypeEditTemplateSelector.CString>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Value, Converter={StaticResource CStringToStringConverter}}" />
+                        </DataTemplate>
+                    </nodes:RedTypeEditTemplateSelector.CString>
+                    <nodes:RedTypeEditTemplateSelector.NodeRef>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Value, Converter={StaticResource NodeRefToStringConverter}}" />
+                        </DataTemplate>
+                    </nodes:RedTypeEditTemplateSelector.NodeRef>
+                    <nodes:RedTypeEditTemplateSelector.CEnum>
+                        <DataTemplate>
+                            <nodes:CEnumComboBox RedEnum="{Binding Value}" />
+                        </DataTemplate>
+                    </nodes:RedTypeEditTemplateSelector.CEnum>
+                    <nodes:RedTypeEditTemplateSelector.CHandle>
+                        <DataTemplate>
+                            <nodes:CHandleComboBox RedHandle="{Binding Value, UpdateSourceTrigger=Explicit}" />
+                        </DataTemplate>
+                    </nodes:RedTypeEditTemplateSelector.CHandle>
+                    <nodes:RedTypeEditTemplateSelector.CInt32>
+                        <DataTemplate>
+                            <Syncfusion:UpDown
+                                MaxValue="2147483647"
+                                MinValue="-2147483648"
+                                NumberDecimalDigits="0"
+                                Value="{Binding Value, Converter={StaticResource CInt32ToInt32Converter}}" />
+                        </DataTemplate>
+                    </nodes:RedTypeEditTemplateSelector.CInt32>
+                    <nodes:RedTypeEditTemplateSelector.ReadOnly>
+                        <DataTemplate>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="{Binding DisplayValue}"
+                                TextAlignment="Left" />
+                        </DataTemplate>
+                    </nodes:RedTypeEditTemplateSelector.ReadOnly>
+                </nodes:RedTypeEditTemplateSelector>
+            </Syncfusion:SfTreeGrid.Resources>
+
+            <Syncfusion:SfTreeGrid.Columns>
+                <Syncfusion:TreeGridTextColumn MappingName="Name" />
+                <Syncfusion:TreeGridTemplateColumn
+                    AllowEditing="True"
+                    CellTemplateSelector="{StaticResource CellTemplateSelector}"
+                    EditTemplateSelector="{StaticResource EditTemplateSelector}"
+                    MappingName="Value" />
+            </Syncfusion:SfTreeGrid.Columns>
+        </Syncfusion:SfTreeGrid>
+    </Grid>
+</UserControl>

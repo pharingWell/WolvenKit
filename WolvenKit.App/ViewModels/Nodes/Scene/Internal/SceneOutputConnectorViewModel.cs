@@ -1,6 +1,6 @@
 ﻿using WolvenKit.RED4.Types;
 
-namespace WolvenKit.App.ViewModels.Nodes.Scene;
+namespace WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 
 public class SceneOutputConnectorViewModel : OutputConnectorViewModel
 {

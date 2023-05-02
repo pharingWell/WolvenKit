@@ -1,29 +1,29 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Windows.Data;
-using System;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.Views.Nodes;
 
-public class CInt32ToInt32Converter : IValueConverter
+public class TweakDBIDToStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not CInt32 cInt32)
+        if (value is not TweakDBID tweak)
         {
             throw new NotSupportedException();
         }
 
-        return (int)cInt32;
+        return tweak.GetResolvedText()!;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not double i)
+        if (value is not string str)
         {
             throw new NotSupportedException();
         }
 
-        return (CInt32)i;
+        return (TweakDBID)str;
     }
 }

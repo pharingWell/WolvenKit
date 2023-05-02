@@ -43,7 +43,7 @@ public class RedTypeCellTemplateSelector : RedTypeEditTemplateSelector
             return ReadOnly;
         }
 
-        if (value is CInt32)
+        if (value is IRedInteger)
         {
             return ReadOnly;
         }
@@ -63,10 +63,11 @@ public class RedTypeEditTemplateSelector : DataTemplateSelector
     public DataTemplate CBool { get; set; }
     public DataTemplate CName { get; set; }
     public DataTemplate CString { get; set; }
-    public DataTemplate CInt32 { get; set; }
     public DataTemplate NodeRef { get; set; }
     public DataTemplate CEnum { get; set; }
     public DataTemplate CHandle { get; set; }
+    public DataTemplate TweakDBID { get; set; }
+    public DataTemplate RedInteger { get; set; }
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
@@ -96,9 +97,14 @@ public class RedTypeEditTemplateSelector : DataTemplateSelector
             return NodeRef;
         }
 
-        if (value is CInt32)
+        if (value is IRedInteger)
         {
-            return CInt32;
+            return RedInteger;
+        }
+
+        if (value is TweakDBID)
+        {
+            return TweakDBID;
         }
 
         if (value is IRedEnum)
@@ -109,6 +115,11 @@ public class RedTypeEditTemplateSelector : DataTemplateSelector
         if (value is IRedHandle)
         {
             return CHandle;
+        }
+
+        if (value is LocalizationString)
+        {
+            return ReadOnly;
         }
 
         return ReadOnly;

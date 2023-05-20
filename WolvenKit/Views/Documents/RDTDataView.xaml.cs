@@ -33,26 +33,17 @@ namespace WolvenKit.Views.Documents
 
             this.WhenActivated(disposables =>
             {
-
                 this.OneWayBind(ViewModel,
-                       viewmodel => viewmodel.Chunks,
-                       view => view.RedTreeView.ItemsSource)
+                       viewmodel => viewmodel.Data,
+                       view => view.RedTreeView.Source)
                    .DisposeWith(disposables);
                 this.Bind(ViewModel,
-                      viewmodel => viewmodel.SelectedChunk,
+                      viewmodel => viewmodel.SelectedProperty,
                       view => view.RedTreeView.SelectedItem)
                   .DisposeWith(disposables);
                 this.Bind(ViewModel,
-                      viewmodel => viewmodel.SelectedChunks,
+                      viewmodel => viewmodel.SelectedProperties,
                       view => view.RedTreeView.SelectedItems)
-                  .DisposeWith(disposables);
-                this.OneWayBind(ViewModel,
-                      viewmodel => viewmodel.SelectedChunk,
-                      view => view.CustomPG.DataContext)
-                  .DisposeWith(disposables);
-                this.OneWayBind(ViewModel,
-                      viewmodel => viewmodel.SelectedChunk,
-                      view => view.CustomPG.ViewModel)
                   .DisposeWith(disposables);
 
 

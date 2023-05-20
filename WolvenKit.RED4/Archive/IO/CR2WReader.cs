@@ -188,7 +188,7 @@ public partial class CR2WReader : Red4Reader
                 ParseBuffer(shared.Buffer);
             }
 
-            if (internalValue is IRedArray arr)
+            if (internalValue is IRedBaseArray arr)
             {
                 foreach (IRedType entry in arr)
                 {

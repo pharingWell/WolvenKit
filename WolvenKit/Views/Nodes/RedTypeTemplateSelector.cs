@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.RED4.Types;
 using WolvenKit.Views.Documents;
 
@@ -12,13 +13,13 @@ public class RedTypeCellTemplateSelector : RedTypeEditTemplateSelector
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
-        if (item is not RedTypeView2.Node2 node)
+        if (item is not PropertyViewModel node)
         {
             return ReadOnly;
         }
 
-        var value = node.Value;
-        if (value is RedBaseClass or IRedHandle or IRedArray)
+        var value = node.DataObject;
+        if (value is RedBaseClass or IRedHandle or IRedBaseArray)
         {
             return ReadOnly;
         }
@@ -34,6 +35,11 @@ public class RedTypeCellTemplateSelector : RedTypeEditTemplateSelector
         }
 
         if (value is CString)
+        {
+            return ReadOnly;
+        }
+
+        if (value is LocalizationString)
         {
             return ReadOnly;
         }
@@ -68,15 +74,17 @@ public class RedTypeEditTemplateSelector : DataTemplateSelector
     public DataTemplate CHandle { get; set; }
     public DataTemplate TweakDBID { get; set; }
     public DataTemplate RedInteger { get; set; }
+    public DataTemplate RedInteger2 { get; set; }
+    public DataTemplate LocalizationString { get; set; }
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
-        if (item is not RedTypeView2.Node2 node)
+        if (item is not PropertyViewModel node)
         {
             return ReadOnly;
         }
 
-        var value = node.Value;
+        var value = node.DataObject;
         if (value is CBool)
         {
             return CBool;
@@ -92,9 +100,19 @@ public class RedTypeEditTemplateSelector : DataTemplateSelector
             return CString;
         }
 
+        if (value is LocalizationString)
+        {
+            return LocalizationString;
+        }
+
         if (value is NodeRef)
         {
             return NodeRef;
+        }
+
+        if (value is CInt64 or CUInt64 or CRUID)
+        {
+            return RedInteger2;
         }
 
         if (value is IRedInteger)

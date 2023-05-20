@@ -1,4 +1,5 @@
-﻿using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
+﻿using System.ComponentModel;
+using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
@@ -13,7 +14,17 @@ public class scnStartNodeWrapper : BaseSceneViewModel<scnStartNode>
         set => _scnEntryPoint.Name = value;
     }
 
-    public scnStartNodeWrapper(scnStartNode scnSceneGraphNode, scnEntryPoint entryPoint) : base(scnSceneGraphNode) => _scnEntryPoint = entryPoint;
+    public scnStartNodeWrapper(scnStartNode scnSceneGraphNode, scnEntryPoint entryPoint) : base(scnSceneGraphNode)
+    {
+        _scnEntryPoint = entryPoint;
+
+        _castedData.PropertyChanged += CastedData_OnPropertyChanged;
+    }
+
+    private void CastedData_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        
+    }
 
     internal override void GenerateSockets()
     {

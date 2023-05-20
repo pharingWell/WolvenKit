@@ -63,9 +63,9 @@ namespace WolvenKit.Views.Editors
                     return value;
                 }
             }
-            else if (PropertyType.IsAssignableTo(typeof(IRedArray)))
+            else if (PropertyType.IsAssignableTo(typeof(IRedBaseArray)))
             {
-                var value = (IRedArray)RedType;
+                var value = (IRedBaseArray)RedType;
                 return RedReflection.GetRedTypeFromCSType(PropertyType) + $"[{value.Count}]";
             }
             else if (PropertyType.IsAssignableTo(typeof(IRedBaseHandle)))

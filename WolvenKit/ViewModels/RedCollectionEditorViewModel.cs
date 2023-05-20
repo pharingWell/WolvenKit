@@ -14,7 +14,7 @@ namespace WolvenKit.ViewModels
         private RedCollectionItemViewModel _selectedElement;
         //private IEditableVariable _selectedElement;
 
-        private IRedArray _redArray;
+        private IRedBaseArray _redArray;
 
         #region properties
 
@@ -49,7 +49,7 @@ namespace WolvenKit.ViewModels
 
         private Type _innerType;
 
-        public void SetElements<T>(IRedArray redarray) where T : IRedType
+        public void SetElements<T>(IRedBaseArray redarray) where T : IRedType
         {
             _redArray = redarray;
             _innerType = typeof(T);

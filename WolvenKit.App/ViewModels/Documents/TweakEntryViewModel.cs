@@ -50,7 +50,7 @@ public sealed class FlatViewModel : TweakEntryViewModel
     {
         _value = value;
 
-        if (value is IRedArray array)
+        if (value is IRedBaseArray array)
         {
             Members = new ObservableCollection<FlatViewModel>(array
                 .OfType<IRedType>()
@@ -68,7 +68,7 @@ public sealed class FlatViewModel : TweakEntryViewModel
     public override string DisplayString => _value.ToString().NotNull();
     public override string DisplayType => RedReflection.GetRedTypeFromCSType(_value.GetType());
 
-    public bool IsArray => _value is IRedArray array;
+    public bool IsArray => _value is IRedBaseArray array;
 
     public IRedType GetValue() => _value;
 

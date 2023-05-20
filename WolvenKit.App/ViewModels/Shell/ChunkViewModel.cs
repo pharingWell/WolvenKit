@@ -123,7 +123,6 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
             });
         }
 
-
         CalculateValue();
         CalculateDescriptor();
         CalculateIsDefault();
@@ -2321,13 +2320,12 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
         }
     }
 
-    private bool InsertArrayItem(IRedArray ira, int index, IRedType item)
+    private bool InsertArrayItem(IRedBaseArray ira, int index, IRedType item)
     {
         var iraType = ira.GetType();
         if (iraType.IsGenericType)
         {
-            var arrayType = iraType.GetGenericTypeDefinition();
-            if (arrayType == typeof(CArray<>) || arrayType == typeof(CStatic<>) && ira.Count < ira.MaxSize)
+            if (ira is IRedArray || (ira is IRedStatic sta && ira.Count < sta.MaxSize))
             {
                 if (index == -1 || index > ira.Count)
                 {

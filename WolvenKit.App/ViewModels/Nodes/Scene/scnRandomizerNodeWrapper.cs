@@ -1,9 +1,10 @@
-﻿using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
+﻿using DynamicData;
+using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 using WolvenKit.RED4.Types;
 
 namespace WolvenKit.App.ViewModels.Nodes.Scene;
 
-public class scnRandomizerNodeWrapper : BaseSceneViewModel<scnRandomizerNode>
+public class scnRandomizerNodeWrapper : BaseSceneViewModel<scnRandomizerNode>, IDynamicOutputNode
 {
     public scnRandomizerNodeWrapper(scnRandomizerNode scnRandomizerNode) : base(scnRandomizerNode)
     {
@@ -32,4 +33,21 @@ public class scnRandomizerNodeWrapper : BaseSceneViewModel<scnRandomizerNode>
             Output.Add(new SceneOutputConnectorViewModel(names[i], names[i], UniqueId, _castedData.OutputSockets[i]));
         }
     }
+
+    public BaseConnectorViewModel AddOutput()
+    {
+        var index = (ushort)Output.Count;
+        var outputSocket = new scnOutputSocket { Stamp = new scnOutputSocketStamp { Name = 0, Ordinal = index } };
+
+        _castedData.OutputSockets.Add(outputSocket);
+
+        var output = new SceneOutputConnectorViewModel($"Out{index}", $"Out{index}", UniqueId, outputSocket);
+        Output.Add(output);
+
+        _castedData.NumOutSockets = (uint)Output.Count;
+
+        return output;
+    }
+
+    public void RemoveOutput() => throw new System.NotImplementedException();
 }

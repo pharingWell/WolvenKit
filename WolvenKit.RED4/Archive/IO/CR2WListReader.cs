@@ -49,7 +49,7 @@ public class CR2WListReader : IBufferReader, IDataCollector, IErrorHandler
             mmmb.Materials = new();
             foreach (var material in list.Files)
             {
-                mmmb.Materials.Add(material.RootChunk);
+                mmmb.Materials.Add((IMaterial)material.RootChunk);
             }
         }
 

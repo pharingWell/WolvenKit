@@ -23,7 +23,7 @@ public enum RedGraphType
     Scene
 }
 
-public partial class RedGraph
+public partial class RedGraph : IDisposable
 {
     private IRedType _data;
 
@@ -298,4 +298,34 @@ public partial class RedGraph
                 node.Center.Y - graph.BoundingBox.Center.Y - (nvm.Size.Height / 2) + yOffset);
         }
     }
+
+    #region IDisposable
+
+    private bool _disposedValue;
+
+    ~RedGraph() => Dispose(false);
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                foreach (var node in Nodes)
+                {
+                    node.Dispose();
+                }
+            }
+
+            _disposedValue = true;
+        }
+    }
+
+    #endregion IDisposable
 }

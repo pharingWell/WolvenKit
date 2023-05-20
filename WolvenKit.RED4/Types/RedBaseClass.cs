@@ -1,20 +1,24 @@
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using WolvenKit.Core.Extensions;
 using WolvenKit.RED4.Types.Exceptions;
 
 namespace WolvenKit.RED4.Types;
 
-public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBaseClass>
+public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBaseClass>, INotifyPropertyChanged, INotifyPropertyChanging
 {
+    private readonly ExtendedTypeInfo _typeInfo;
+
     public RedBaseClass()
     {
+        _typeInfo = RedReflection.GetTypeInfo(GetType());
+
         InternalInitClass();
     }
 
     internal void InternalInitClass()
     {
-        var info = RedReflection.GetTypeInfo(GetType());
-        foreach (var propertyInfo in info.PropertyInfos)
+        foreach (var propertyInfo in _typeInfo.PropertyInfos)
         {
             if (string.IsNullOrEmpty(propertyInfo.RedName))
             {
@@ -82,7 +86,7 @@ public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBase
                     var flags = propertyInfo.Flags;
                     var size = flags.MoveNext() ? flags.Current : 0;
 
-                    if (value == null || ((IRedArray)value).Count > size)
+                    if (value == null || ((IRedArrayFixedSize)value).Count > size)
                     {
                         throw new ArgumentException();
                     }
@@ -93,7 +97,7 @@ public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBase
                     var flags = propertyInfo.Flags;
                     var maxSize = flags.MoveNext() ? flags.Current : 0;
 
-                    ((IRedArray)value!).MaxSize = maxSize;
+                    ((IRedStatic)value!).MaxSize = maxSize;
                 }
             }
         }
@@ -115,6 +119,9 @@ public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBase
 
     #region Properties
 
+    public event PropertyChangingEventHandler? PropertyChanging;
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     private readonly IDictionary<string, IRedType?> _properties = new Dictionary<string, IRedType?>();
     private readonly IList<string> _dynamicProperties = new List<string>();
 
@@ -131,10 +138,11 @@ public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBase
 
         ArgumentNullException.ThrowIfNull(propertyInfo?.RedName);
 
-        if (_properties.ContainsKey(propertyInfo.RedName))
+        if (_properties.TryGetValue(propertyInfo.RedName, out var value))
         {
-            return (T?)_properties[propertyInfo.RedName];
+            return (T?)value;
         }
+
         return (T?)RedReflection.GetDefaultValue(typeof(T));
     }
 
@@ -145,7 +153,11 @@ public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBase
     /// <param name="value"></param>
     /// <param name="callerName"></param>
     protected void SetPropertyValue<T>(T value, [CallerMemberName] string callerName = "") where T : IRedType
-        => InternalSetPropertyValue(callerName, value);
+    {
+        OnPropertyChanging(callerName);
+        InternalSetPropertyValue(callerName, value);
+        OnPropertyChanged(callerName);
+    }
 
     public bool HasProperty(string propertyName) => _properties.ContainsKey(propertyName) || RedReflection.GetNativePropertyInfo(GetType(), propertyName) != null;
 
@@ -166,9 +178,9 @@ public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBase
                 throw new PropertyNotFoundException(" RedName is null ");
             }
 
-            if ( _properties.ContainsKey(propertyInfo.RedName))
+            if (_properties.TryGetValue(propertyInfo.RedName, out var value))
             {
-                return _properties[propertyInfo.RedName];
+                return value;
             }
 
             return (IRedType?)RedReflection.GetDefaultValue(propertyInfo.Type);
@@ -212,6 +224,9 @@ public partial class RedBaseClass : IRedClass, IRedCloneable, IEquatable<RedBase
 
     public List<string> GetPropertyNames() => new(_properties.Keys);
     public List<string> GetDynamicPropertyNames() => new(_dynamicProperties);
+
+    protected virtual void OnPropertyChanging([CallerMemberName] string? propertyName = null) => PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     #endregion Properties
 

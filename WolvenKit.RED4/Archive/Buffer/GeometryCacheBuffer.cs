@@ -54,7 +54,7 @@ public class CVXMCacheEntry : GeometryCacheEntry
     // else if Uk1 > 0
 
     // 2 CInt8
-    public CArray<CArray<CInt8>> Uk3 { get; set; } = new();
+    public CArray<CArray<CUInt8>> Uk3 { get; set; } = new();
 
     public CUInt32 Uk4 { get; set; }
 

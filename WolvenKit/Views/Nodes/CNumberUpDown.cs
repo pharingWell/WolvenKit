@@ -98,6 +98,12 @@ public class CNumberUpDown : UpDown
             SetCurrentValue(RedIntegerProperty, (CUInt64)(ulong)dv);
             return;
         }
+
+        if (RedInteger is CRUID)
+        {
+            SetCurrentValue(RedIntegerProperty, (CRUID)(ulong)dv);
+            return;
+        }
     }
 
     private void UpdateView()
@@ -188,6 +194,14 @@ public class CNumberUpDown : UpDown
             SetCurrentValue(MaxValueProperty, (double)ulong.MaxValue);
             SetCurrentValue(MinValueProperty, (double)ulong.MinValue);
             SetCurrentValue(ValueProperty, (double)(ulong)u64);
+            return;
+        }
+
+        if (RedInteger is CRUID cruid)
+        {
+            SetCurrentValue(MaxValueProperty, (double)ulong.MaxValue);
+            SetCurrentValue(MinValueProperty, (double)ulong.MinValue);
+            SetCurrentValue(ValueProperty, (double)(ulong)cruid);
             return;
         }
     }

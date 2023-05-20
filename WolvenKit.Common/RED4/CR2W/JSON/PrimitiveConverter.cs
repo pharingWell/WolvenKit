@@ -673,7 +673,7 @@ public class RedClassConverter : CustomRedConverter<RedBaseClass>
                     buf.GetValue().Parent = cls;
                 }
 
-                if (val is IRedArray arr)
+                if (val is IRedBaseArray arr)
                 {
                     if (typeof(IRedBufferPointer).IsAssignableFrom(arr.InnerType))
                     {

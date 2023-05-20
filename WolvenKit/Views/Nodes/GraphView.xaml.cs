@@ -20,6 +20,8 @@ using System.Windows.Threading;
 using Nodify;
 using ReactiveUI;
 using WolvenKit.App.ViewModels.Nodes;
+using WolvenKit.App.ViewModels.Nodes.Scene;
+using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.RED4.Types;
 using WolvenKit.Views.Others;
 using Point = System.Windows.Point;
@@ -60,7 +62,24 @@ public partial class GraphView : INotifyPropertyChanged
     public NodeViewModel SelectedNode
     {
         get => _selectedNode;
-        set => SetField(ref _selectedNode, value);
+        set
+        {
+            SetField(ref _selectedNode, value);
+            OnPropertyChanged(nameof(SelectedProperty));
+        }
+    }
+
+    public PropertyViewModel SelectedProperty
+    {
+        get
+        {
+            if (_selectedNode?.Data != null)
+            {
+                return PropertyViewModel.Create(_selectedNode.Data);
+            }
+
+            return null;
+        }
     }
 
     public Point ViewportLocation { get; set; }
@@ -135,6 +154,18 @@ public partial class GraphView : INotifyPropertyChanged
         if (node.DataContext is IDynamicInputNode dynamicInputNode)
         {
             node.ContextMenu.Items.Add(CreateMenuItem("Add Input", () => dynamicInputNode.AddInput()));
+            node.ContextMenu.Items.Add(new Separator());
+        }
+
+        if (node.DataContext is IDynamicOutputNode dynamicOutputNode)
+        {
+            node.ContextMenu.Items.Add(CreateMenuItem("Add Output", () => dynamicOutputNode.AddOutput()));
+            node.ContextMenu.Items.Add(new Separator());
+        }
+
+        if (node.DataContext is scnChoiceNodeWrapper choice)
+        {
+            node.ContextMenu.Items.Add(CreateMenuItem("Add Choice", () => choice.AddChoice()));
             node.ContextMenu.Items.Add(new Separator());
         }
 

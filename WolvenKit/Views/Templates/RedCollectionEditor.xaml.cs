@@ -14,9 +14,9 @@ namespace WolvenKit.Views.Templates
     /// </summary>
     public partial class RedCollectionEditor
     {
-        private readonly IRedArray _redarray;
+        private readonly IRedBaseArray _redarray;
 
-        public RedCollectionEditor(IRedArray redarray)
+        public RedCollectionEditor(IRedBaseArray redarray)
         {
             InitializeComponent();
 
@@ -28,7 +28,7 @@ namespace WolvenKit.Views.Templates
                 var innerType = type.GetGenericArguments()[0];
 
                 var method = typeof(RedCollectionEditorViewModel)
-                    .GetMethod(nameof(RedCollectionEditorViewModel.SetElements), new[] { typeof(IRedArray) });
+                    .GetMethod(nameof(RedCollectionEditorViewModel.SetElements), new[] { typeof(IRedBaseArray) });
                 var generic = method.MakeGenericMethod(innerType);
 
                 generic.Invoke(vm, new object[] { _redarray });
@@ -91,7 +91,7 @@ namespace WolvenKit.Views.Templates
                 var selectedProperty = pg.SelectedPropertyItem;
                 var prop = selectedProperty.Value;
 
-                if (prop is IRedArray editableVariable)
+                if (prop is IRedBaseArray editableVariable)
                 {
                     // open custom collection editor
                     var collectionEditor = new RedCollectionEditor(editableVariable);

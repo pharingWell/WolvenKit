@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WolvenKit.RED4.Archive.Buffer;
@@ -13,7 +12,7 @@ public class ArrayConverterFactory : JsonConverterFactory
     private readonly CArrayFixedSizeConverter _cArrayFixedSizeConverter = new();
     private readonly CStaticConverter _cStaticConverter = new();
 
-    public override bool CanConvert(Type typeToConvert) => typeof(IRedArray).IsAssignableFrom(typeToConvert);
+    public override bool CanConvert(Type typeToConvert) => typeof(IRedBaseArray).IsAssignableFrom(typeToConvert);
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
@@ -91,9 +90,9 @@ public class CArrayConverter : CustomRedConverter<IRedArray>
     }
 }
 
-public class CArrayFixedSizeConverter : CustomRedConverter<IRedArray>
+public class CArrayFixedSizeConverter : CustomRedConverter<IRedArrayFixedSize>
 {
-    public override IRedArray? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override IRedArrayFixedSize? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
         {
@@ -105,7 +104,7 @@ public class CArrayFixedSizeConverter : CustomRedConverter<IRedArray>
             throw new JsonException();
         }
 
-        var arr = (IRedArray)RedTypeManager.CreateRedType(typeToConvert, _flags);
+        var arr = (IRedArrayFixedSize)RedTypeManager.CreateRedType(typeToConvert, _flags);
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject)
@@ -179,7 +178,7 @@ public class CArrayFixedSizeConverter : CustomRedConverter<IRedArray>
         throw new JsonException();
     }
 
-    public override void Write(Utf8JsonWriter writer, IRedArray value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, IRedArrayFixedSize value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 
@@ -195,9 +194,9 @@ public class CArrayFixedSizeConverter : CustomRedConverter<IRedArray>
     }
 }
 
-public class CStaticConverter : CustomRedConverter<IRedArray>
+public class CStaticConverter : CustomRedConverter<IRedStatic>
 {
-    public override IRedArray? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override IRedStatic? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
         {
@@ -209,7 +208,7 @@ public class CStaticConverter : CustomRedConverter<IRedArray>
             throw new JsonException();
         }
 
-        var arr = (IRedArray)RedTypeManager.CreateRedType(typeToConvert, _flags);
+        var arr = (IRedStatic)RedTypeManager.CreateRedType(typeToConvert, _flags);
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject)
@@ -288,7 +287,7 @@ public class CStaticConverter : CustomRedConverter<IRedArray>
         throw new JsonException();
     }
 
-    public override void Write(Utf8JsonWriter writer, IRedArray value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, IRedStatic value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 

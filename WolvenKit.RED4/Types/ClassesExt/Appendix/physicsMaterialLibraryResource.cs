@@ -35,7 +35,7 @@ public partial class physicsMaterialLibraryResource : IRedAppendix
 
         for (int i = 0; i < cnt; i++)
         {
-            Unk2.Add(reader.ReadCHandle<physicsMaterialResource>());
+            Unk2.Add((CHandle<physicsMaterialResource>)reader.ReadCHandle<physicsMaterialResource>());
         }
     }
 

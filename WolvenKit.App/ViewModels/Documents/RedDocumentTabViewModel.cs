@@ -48,7 +48,7 @@ public abstract partial class RedDocumentTabViewModel : ObservableObject
             for (var i = 0; i < Parent.Cr2wFile.EmbeddedFiles.Count; i++)
             {
                 var file = Parent.Cr2wFile.EmbeddedFiles[i];
-                if (file.Content == datavm.GetData())
+                if (file.Content == datavm.Data)
                 {
                     Parent.Cr2wFile.EmbeddedFiles.Remove(file);
                     break;
@@ -77,7 +77,7 @@ public abstract partial class RedDocumentTabViewModel : ObservableObject
             for (var i = 0; i < Parent.Cr2wFile.EmbeddedFiles.Count; i++)
             {
                 var file = Parent.Cr2wFile.EmbeddedFiles[i];
-                if (file.Content == datavm.GetData())
+                if (file.Content == datavm.Data)
                 {
                     embeddedFile = (CR2WEmbedded)file;
                 }

@@ -3,7 +3,6 @@ using System;
 using System.Linq;
 using WolvenKit.App.ViewModels.Nodes.Scene;
 using WolvenKit.RED4.Types;
-using SharpDX.DXGI;
 using WolvenKit.App.ViewModels.Nodes.Scene.Internal;
 
 namespace WolvenKit.App.ViewModels.Nodes;
@@ -14,11 +13,7 @@ public partial class RedGraph
 
     public void CreateSceneNode<T>(System.Windows.Point point) where T : scnSceneGraphNode
     {
-        var instance = System.Activator.CreateInstance<T>();
-
-        instance.NodeId.Id = ++_currentSceneNodeId;
-        instance.OutputSockets.Add(new scnOutputSocket { Stamp = new scnOutputSocketStamp { Name = 0, Ordinal = 0 } });
-
+        var instance = InternalCreateSceneNode<T>();
         var wrappedInstance = WrapSceneNode(instance);
         wrappedInstance.Location = point;
 
@@ -83,6 +78,28 @@ public partial class RedGraph
         }
 
         Nodes.Remove(node);
+    }
+
+    private T InternalCreateSceneNode<T>() where T : scnSceneGraphNode
+    {
+        var instance = System.Activator.CreateInstance<T>();
+        instance.NodeId.Id = ++_currentSceneNodeId;
+        instance.OutputSockets.Add(new scnOutputSocket { Stamp = new scnOutputSocketStamp { Name = 0, Ordinal = 0 } });
+
+        if (instance is scnQuestNode questNode)
+        {
+            questNode.IsockMappings.Add("CutDestination");
+            questNode.IsockMappings.Add("In");
+            questNode.OsockMappings.Add("Out");
+        }
+
+        if (instance is scnRandomizerNode randomizerNode)
+        {
+            randomizerNode.NumOutSockets = 1;
+            randomizerNode.Weights[0] = 1;
+        }
+
+        return instance;
     }
 
     private BaseSceneViewModel WrapSceneNode(scnSceneGraphNode node)
@@ -220,6 +237,11 @@ public partial class RedGraph
                         {
                             dynamicInputNode.AddInput();
                         }
+                    }
+
+                    if (destination.IsockStamp.Ordinal >= targetNode.Input.Count)
+                    {
+
                     }
 
                     graph.Connections.Add(new SceneConnectionViewModel(outputConnector, targetNode.Input[destination.IsockStamp.Ordinal]));

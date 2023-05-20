@@ -142,19 +142,14 @@ namespace WolvenKit.Views.Tools
                                     allowDrop = true;
                                 }
 
-                                if (target.Parent.Data is IRedArray arr)
+                                if (target.Parent.Data is IRedArray)
                                 {
-                                    var arrayType = target.Parent.Data.GetType().GetGenericTypeDefinition();
+                                    allowDrop = true;
+                                }
 
-                                    if (arrayType == typeof(CArray<>))
-                                    {
-                                        allowDrop = true;
-                                    }
-
-                                    if (arrayType == typeof(CStatic<>) && arr.Count < arr.MaxSize)
-                                    {
-                                        allowDrop = true;
-                                    }
+                                if (target.Parent.Data is IRedStatic sta && sta.Count < sta.MaxSize)
+                                {
+                                    allowDrop = true;
                                 }
                             }
                             else if (target.IsInArray && !target.Parent.IsReadOnly)

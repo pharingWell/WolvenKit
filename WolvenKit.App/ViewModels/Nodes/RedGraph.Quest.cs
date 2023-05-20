@@ -22,6 +22,10 @@ public partial class RedGraph
         {
             nodeWrapper = new questOutputNodeDefinitionWrapper(outputNode);
         }
+        else if (node is questPauseConditionNodeDefinition pauseCondition)
+        {
+            nodeWrapper = new questPauseConditionNodeDefinitionWrapper(pauseCondition);
+        }
         else if (node is questFactsDBManagerNodeDefinition factsDbManager)
         {
             nodeWrapper = new questFactsDBManagerNodeDefinitionWrapper(factsDbManager);

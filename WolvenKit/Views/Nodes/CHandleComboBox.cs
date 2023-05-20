@@ -64,8 +64,10 @@ public class CHandleComboBox : ComboBox
             return;
         }
 
-        RedHandle.SetValue(targetType != null ? RedTypeManager.Create(targetType) : null);
-        GetBindingExpression(RedHandleProperty)?.UpdateSource();
+        if (RedHandle.GetValue()?.GetType() != targetType)
+        {
+            RedHandle.SetValue(targetType != null ? RedTypeManager.Create(targetType) : null);
+        }
 
         e.Handled = true;
     }

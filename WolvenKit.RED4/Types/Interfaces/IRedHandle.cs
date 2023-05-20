@@ -1,6 +1,8 @@
+using System.ComponentModel;
+
 namespace WolvenKit.RED4.Types;
 
-public interface IRedBaseHandle : IRedType
+public interface IRedBaseHandle : IRedType, INotifyPropertyChanging, INotifyPropertyChanged
 {
     /// <summary>
     /// Acceptable type or interface for the handle

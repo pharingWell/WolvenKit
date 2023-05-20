@@ -9,3 +9,11 @@ public interface IDynamicInputNode
     public BaseConnectorViewModel AddInput();
     public void RemoveInput();
 }
+
+public interface IDynamicOutputNode
+{
+    public ObservableCollection<OutputConnectorViewModel> Output { get; }
+
+    public BaseConnectorViewModel AddOutput();
+    public void RemoveOutput();
+}

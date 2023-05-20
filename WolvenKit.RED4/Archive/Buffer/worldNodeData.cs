@@ -3,64 +3,112 @@ using WolvenKit.RED4.Types;
 namespace WolvenKit.RED4.Archive.Buffer;
 
 // this might just be worldNodeEditorData
-public class worldNodeData : IRedType, IRedCloneable
+public class worldNodeData : RedBaseClass
 {
-    public CUInt64 Id { get; set; }
+    [REDProperty(IsIgnored = true)]
+    public CUInt64 Id
+    {
+        get => GetPropertyValue<CUInt64>();
+        set => SetPropertyValue<CUInt64>(value);
+    }
 
-    public CUInt16 NodeIndex { get; set; }
+    [REDProperty(IsIgnored = true)]
+    public CUInt16 NodeIndex
+    {
+        get => GetPropertyValue<CUInt16>();
+        set => SetPropertyValue<CUInt16>(value);
+    }
 
-    public Vector4 Position { get; set; } = new();
+    [REDProperty(IsIgnored = true)]
+    public Vector4 Position
+    {
+        get => GetPropertyValue<Vector4>();
+        set => SetPropertyValue<Vector4>(value);
+    }
 
-    public Quaternion Orientation { get; set; } = new();
+    [REDProperty(IsIgnored = true)]
+    public Quaternion Orientation
+    {
+        get => GetPropertyValue<Quaternion>();
+        set => SetPropertyValue<Quaternion>(value);
+    }
 
-    public Vector3 Scale { get; set; } = new();
+    [REDProperty(IsIgnored = true)]
+    public Vector3 Scale
+    {
+        get => GetPropertyValue<Vector3>();
+        set => SetPropertyValue<Vector3>(value);
+    }
 
-    public Vector3 Pivot { get; set; } = new();
+    [REDProperty(IsIgnored = true)]
+    public Vector3 Pivot
+    {
+        get => GetPropertyValue<Vector3>();
+        set => SetPropertyValue<Vector3>(value);
+    }
 
-    public Box Bounds { get; set; } = new();
+    [REDProperty(IsIgnored = true)]
+    public Box Bounds
+    {
+        get => GetPropertyValue<Box>();
+        set => SetPropertyValue<Box>(value);
+    }
 
-    public NodeRef QuestPrefabRefHash { get; set; }
+    [REDProperty(IsIgnored = true)]
+    public NodeRef QuestPrefabRefHash
+    {
+        get => GetPropertyValue<NodeRef>();
+        set => SetPropertyValue<NodeRef>(value);
+    }
 
-    public NodeRef UkHash1 { get; set; }
+    [REDProperty(IsIgnored = true)]
+    public NodeRef UkHash1
+    {
+        get => GetPropertyValue<NodeRef>();
+        set => SetPropertyValue<NodeRef>(value);
+    }
 
-    public CResourceReference<worldCookedPrefabData> CookedPrefabData { get; set; } = new();
+    [REDProperty(IsIgnored = true)]
+    public CResourceReference<worldCookedPrefabData> CookedPrefabData
+    {
+        get => GetPropertyValue<CResourceReference<worldCookedPrefabData>>();
+        set => SetPropertyValue<CResourceReference<worldCookedPrefabData>>(value);
+    }
 
-    public CFloat MaxStreamingDistance { get; set; }
+    [REDProperty(IsIgnored = true)]
+    public CFloat MaxStreamingDistance
+    {
+        get => GetPropertyValue<CFloat>();
+        set => SetPropertyValue<CFloat>(value);
+    }
 
-    public CFloat UkFloat1 { get; set; }
+    [REDProperty(IsIgnored = true)]
+    public CFloat UkFloat1
+    {
+        get => GetPropertyValue<CFloat>();
+        set => SetPropertyValue<CFloat>(value);
+    }
 
     // likely a bitfield
 
-    public CUInt16 Uk10 { get; set; }
-
-    public CUInt16 Uk11 { get; set; }
-
-    public CUInt16 Uk12 { get; set; }
-
-    public worldNodeData()
+    [REDProperty(IsIgnored = true)]
+    public CUInt16 Uk10
     {
-
+        get => GetPropertyValue<CUInt16>();
+        set => SetPropertyValue<CUInt16>(value);
     }
 
-    public object ShallowCopy() => MemberwiseClone();
+    [REDProperty(IsIgnored = true)]
+    public CUInt16 Uk11
+    {
+        get => GetPropertyValue<CUInt16>();
+        set => SetPropertyValue<CUInt16>(value);
+    }
 
-    public object DeepCopy() =>
-        new worldNodeData
-        {
-            Id = Id,
-            NodeIndex = NodeIndex,
-            Position = (Vector4)Position.DeepCopy(),
-            Orientation = (Quaternion)Orientation.DeepCopy(),
-            Scale = (Vector3)Scale.DeepCopy(),
-            Pivot = (Vector3)Pivot.DeepCopy(),
-            Bounds = (Box)Bounds.DeepCopy(),
-            QuestPrefabRefHash = QuestPrefabRefHash,
-            UkHash1 = UkHash1,
-            CookedPrefabData = CookedPrefabData,
-            MaxStreamingDistance = MaxStreamingDistance,
-            UkFloat1 = UkFloat1,
-            Uk10 = Uk10,
-            Uk11 = Uk11,
-            Uk12 = Uk12
-        };
+    [REDProperty(IsIgnored = true)]
+    public CUInt16 Uk12
+    {
+        get => GetPropertyValue<CUInt16>();
+        set => SetPropertyValue<CUInt16>(value);
+    }
 }

@@ -28,6 +28,8 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
 
     public void Load()
     {
+        MainGraph.Dispose();
+
         RedGraph? mainGraph = null;
 
         try

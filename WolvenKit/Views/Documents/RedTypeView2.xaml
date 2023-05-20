@@ -31,7 +31,7 @@
                 <nodes:RedTypeCellTemplateSelector x:Key="CellTemplateSelector">
                     <nodes:RedTypeCellTemplateSelector.CBool>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding Value, Converter={StaticResource CBoolToBoolConverter}}" />
+                            <CheckBox IsChecked="{Binding DataObject, Converter={StaticResource CBoolToBoolConverter}}" />
                         </DataTemplate>
                     </nodes:RedTypeCellTemplateSelector.CBool>
                     <nodes:RedTypeCellTemplateSelector.Done>
@@ -64,42 +64,42 @@
                 <nodes:RedTypeEditTemplateSelector x:Key="EditTemplateSelector">
                     <nodes:RedTypeEditTemplateSelector.CBool>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding Value, Converter={StaticResource CBoolToBoolConverter}}" />
+                            <CheckBox IsChecked="{Binding DataObject, Converter={StaticResource CBoolToBoolConverter}}" />
                         </DataTemplate>
                     </nodes:RedTypeEditTemplateSelector.CBool>
                     <nodes:RedTypeEditTemplateSelector.CName>
                         <DataTemplate>
-                            <TextBox Text="{Binding Value, Converter={StaticResource CNameToStringConverter}}" />
+                            <TextBox Text="{Binding DataObject, Converter={StaticResource CNameToStringConverter}}" />
                         </DataTemplate>
                     </nodes:RedTypeEditTemplateSelector.CName>
                     <nodes:RedTypeEditTemplateSelector.CString>
                         <DataTemplate>
-                            <TextBox Text="{Binding Value, Converter={StaticResource CStringToStringConverter}}" />
+                            <TextBox Text="{Binding DataObject, Converter={StaticResource CStringToStringConverter}}" />
                         </DataTemplate>
                     </nodes:RedTypeEditTemplateSelector.CString>
                     <nodes:RedTypeEditTemplateSelector.NodeRef>
                         <DataTemplate>
-                            <TextBox Text="{Binding Value, Converter={StaticResource NodeRefToStringConverter}}" />
+                            <TextBox Text="{Binding DataObject, Converter={StaticResource NodeRefToStringConverter}}" />
                         </DataTemplate>
                     </nodes:RedTypeEditTemplateSelector.NodeRef>
                     <nodes:RedTypeEditTemplateSelector.TweakDBID>
                         <DataTemplate>
-                            <TextBox Text="{Binding Value, Converter={StaticResource TweakDBIDToStringConverter}}" />
+                            <TextBox Text="{Binding DataObject, Converter={StaticResource TweakDBIDToStringConverter}}" />
                         </DataTemplate>
                     </nodes:RedTypeEditTemplateSelector.TweakDBID>
                     <nodes:RedTypeEditTemplateSelector.CEnum>
                         <DataTemplate>
-                            <nodes:CEnumComboBox RedEnum="{Binding Value}" />
+                            <nodes:CEnumComboBox RedEnum="{Binding DataObject}" />
                         </DataTemplate>
                     </nodes:RedTypeEditTemplateSelector.CEnum>
                     <nodes:RedTypeEditTemplateSelector.CHandle>
                         <DataTemplate>
-                            <nodes:CHandleComboBox RedHandle="{Binding Value, UpdateSourceTrigger=Explicit}" />
+                            <nodes:CHandleComboBox RedHandle="{Binding DataObject, UpdateSourceTrigger=Explicit}" />
                         </DataTemplate>
                     </nodes:RedTypeEditTemplateSelector.CHandle>
                     <nodes:RedTypeEditTemplateSelector.RedInteger>
                         <DataTemplate>
-                            <nodes:CNumberUpDown RedInteger="{Binding Value}" />
+                            <nodes:CNumberUpDown RedInteger="{Binding DataObject}" />
                         </DataTemplate>
                     </nodes:RedTypeEditTemplateSelector.RedInteger>
                     <nodes:RedTypeEditTemplateSelector.ReadOnly>
@@ -114,12 +114,12 @@
             </Syncfusion:SfTreeGrid.Resources>
 
             <Syncfusion:SfTreeGrid.Columns>
-                <Syncfusion:TreeGridTextColumn MappingName="Name" />
+                <Syncfusion:TreeGridTextColumn MappingName="DisplayName" />
                 <Syncfusion:TreeGridTemplateColumn
                     AllowEditing="True"
                     CellTemplateSelector="{StaticResource CellTemplateSelector}"
                     EditTemplateSelector="{StaticResource EditTemplateSelector}"
-                    MappingName="Value" />
+                    MappingName="DisplayValue" />
             </Syncfusion:SfTreeGrid.Columns>
         </Syncfusion:SfTreeGrid>
     </Grid>

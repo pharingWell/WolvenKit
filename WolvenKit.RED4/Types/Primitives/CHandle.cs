@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace WolvenKit.RED4.Types;
 
@@ -31,8 +33,15 @@ public static class CHandle
 [RED("handle")]
 public class CHandle<T> : IRedHandle<T>, IEquatable<CHandle<T>>, IRedCloneable where T : RedBaseClass
 {
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private T? _chunk;
+
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    public T? Chunk { get; set; }
+    public T? Chunk
+    {
+        get => _chunk;
+        set => SetField(ref _chunk, value);
+    }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public Type InnerType => typeof(T);
@@ -102,4 +111,34 @@ public class CHandle<T> : IRedHandle<T>, IEquatable<CHandle<T>>, IRedCloneable w
         }
         return new CHandle<T>();
     }
+
+    #region INotifyPropertyChanged
+
+    private PropertyChangingEventHandler? _propertyChangingDelegate;
+    public event PropertyChangingEventHandler? PropertyChanging
+    {
+        add => _propertyChangingDelegate += value;
+        remove => _propertyChangingDelegate -= value;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanging([CallerMemberName] string? propertyName = null) => _propertyChangingDelegate?.Invoke(this, new PropertyChangingEventArgs(propertyName));
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return false;
+        }
+
+        OnPropertyChanging(propertyName);
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+
+    #endregion INotifyPropertyChanged
 }

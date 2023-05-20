@@ -19,7 +19,7 @@ namespace WolvenKit.Converters
             {
                 if (tvn.Content is ChunkViewModel vm)
                 {
-                    if (vm.Data is IRedArray)
+                    if (vm.Data is IRedBaseArray)
                     {
                         return ArrayTemplate;
                     }

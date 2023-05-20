@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace WolvenKit.RED4.Types;
 
@@ -31,8 +33,15 @@ public static class CWeakHandle
 [RED("whandle")]
 public class CWeakHandle<T> : IRedWeakHandle<T>, IEquatable<CWeakHandle<T>> where T : RedBaseClass
 {
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private T? _chunk;
+
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    public T? Chunk { get; set; }
+    public T? Chunk
+    {
+        get => _chunk;
+        set => SetField(ref _chunk, value);
+    }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public Type InnerType => typeof(T);
@@ -89,4 +98,27 @@ public class CWeakHandle<T> : IRedWeakHandle<T>, IEquatable<CWeakHandle<T>> wher
     }
 
     public override int GetHashCode() => EqualityComparer<T>.Default.GetHashCode((T)Chunk);
+
+    #region INotifyPropertyChanged
+
+    public event PropertyChangingEventHandler? PropertyChanging;
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanging([CallerMemberName] string? propertyName = null) => PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return false;
+        }
+
+        OnPropertyChanging(propertyName);
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+
+    #endregion INotifyPropertyChanged
 }

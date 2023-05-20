@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WolvenKit.RED4.Types;
@@ -7,7 +9,7 @@ using Point = System.Windows.Point;
 
 namespace WolvenKit.App.ViewModels.Nodes;
 
-public abstract partial class NodeViewModel : ObservableObject
+public abstract partial class NodeViewModel : ObservableObject, IDisposable
 {
     public abstract uint UniqueId { get; }
 
@@ -23,9 +25,51 @@ public abstract partial class NodeViewModel : ObservableObject
     public ObservableCollection<OutputConnectorViewModel> Output { get; } = new();
 
     public RedBaseClass Data { get; }
-    public bool IsDynamic => GetType().IsAssignableTo(typeof(IDynamicInputNode));
 
-    protected NodeViewModel(RedBaseClass data) => Data = data;
+    protected NodeViewModel(RedBaseClass data)
+    {
+        Data = data;
+
+        Data.PropertyChanging += DataOnPropertyChanging;
+        Data.PropertyChanged += DataOnPropertyChanged;
+    }
+
+    protected virtual void DataOnPropertyChanging(object? sender, PropertyChangingEventArgs e)
+    {
+
+    }
+
+    protected virtual void DataOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        
+    }
 
     internal abstract void GenerateSockets();
+
+    #region IDisposable
+
+    private bool _disposedValue;
+
+    ~NodeViewModel() => Dispose(false);
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                Data.PropertyChanged -= DataOnPropertyChanged;
+            }
+
+            _disposedValue = true;
+        }
+    }
+
+    #endregion IDisposable
 }

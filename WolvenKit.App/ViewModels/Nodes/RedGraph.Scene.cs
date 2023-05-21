@@ -17,10 +17,8 @@ public partial class RedGraph
         {
             s_sceneNodeTypes = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
-                .Where(typeof(scnSceneGraphNode).IsAssignableFrom)
+                .Where(x => typeof(scnSceneGraphNode).IsAssignableFrom(x) && !x.IsAbstract)
                 .ToList();
-
-            s_sceneNodeTypes.Remove(typeof(scnSceneGraphNode));
         }
 
         return s_sceneNodeTypes;

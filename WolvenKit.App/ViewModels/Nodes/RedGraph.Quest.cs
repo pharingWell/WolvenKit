@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.App.ViewModels.Nodes.Quest.Internal;
@@ -21,10 +22,8 @@ public partial class RedGraph
         {
             s_questNodeTypes = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
-                .Where(typeof(graphGraphNodeDefinition).IsAssignableFrom)
+                .Where(x => typeof(graphGraphNodeDefinition).IsAssignableFrom(x) && !x.IsAbstract)
                 .ToList();
-
-            s_questNodeTypes.Remove(typeof(graphGraphNodeDefinition));
         }
 
         return s_questNodeTypes;

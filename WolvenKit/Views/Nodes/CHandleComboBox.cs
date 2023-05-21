@@ -81,7 +81,7 @@ public class CHandleComboBox : ComboBox
 
         _types = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(x => x.GetTypes())
-            .Where(RedHandle.InnerType.IsAssignableFrom)
+            .Where(x => RedHandle.InnerType.IsAssignableFrom(x) && !x.IsAbstract)
             .ToDictionary(x => x.Name, x => x);
 
         _types.Add("null", null);

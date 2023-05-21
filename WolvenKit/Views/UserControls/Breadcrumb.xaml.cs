@@ -64,17 +64,17 @@ public partial class Breadcrumb : UserControl
         SetCurrentValue(SelectedItemProperty, null);
 
         StackPanel.Children.Clear();
-        foreach (var propertyViewModel in ItemsSource)
+        for (var i = 0; i < ItemsSource.Count; i++)
         {
-            if (propertyViewModel is HandleViewModel)
+            AddNewElement(ItemsSource[i].DisplayName, ItemsSource[i]);
+            if (ItemsSource[i].Properties.Count > 0)
             {
-                continue;
+                AddNewElement(">", ItemsSource[i]);
             }
 
-            AddNewElement(propertyViewModel.DisplayName, propertyViewModel);
-            if (propertyViewModel.Properties.Count > 0)
+            if (ItemsSource[i] is HandleViewModel)
             {
-                AddNewElement(">", propertyViewModel);
+                i++;
             }
         }
 

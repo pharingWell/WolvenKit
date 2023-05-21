@@ -116,19 +116,24 @@ public partial class GraphView : INotifyPropertyChanged
         {
             var addMenu = new MenuItem { Header = "Add..."};
 
-            addMenu.Items.Add(CreateMenuItem("And", () => Source.CreateSceneNode<scnAndNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Choice", () => Source.CreateSceneNode<scnChoiceNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Cut Control", () => Source.CreateSceneNode<scnCutControlNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Deletion Marker", () => Source.CreateSceneNode<scnDeletionMarkerNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("End", () => Source.CreateSceneNode<scnEndNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Hub", () => Source.CreateSceneNode<scnHubNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Interrupt Manager", () => Source.CreateSceneNode<scnInterruptManagerNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Quest", () => Source.CreateSceneNode<scnQuestNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Randomizer", () => Source.CreateSceneNode<scnRandomizerNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Rewindable Section", () => Source.CreateSceneNode<scnRewindableSectionNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Section", () => Source.CreateSceneNode<scnSectionNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Start", () => Source.CreateSceneNode<scnStartNode>(ViewportLocation)));
-            addMenu.Items.Add(CreateMenuItem("Xor", () => Source.CreateSceneNode<scnXorNode>(ViewportLocation)));
+            var nodeTypes = Source.GetSceneNodeTypes();
+            foreach (var nodeType in nodeTypes)
+            {
+                addMenu.Items.Add(CreateMenuItem(nodeType.Name[3..^4], () => Source.CreateSceneNode(nodeType, ViewportLocation)));
+            }
+
+            nodifyEditor.ContextMenu.Items.Add(addMenu);
+        }
+
+        if (Source.GraphType == RedGraphType.Quest)
+        {
+            var addMenu = new MenuItem { Header = "Add..." };
+
+            var nodeTypes = Source.GetQuestNodeTypes();
+            foreach (var nodeType in nodeTypes)
+            {
+                addMenu.Items.Add(CreateMenuItem(nodeType.Name[5..^14], () => Source.CreateQuestNode(nodeType, ViewportLocation)));
+            }
 
             nodifyEditor.ContextMenu.Items.Add(addMenu);
         }

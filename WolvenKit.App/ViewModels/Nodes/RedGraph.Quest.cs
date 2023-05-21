@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.App.ViewModels.Nodes.Quest.Internal;
@@ -9,7 +10,46 @@ namespace WolvenKit.App.ViewModels.Nodes;
 
 public partial class RedGraph
 {
+    private static List<Type>? s_questNodeTypes;
+
     private INodeWrapperFactory? _nodeWrapperFactory;
+
+    
+    public List<Type> GetQuestNodeTypes()
+    {
+        if (s_questNodeTypes == null)
+        {
+            s_questNodeTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(typeof(graphGraphNodeDefinition).IsAssignableFrom)
+                .ToList();
+
+            s_questNodeTypes.Remove(typeof(graphGraphNodeDefinition));
+        }
+
+        return s_questNodeTypes;
+    }
+
+    public void CreateQuestNode(Type type, System.Windows.Point point)
+    {
+        var instance = InternalCreateQuestNode(type);
+        var wrappedInstance = WrapQuestNode(instance);
+        wrappedInstance.Location = point;
+
+        ((graphGraphDefinition)_data).Nodes.Add(new CHandle<graphGraphNodeDefinition>(instance));
+        Nodes.Add(wrappedInstance);
+    }
+
+    private graphGraphNodeDefinition InternalCreateQuestNode(Type type)
+    {
+        var instance = System.Activator.CreateInstance(type);
+        if (instance is not graphGraphNodeDefinition questNode)
+        {
+            throw new Exception();
+        }
+
+        return questNode;
+    }
 
     private BaseQuestViewModel WrapQuestNode(graphGraphNodeDefinition node)
     {

@@ -9,16 +9,69 @@ namespace WolvenKit.App.ViewModels.Nodes;
 
 public partial class RedGraph
 {
-    public void CreateSceneNode<T>() where T : scnSceneGraphNode => CreateSceneNode<T>(new System.Windows.Point());
+    private static List<Type>? s_sceneNodeTypes;
 
-    public void CreateSceneNode<T>(System.Windows.Point point) where T : scnSceneGraphNode
+    public List<Type> GetSceneNodeTypes()
     {
-        var instance = InternalCreateSceneNode<T>();
+        if (s_sceneNodeTypes == null)
+        {
+            s_sceneNodeTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(typeof(scnSceneGraphNode).IsAssignableFrom)
+                .ToList();
+
+            s_sceneNodeTypes.Remove(typeof(scnSceneGraphNode));
+        }
+
+        return s_sceneNodeTypes;
+    }
+
+    public void CreateSceneNode(Type type, System.Windows.Point point)
+    {
+        var instance = InternalCreateSceneNode(type);
         var wrappedInstance = WrapSceneNode(instance);
         wrappedInstance.Location = point;
 
         ((scnSceneResource)_data).SceneGraph.Chunk!.Graph.Add(new CHandle<scnSceneGraphNode>(instance));
         Nodes.Add(wrappedInstance);
+    }
+
+    private scnSceneGraphNode InternalCreateSceneNode(Type type)
+    {
+        var instance = System.Activator.CreateInstance(type);
+        if (instance is not scnSceneGraphNode sceneGraphNode)
+        {
+            throw new Exception();
+        }
+
+        sceneGraphNode.NodeId.Id = ++_currentSceneNodeId;
+        sceneGraphNode.OutputSockets.Add(new scnOutputSocket { Stamp = new scnOutputSocketStamp { Name = 0, Ordinal = 0 } });
+
+        if (sceneGraphNode is scnChoiceNode)
+        {
+            ((scnSceneResource)_data).NotablePoints.Add(new scnNotablePoint
+            {
+                NodeId = new scnNodeId
+                {
+                    Id = sceneGraphNode.NodeId.Id
+                }
+            });
+        }
+
+        if (sceneGraphNode is scnQuestNode questNode)
+        {
+            questNode.IsockMappings.Add("CutDestination");
+            questNode.IsockMappings.Add("In");
+            questNode.OsockMappings.Add("Out");
+        }
+
+        if (sceneGraphNode is scnRandomizerNode randomizerNode)
+        {
+            randomizerNode.NumOutSockets = 1;
+            randomizerNode.Weights[0] = 1;
+        }
+
+        return sceneGraphNode;
     }
 
     private void RemoveSceneNode(BaseSceneViewModel node)
@@ -78,28 +131,6 @@ public partial class RedGraph
         }
 
         Nodes.Remove(node);
-    }
-
-    private T InternalCreateSceneNode<T>() where T : scnSceneGraphNode
-    {
-        var instance = System.Activator.CreateInstance<T>();
-        instance.NodeId.Id = ++_currentSceneNodeId;
-        instance.OutputSockets.Add(new scnOutputSocket { Stamp = new scnOutputSocketStamp { Name = 0, Ordinal = 0 } });
-
-        if (instance is scnQuestNode questNode)
-        {
-            questNode.IsockMappings.Add("CutDestination");
-            questNode.IsockMappings.Add("In");
-            questNode.OsockMappings.Add("Out");
-        }
-
-        if (instance is scnRandomizerNode randomizerNode)
-        {
-            randomizerNode.NumOutSockets = 1;
-            randomizerNode.Weights[0] = 1;
-        }
-
-        return instance;
     }
 
     private BaseSceneViewModel WrapSceneNode(scnSceneGraphNode node)

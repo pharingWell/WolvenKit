@@ -2,7 +2,7 @@ using static WolvenKit.RED4.Types.Enums;
 
 namespace WolvenKit.RED4.Types
 {
-	public partial class AIBaseUseWorkspotCommand : AICommand
+	public abstract partial class AIBaseUseWorkspotCommand : AICommand
 	{
 		[Ordinal(4)] 
 		[RED("moveToWorkspot")] 

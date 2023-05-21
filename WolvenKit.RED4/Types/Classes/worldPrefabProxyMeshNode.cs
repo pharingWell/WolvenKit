@@ -2,7 +2,7 @@ using static WolvenKit.RED4.Types.Enums;
 
 namespace WolvenKit.RED4.Types
 {
-	public partial class worldPrefabProxyMeshNode : worldMeshNode
+	public abstract partial class worldPrefabProxyMeshNode : worldMeshNode
 	{
 		[Ordinal(16)] 
 		[RED("nearAutoHideDistance")] 

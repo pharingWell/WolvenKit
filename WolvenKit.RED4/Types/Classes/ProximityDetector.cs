@@ -2,7 +2,7 @@ using static WolvenKit.RED4.Types.Enums;
 
 namespace WolvenKit.RED4.Types
 {
-	public partial class ProximityDetector : Device
+	public abstract partial class ProximityDetector : Device
 	{
 		[Ordinal(84)] 
 		[RED("scanningAreaName")] 

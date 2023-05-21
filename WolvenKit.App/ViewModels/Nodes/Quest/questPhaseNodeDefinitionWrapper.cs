@@ -1,11 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes.Quest.Internal;
 using WolvenKit.Common;
-using WolvenKit.RED4.Archive.IO;
 using WolvenKit.RED4.Types;
-using EFileReadErrorCodes = WolvenKit.RED4.Archive.IO.EFileReadErrorCodes;
 
 namespace WolvenKit.App.ViewModels.Nodes.Quest;
 
@@ -49,32 +48,67 @@ public class questPhaseNodeDefinitionWrapper : BaseQuestViewModel<questPhaseNode
         }
         else if (_castedData.PhaseResource.DepotPath != ResourcePath.Empty)
         {
-            var file = _archiveManager.Lookup(_castedData.PhaseResource.DepotPath);
-            if (!file.HasValue)
+            var cr2w = _archiveManager.GetGameFile(_castedData.PhaseResource.DepotPath);
+
+            if (cr2w is not { RootChunk: questQuestPhaseResource res } || res.Graph?.Chunk == null)
             {
                 throw new Exception();
             }
 
-            using var ms = new MemoryStream();
-            file.Value.Extract(ms);
-            ms.Position = 0;
-
-            using var reader = new CR2WReader(ms);
-            if (reader.ReadFile(out var cr2w) != EFileReadErrorCodes.NoError)
+            var fileName = ((ulong)_castedData.PhaseResource.DepotPath).ToString();
+            if (_castedData.PhaseResource.DepotPath.IsResolvable)
             {
-                throw new Exception();
+                fileName = _castedData.PhaseResource.DepotPath.GetResolvedText();
             }
 
-            if (cr2w!.RootChunk is not questQuestPhaseResource res || res.Graph == null || res.Graph.Chunk == null)
-            {
-                throw new Exception();
-            }
-
-            _graph = RedGraph.GenerateQuestGraph(Path.GetFileName(file.Value.FileName), res.Graph.Chunk, _nodeWrapperFactory);
+            _graph = RedGraph.GenerateQuestGraph(fileName!, res.Graph.Chunk, _nodeWrapperFactory);
         }
         else
         {
             throw new Exception();
         }
+    }
+
+    public void RecalculateSockets()
+    {
+        _castedData.Sockets.Clear();
+        _castedData.Sockets.Add(new CHandle<graphGraphSocketDefinition>(new questSocketDefinition
+        {
+            Name = "CutDestination",
+            Type = Enums.questSocketType.CutDestination
+        }));
+
+        if (_castedData.PhaseResource.DepotPath != ResourcePath.Empty)
+        {
+            var cr2w = _archiveManager.GetGameFile(_castedData.PhaseResource.DepotPath);
+
+            if (cr2w is not { RootChunk: questQuestPhaseResource res } || res.Graph?.Chunk == null)
+            {
+                throw new Exception();
+            }
+
+            foreach (var nodeHandle in res.Graph.Chunk.Nodes)
+            {
+                if (nodeHandle.Chunk is questInputNodeDefinition inputNode)
+                {
+                    _castedData.Sockets.Add(new CHandle<graphGraphSocketDefinition>(new questSocketDefinition
+                    {
+                        Name = inputNode.SocketName,
+                        Type = Enums.questSocketType.Input
+                    }));
+                }
+
+                if (nodeHandle.Chunk is questOutputNodeDefinition outputNode)
+                {
+                    _castedData.Sockets.Add(new CHandle<graphGraphSocketDefinition>(new questSocketDefinition
+                    {
+                        Name = outputNode.SocketName,
+                        Type = Enums.questSocketType.Output
+                    }));
+                }
+            }
+        }
+
+        GenerateSockets();
     }
 }

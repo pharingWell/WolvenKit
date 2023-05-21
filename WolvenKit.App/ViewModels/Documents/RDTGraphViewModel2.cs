@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using WolvenKit.App.Factories;
 using WolvenKit.App.ViewModels.Nodes;
@@ -12,7 +14,7 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
     private readonly INodeWrapperFactory _nodeWrapperFactory;
 
     protected readonly IRedType _data;
-
+    
     [ObservableProperty]
     private RedGraph _mainGraph;
 
@@ -24,7 +26,29 @@ public partial class RDTGraphViewModel2 : RedDocumentTabViewModel
         _mainGraph = new RedGraph("ERROR", new RedDummy());
     }
 
+    protected override void OnPropertyChanging(PropertyChangingEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainGraph))
+        {
+            History.Clear();
+        }
+        
+        base.OnPropertyChanging(e);
+    }
+
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainGraph))
+        {
+            History.Add(MainGraph);
+        }
+
+        base.OnPropertyChanged(e);
+    }
+
     public override ERedDocumentItemType DocumentItemType => ERedDocumentItemType.MainFile;
+
+    public List<RedGraph> History { get; } = new();
 
     public void Load()
     {

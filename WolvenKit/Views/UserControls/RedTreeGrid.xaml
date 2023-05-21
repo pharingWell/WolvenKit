@@ -35,6 +35,7 @@
             <nodes:CStringToStringConverter x:Key="CStringToStringConverter" />
             <nodes:NodeRefToStringConverter x:Key="NodeRefToStringConverter" />
             <nodes:TweakDBIDToStringConverter x:Key="TweakDBIDToStringConverter" />
+            <nodes:ResourcePathToStringConverter x:Key="ResourcePathToStringConverter" />
 
             <nodes:RedTypeCellTemplateSelector x:Key="CellTemplateSelector">
                 <nodes:RedTypeCellTemplateSelector.CBool>
@@ -42,6 +43,14 @@
                         <CheckBox IsChecked="{Binding DataObject, Converter={StaticResource CBoolToBoolConverter}}" />
                     </DataTemplate>
                 </nodes:RedTypeCellTemplateSelector.CBool>
+                <nodes:RedTypeCellTemplateSelector.ResourcePath>
+                    <DataTemplate>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{Binding DataObject.DepotPath, Converter={StaticResource ResourcePathToStringConverter}}"
+                            TextAlignment="Left" />
+                    </DataTemplate>
+                </nodes:RedTypeCellTemplateSelector.ResourcePath>
                 <nodes:RedTypeCellTemplateSelector.Done>
                     <DataTemplate>
                         <TextBlock
@@ -76,6 +85,11 @@
                         <CheckBox IsChecked="{Binding DataObject, Converter={StaticResource CBoolToBoolConverter}}" />
                     </DataTemplate>
                 </nodes:RedTypeEditTemplateSelector.CBool>
+                <nodes:RedTypeEditTemplateSelector.ResourcePath>
+                    <DataTemplate>
+                        <nodes:ResourceReferenceEditor RedResourceReference="{Binding DataObject}" />
+                    </DataTemplate>
+                </nodes:RedTypeEditTemplateSelector.ResourcePath>
                 <nodes:RedTypeEditTemplateSelector.CName>
                     <DataTemplate>
                         <TextBox Text="{Binding DataObject, Converter={StaticResource CNameToStringConverter}}" />

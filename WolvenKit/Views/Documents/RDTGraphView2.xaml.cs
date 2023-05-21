@@ -13,8 +13,6 @@ namespace WolvenKit.Views.Documents;
 /// </summary>
 public partial class RDTGraphView2
 {
-    private readonly List<RedGraph> _history = new();
-
     public RDTGraphView2()
     {
         InitializeComponent();
@@ -23,7 +21,6 @@ public partial class RDTGraphView2
 
         this.WhenActivated(disposables =>
         {
-            _history.Add(ViewModel!.MainGraph);
             BuildBreadcrumb();
         });
     }
@@ -34,7 +31,7 @@ public partial class RDTGraphView2
         {
             if (Editor.SelectedNode is IGraphProvider provider)
             {
-                _history.Add(provider.Graph);
+                ViewModel!.History.Add(provider.Graph);
                 Editor.SetCurrentValue(GraphView.SourceProperty, provider.Graph);
 
                 BuildBreadcrumb();
@@ -42,10 +39,10 @@ public partial class RDTGraphView2
 
             if (Editor.SelectedNode is questInputNodeDefinitionWrapper input)
             {
-                if (_history.Count > 1)
+                if (ViewModel!.History.Count > 1)
                 {
-                    _history.Remove(_history[^1]);
-                    Editor.SetCurrentValue(GraphView.SourceProperty, _history[^1]);
+                    ViewModel.History.Remove(ViewModel.History[^1]);
+                    Editor.SetCurrentValue(GraphView.SourceProperty, ViewModel.History[^1]);
 
                     BuildBreadcrumb();
                 }
@@ -57,11 +54,11 @@ public partial class RDTGraphView2
     {
         Breadcrumb.Children.Clear();
 
-        for (var i = 0; i < _history.Count; i++)
+        for (var i = 0; i < ViewModel!.History.Count; i++)
         {
-            AddNewElement(_history[i].Title, _history[i]);
+            AddNewElement(ViewModel.History[i].Title, ViewModel.History[i]);
 
-            if (i < _history.Count - 1)
+            if (i < ViewModel.History.Count - 1)
             {
                 AddNewElement(">", null);
             }
@@ -88,7 +85,7 @@ public partial class RDTGraphView2
             return;
         }
 
-        if (_history.Count == 1)
+        if (ViewModel!.History.Count == 1)
         {
             return;
         }
@@ -100,13 +97,13 @@ public partial class RDTGraphView2
 
         Editor.SetCurrentValue(GraphView.SourceProperty, graph);
 
-        for (var i = _history.Count - 1; i >= 0; i--)
+        for (var i = ViewModel.History.Count - 1; i >= 0; i--)
         {
-            if (ReferenceEquals(_history[i], graph))
+            if (ReferenceEquals(ViewModel.History[i], graph))
             {
                 break;
             }
-            _history.RemoveAt(i);
+            ViewModel.History.RemoveAt(i);
         }
 
         BuildBreadcrumb();

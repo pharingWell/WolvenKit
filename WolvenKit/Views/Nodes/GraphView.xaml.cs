@@ -20,6 +20,7 @@ using System.Windows.Threading;
 using Nodify;
 using ReactiveUI;
 using WolvenKit.App.ViewModels.Nodes;
+using WolvenKit.App.ViewModels.Nodes.Quest;
 using WolvenKit.App.ViewModels.Nodes.Scene;
 using WolvenKit.App.ViewModels.Shell.RedTypes;
 using WolvenKit.RED4.Types;
@@ -58,29 +59,27 @@ public partial class GraphView : INotifyPropertyChanged
     }
 
     private NodeViewModel _selectedNode;
+    private PropertyViewModel _selectedPropertyViewModel;
 
     public NodeViewModel SelectedNode
     {
         get => _selectedNode;
         set
         {
+            _selectedPropertyViewModel?.Dispose();
+
             SetField(ref _selectedNode, value);
+
+            if (_selectedNode?.Data != null)
+            {
+                _selectedPropertyViewModel = PropertyViewModel.Create(_selectedNode.Data);
+            }
+
             OnPropertyChanged(nameof(SelectedProperty));
         }
     }
 
-    public PropertyViewModel SelectedProperty
-    {
-        get
-        {
-            if (_selectedNode?.Data != null)
-            {
-                return PropertyViewModel.Create(_selectedNode.Data);
-            }
-
-            return null;
-        }
-    }
+    public PropertyViewModel SelectedProperty => _selectedPropertyViewModel;
 
     public Point ViewportLocation { get; set; }
 
@@ -171,6 +170,12 @@ public partial class GraphView : INotifyPropertyChanged
         if (node.DataContext is scnChoiceNodeWrapper choice)
         {
             node.ContextMenu.Items.Add(CreateMenuItem("Add Choice", () => choice.AddChoice()));
+            node.ContextMenu.Items.Add(new Separator());
+        }
+
+        if (node.DataContext is questPhaseNodeDefinitionWrapper questPhase)
+        {
+            node.ContextMenu.Items.Add(CreateMenuItem("Recalculate sockets", () => questPhase.RecalculateSockets()));
             node.ContextMenu.Items.Add(new Separator());
         }
 

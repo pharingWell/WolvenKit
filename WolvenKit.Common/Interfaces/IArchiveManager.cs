@@ -7,6 +7,8 @@ using DynamicData.Kernel;
 using WolvenKit.Common.Model;
 using WolvenKit.Core.Interfaces;
 using WolvenKit.RED4.Archive;
+using WolvenKit.RED4.Archive.CR2W;
+using WolvenKit.RED4.Types;
 
 namespace WolvenKit.Common
 {
@@ -19,6 +21,7 @@ namespace WolvenKit.Common
 
         SourceCache<IGameArchive, string> Archives { get; set; }
         SourceCache<IGameArchive, string> ModArchives { get; set; }
+        IGameArchive? ProjectArchive { get; set; }
         //SourceCache<IGameFile, ulong> Items { get; }
         RedFileSystemModel? RootNode { get; set; }
         public List<RedFileSystemModel> ModRoots { get; }
@@ -48,5 +51,7 @@ namespace WolvenKit.Common
 
         public IObservable<IChangeSet<RedFileSystemModel>> ConnectGameRoot();
         public IObservable<IChangeSet<RedFileSystemModel>> ConnectModRoot();
+
+        public CR2WFile? GetGameFile(ResourcePath path);
     }
 }

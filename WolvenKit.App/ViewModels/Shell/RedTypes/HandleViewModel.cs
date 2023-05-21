@@ -19,17 +19,21 @@ public class HandleViewModel : PropertyViewModel<IRedHandle>
         _dataObject ??= RedTypeManager.CreateRedType(redPropertyInfo.ExtendedPropertyInfo!.Type);
         _chunkViewModel = (ClassViewModel)Create(this, new RedPropertyInfo(redPropertyInfo.InnerType!), _castedData!.GetValue(), false);
 
-        _castedData.PropertyChanging += (sender, args) =>
-        {
-            Properties.Clear();
-            _chunkViewModel.Dispose();
-        };
-        _castedData.PropertyChanged += (sender, args) =>
-        {
-            _chunkViewModel = (ClassViewModel)Create(this, new RedPropertyInfo(redPropertyInfo.InnerType!), _castedData!.GetValue());
-            FetchProperties();
-            UpdateInfos();
-        };
+        _castedData.PropertyChanging += CastedData_OnPropertyChanging;
+        _castedData.PropertyChanged += CastedData_OnPropertyChanged;
+    }
+
+    private void CastedData_OnPropertyChanging(object? sender, PropertyChangingEventArgs e)
+    {
+        Properties.Clear();
+        _chunkViewModel.Dispose();
+    }
+
+    private void CastedData_OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        _chunkViewModel = (ClassViewModel)Create(this, new RedPropertyInfo(RedPropertyInfo.InnerType!), _castedData!.GetValue());
+        FetchProperties();
+        UpdateInfos();
     }
 
     protected override void SetValue(PropertyViewModel propertyViewModel) => _castedData!.SetValue((RedBaseClass?)_chunkViewModel.DataObject);
@@ -87,5 +91,22 @@ public class HandleViewModel : PropertyViewModel<IRedHandle>
         }
 
         DisplayValue = displayValue;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                if (_castedData != null)
+                {
+                    _castedData.PropertyChanging -= CastedData_OnPropertyChanging;
+                    _castedData.PropertyChanged -= CastedData_OnPropertyChanged;
+                }
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }

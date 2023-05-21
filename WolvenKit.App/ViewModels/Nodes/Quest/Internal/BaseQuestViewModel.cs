@@ -23,6 +23,9 @@ public class BaseQuestViewModel<T> : BaseQuestViewModel where T : graphGraphNode
 
     internal override void GenerateSockets()
     {
+        Input.Clear();
+        Output.Clear();
+
         foreach (var socketHandle in _castedData.Sockets)
         {
             if (socketHandle.Chunk is questSocketDefinition socketDefinition)

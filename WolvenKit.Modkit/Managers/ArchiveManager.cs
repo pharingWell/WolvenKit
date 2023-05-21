@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using DynamicData;
 using DynamicData.Kernel;
 using WolvenKit.Common;
@@ -11,6 +12,8 @@ using WolvenKit.Common.Services;
 using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
 using WolvenKit.RED4.Archive;
+using WolvenKit.RED4.Archive.CR2W;
+using WolvenKit.RED4.Types;
 using Path = System.IO.Path;
 
 namespace WolvenKit.RED4.CR2W.Archive
@@ -79,6 +82,8 @@ namespace WolvenKit.RED4.CR2W.Archive
         public override IObservable<IChangeSet<RedFileSystemModel>> ConnectModRoot() => _modCache.Connect();
 
         public override EArchiveType TypeName => EArchiveType.Archive;
+
+        public override IGameArchive? ProjectArchive { get; set; }
 
         #endregion properties
 
@@ -452,6 +457,61 @@ namespace WolvenKit.RED4.CR2W.Archive
                     return i == splits.Length - 1 ? currentDir : null;
                 }
             }
+            return null;
+        }
+
+        public override CR2WFile? GetGameFile(ResourcePath path)
+        {
+            if (ProjectArchive != null && ProjectArchive.Files.TryGetValue(path, out var projectFile))
+            {
+                using var ms = new MemoryStream();
+                projectFile.Extract(ms);
+                ms.Position = 0;
+
+                if (_wolvenkitFileService.TryReadRed4File(ms, out var redFile))
+                {
+                    return redFile;
+                }
+            }
+
+            var modFile = ModArchives
+                .Items
+                .Select(x => x.Files)
+                .Where(x => x.ContainsKey(path))
+                .Select(x => x[path])
+                .FirstOrDefault();
+
+            if (modFile != null)
+            {
+                using var ms = new MemoryStream();
+                modFile.Extract(ms);
+                ms.Position = 0;
+
+                if (_wolvenkitFileService.TryReadRed4File(ms, out var redFile))
+                {
+                    return redFile;
+                }
+            }
+
+            var baseFile = Archives
+                .Items
+                .Select(x => x.Files)
+                .Where(x => x.ContainsKey(path))
+                .Select(x => x[path])
+                .FirstOrDefault();
+
+            if (baseFile != null)
+            {
+                using var ms = new MemoryStream();
+                baseFile.Extract(ms);
+                ms.Position = 0;
+
+                if (_wolvenkitFileService.TryReadRed4File(ms, out var redFile))
+                {
+                    return redFile;
+                }
+            }
+
             return null;
         }
 

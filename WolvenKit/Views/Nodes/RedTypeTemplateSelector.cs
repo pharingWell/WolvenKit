@@ -29,6 +29,11 @@ public class RedTypeCellTemplateSelector : RedTypeEditTemplateSelector
             return CBool;
         }
 
+        if (value is IRedRef)
+        {
+            return ResourcePath;
+        }
+
         if (value is CName)
         {
             return ReadOnly;
@@ -76,6 +81,7 @@ public class RedTypeEditTemplateSelector : DataTemplateSelector
     public DataTemplate RedInteger { get; set; }
     public DataTemplate RedInteger2 { get; set; }
     public DataTemplate LocalizationString { get; set; }
+    public DataTemplate ResourcePath { get; set; }
 
     public override DataTemplate SelectTemplate(object item, DependencyObject container)
     {
@@ -88,6 +94,11 @@ public class RedTypeEditTemplateSelector : DataTemplateSelector
         if (value is CBool)
         {
             return CBool;
+        }
+
+        if (value is IRedRef)
+        {
+            return ResourcePath;
         }
 
         if (value is CName)

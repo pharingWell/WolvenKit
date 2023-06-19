@@ -21,8 +21,8 @@ public interface ICR2WExport
 
 public interface ICR2WEmbeddedFile
 {
-    public string FileName { get; set; }
-    public RedBaseClass Content { get; set; }
+    public ResourcePath FileName { get; set; }
+    public CResource Content { get; set; }
 }
 
 //public interface IEditableVariable

@@ -961,7 +961,7 @@ namespace WolvenKit.Modkit.RED4
 
             // Helpers
 
-            [return: NotNull] RawArmature _ProcessRigs(List<Stream> rigStreamS)
+            RawArmature _ProcessRigs(List<Stream> rigStreamS)
             {
                 var Rigs = new List<RawArmature>();
                 foreach (var rigStream in rigStreamS)

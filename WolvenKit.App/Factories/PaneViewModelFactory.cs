@@ -13,6 +13,7 @@ using WolvenKit.Common.Interfaces;
 using WolvenKit.Common.Services;
 using WolvenKit.Core.Interfaces;
 using WolvenKit.Core.Services;
+using WolvenKit.Modkit.Managers;
 using WolvenKit.Modkit.RED4.Tools;
 using WolvenKit.RED4.CR2W;
 
@@ -36,6 +37,7 @@ public class PaneViewModelFactory : IPaneViewModelFactory
     private readonly ITweakDBService _tweakDbService;
     private readonly ILocKeyService _locKeyService;
     private readonly ImportExportHelper _importExportHelper;
+    private readonly ConvertManager _convertManager;
 
     private readonly PropertiesViewModel _propertiesViewModel;
 
@@ -55,7 +57,8 @@ public class PaneViewModelFactory : IPaneViewModelFactory
         ITweakDBService tweakDbService,
         ILocKeyService locKeyService,
         PropertiesViewModel propertiesViewModel,
-        ImportExportHelper importExportHelper
+        ImportExportHelper importExportHelper,
+        ConvertManager convertManager
         )
     {
         _projectManager = projectManager;
@@ -74,6 +77,7 @@ public class PaneViewModelFactory : IPaneViewModelFactory
         _locKeyService = locKeyService;
         _propertiesViewModel = propertiesViewModel;
         _importExportHelper = importExportHelper;
+        _convertManager = convertManager;
     }
 
     public LogViewModel LogViewModel() => new(_loggerService);
@@ -88,5 +92,5 @@ public class PaneViewModelFactory : IPaneViewModelFactory
     public LocKeyBrowserViewModel LocKeyBrowserViewModel() => new(_projectManager, _loggerService, _watcherService, _progressService, _modTools, _gameController, _archiveManager, _locKeyService);
     
     public ImportViewModel ImportViewModel() => new(_archiveManager, _notificationService, _settingsManager, _loggerService, _watcherService, _projectManager, _progressService, _gameController, _parserService, _importExportHelper);
-    public ExportViewModel ExportViewModel() => new(_archiveManager, _notificationService, _settingsManager, _loggerService, _watcherService, _projectManager, _progressService, _importExportHelper);
+    public ExportViewModel ExportViewModel() => new(_archiveManager, _notificationService, _settingsManager, _loggerService, _watcherService, _projectManager, _progressService, _importExportHelper, _convertManager);
 }

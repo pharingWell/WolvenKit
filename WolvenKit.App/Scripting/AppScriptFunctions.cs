@@ -19,6 +19,7 @@ using WolvenKit.Common.FNV1A;
 using WolvenKit.Common.Interfaces;
 using WolvenKit.Common.Model.Arguments;
 using WolvenKit.Core.Interfaces;
+using WolvenKit.Modkit.Managers;
 using WolvenKit.Modkit.Scripting;
 using WolvenKit.RED4.Archive.CR2W;
 using WolvenKit.RED4.Archive.IO;
@@ -38,6 +39,7 @@ public class AppScriptFunctions : ScriptFunctions
     private readonly IModTools _modTools;
     private readonly ImportExportHelper _importExportHelper;
     private readonly IGameControllerFactory _gameController;
+    private readonly ConvertManager _convertManager;
 
     public AppViewModel? AppViewModel;
 
@@ -49,7 +51,8 @@ public class AppScriptFunctions : ScriptFunctions
         IWatcherService watcherService,
         IModTools modTools,
         ImportExportHelper importExportHelper,
-        IGameControllerFactory gameController)
+        IGameControllerFactory gameController,
+        ConvertManager convertManager)
         : base(loggerService, archiveManager, parserService)
     {
         _projectManager = projectManager;
@@ -57,6 +60,7 @@ public class AppScriptFunctions : ScriptFunctions
         _modTools = modTools;
         _importExportHelper = importExportHelper;
         _gameController = gameController;
+        _convertManager = convertManager;
     }
 
     /// <summary>
@@ -433,6 +437,39 @@ public class AppScriptFunctions : ScriptFunctions
 
             fileDict.Add(fileInfo, globalExport);
         }
+    }
+
+    public virtual void DebugExport(IGameFile gameFile, ScriptObject exportArgs)
+    {
+        var globalArgs = GetGlobalExportArgs(exportArgs);
+        _importExportHelper.Finalize(globalArgs);
+
+        if (_convertManager.DepotPath == null)
+        {
+            _convertManager.DepotPath = @"D:\TestDepot";
+        }
+
+        if (_convertManager.Archives == null)
+        {
+            _convertManager.Archives = new List<IGameArchive>();
+
+            if (_projectManager.ActiveProject is { } project)
+            {
+                _convertManager.Archives.Add(project.AsArchive());
+            }
+
+            foreach (var archive in _archiveManager.ModArchives.Items)
+            {
+                _convertManager.Archives.Add(archive);
+            }
+
+            foreach (var archive in _archiveManager.Archives.Items)
+            {
+                _convertManager.Archives.Add(archive);
+            }
+        }
+
+        _convertManager.Export(gameFile, globalArgs);
     }
 
     public virtual object? GetFileFromProject(string path, OpenAs openAs)

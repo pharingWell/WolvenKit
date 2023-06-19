@@ -43,6 +43,19 @@ public class FileSystemArchive : ICyberGameArchive
         await fs.CopyToAsync(stream);
     }
 
+    public IGameFile? GetFile(string targetPath)
+    {
+        foreach (var (hash, path) in _filePaths)
+        {
+            if (path == targetPath)
+            {
+                return Files[hash];
+            }
+        }
+
+        return null;
+    }
+
     public FileSystemArchive(string modName, string modDirectory, IHashService hashService)
     {
         ArchiveAbsolutePath = $"<virtual FileSystemArchive>";

@@ -34,7 +34,7 @@ public class CR2WList : Red4File, IParseableBuffer, IRedCloneable
         {
             list.Files.Add(new CR2WFile()
             {
-                RootChunk = (RedBaseClass)file.RootChunk.DeepCopy()
+                RootChunk = (CResource)file.RootChunk.DeepCopy()
             });
         }
         return list;

@@ -843,7 +843,7 @@ public class CR2WFileConverter : CustomRedConverter<CR2WFile>
                     var converter = options.GetConverter(typeof(RedBaseClass));
                     if (converter is ICustomRedConverter conv)
                     {
-                        result.RootChunk = (RedBaseClass?)conv.ReadRedType(ref reader, typeof(RedBaseClass), options) ?? throw new ArgumentNullException();
+                        result.RootChunk = (CResource?)conv.ReadRedType(ref reader, typeof(RedBaseClass), options) ?? throw new ArgumentNullException();
                     }
                     else
                     {
@@ -940,7 +940,7 @@ public class CR2WFileConverter : CustomRedConverter<CR2WFile>
                         throw new JsonException();
                     }
 
-                    result.RootChunk = JsonSerializer.Deserialize<RedBaseClass>(ref reader, options) ?? throw new ArgumentNullException();
+                    result.RootChunk = (CResource)(JsonSerializer.Deserialize<RedBaseClass>(ref reader, options) ?? throw new ArgumentNullException());
 
                     break;
                 }

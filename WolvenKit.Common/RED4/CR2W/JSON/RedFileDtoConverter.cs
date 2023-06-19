@@ -135,7 +135,7 @@ public class RedFileDtoConverter : CustomRedConverter<RedFileDto>
                 {
                     var converter = options.GetConverter(typeof(RedBaseClass));
                     result.RootChunk = converter is ICustomRedConverter conv
-                        ? (RedBaseClass?)conv.ReadRedType(ref reader, typeof(RedBaseClass), options) ?? throw new ArgumentNullException()
+                        ? (CResource?)conv.ReadRedType(ref reader, typeof(RedBaseClass), options) ?? throw new ArgumentNullException()
                         : throw new JsonException();
 
                     break;
@@ -228,7 +228,7 @@ public class RedFileDtoConverter : CustomRedConverter<RedFileDto>
                         throw new JsonException();
                     }
 
-                    result.RootChunk = JsonSerializer.Deserialize<RedBaseClass>(ref reader, options) ?? throw new ArgumentNullException();
+                    result.RootChunk = (CResource)(JsonSerializer.Deserialize<RedBaseClass>(ref reader, options) ?? throw new ArgumentNullException());
 
                     break;
                 }

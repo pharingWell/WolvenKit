@@ -24,7 +24,7 @@ public class CR2WFile : Red4File, IDisposable, IEquatable<CR2WFile>
 
     public IList<ICR2WProperty> Properties { get; }
 
-    public RedBaseClass RootChunk { get; set; }
+    public CResource RootChunk { get; set; }
 
     public IList<ICR2WEmbeddedFile> EmbeddedFiles { get; }
 

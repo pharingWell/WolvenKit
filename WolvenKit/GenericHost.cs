@@ -24,6 +24,7 @@ using WolvenKit.Common.Interfaces;
 using WolvenKit.Common.Services;
 using WolvenKit.Core.Interfaces;
 using WolvenKit.Core.Services;
+using WolvenKit.Modkit.Managers;
 using WolvenKit.Modkit.RED4;
 using WolvenKit.Modkit.RED4.Tools;
 using WolvenKit.Modkit.Scripting;
@@ -90,6 +91,7 @@ namespace WolvenKit
                     services.AddTransient<RED4Controller>();
                     services.AddTransient<IGameControllerFactory, GameControllerFactory>();
                     services.AddSingleton<IPluginService, PluginService>();
+                    services.AddSingleton<ConvertManager>();
 
                     // factories
                     services.AddTransient<IPageViewModelFactory, PageViewModelFactory>();

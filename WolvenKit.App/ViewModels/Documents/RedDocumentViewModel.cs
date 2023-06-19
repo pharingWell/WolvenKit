@@ -315,7 +315,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
             if (file.Content != null)
             {
                 var vm = _documentTabViewmodelFactory.RDTDataViewModel(file.Content, this, _appViewModel, _chunkViewmodelFactory);
-                vm.FilePath = file.FileName;
+                vm.FilePath = file.FileName.GetResolvedText()!;
                 vm.IsEmbeddedFile = true;
 
                 TabItemViewModels.Add(vm);
@@ -372,7 +372,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
 
             var file = new CR2WEmbedded
             {
-                Content = instance,
+                Content = (CResource)instance,
                 FileName = "unnamed." + FileTypeHelper.GetFileExtensionsFromRootName(instance.GetType().Name)[0]
             };
 
@@ -380,7 +380,7 @@ public partial class RedDocumentViewModel : DocumentViewModel
             IsDirty = true;
 
             var vm = _documentTabViewmodelFactory.RDTDataViewModel(file.Content, this, _appViewModel, _chunkViewmodelFactory);
-            vm.FilePath = file.FileName;
+            vm.FilePath = file.FileName.GetResolvedText()!;
             vm.IsEmbeddedFile = true;
 
             TabItemViewModels.Add(vm);

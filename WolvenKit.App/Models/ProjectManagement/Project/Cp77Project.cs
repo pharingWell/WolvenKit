@@ -297,7 +297,7 @@ public sealed class Cp77Project : IEquatable<Cp77Project>, ICloneable
 
     // Conversions
 
-    public ICyberGameArchive AsArchive() => new FileSystemArchive(Name, ModDirectory, _hashService);
+    public FileSystemArchive AsArchive() => new(Name, ModDirectory, _hashService);
 
 
     #region implements ICloneable

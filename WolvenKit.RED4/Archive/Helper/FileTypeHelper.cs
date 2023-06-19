@@ -392,4 +392,10 @@ public class FileTypeHelper
 
         return null;
     }
+
+    public static List<ERedExtension> GetRedExtension(CResource resource) => 
+        FileTypes
+            .Where(x => x.RootType == resource.GetType())
+            .Select(x => x.Extension)
+            .ToList();
 }

@@ -226,9 +226,9 @@ namespace WolvenKit.Modkit.RED4
 
                 foreach (var import in cr2w.Info.GetImports())
                 {
-                    if (!primaryDependencies.Contains(import.ToString().NotNull()))
+                    if (!primaryDependencies.Contains(import.DepotPath.ToString().NotNull()))
                     {
-                        primaryDependencies.Add(import.ToString().NotNull());
+                        primaryDependencies.Add(import.DepotPath.ToString().NotNull());
                     }
                 }
             }
@@ -1206,11 +1206,12 @@ namespace WolvenKit.Modkit.RED4
             var materialTemplates = new Dictionary<string, CMaterialTemplate>();
             foreach (var file in cr2w.EmbeddedFiles)
             {
-                if (Path.GetExtension(file.FileName).Contains("mt"))
+                var resolvedPath = file.FileName.GetResolvedText()!;
+                if (Path.GetExtension(resolvedPath).Contains("mt"))
                 {
                     if (file.Content is CMaterialTemplate mt)
                     {
-                        materialTemplates.Add(file.FileName, mt);
+                        materialTemplates.Add(resolvedPath, mt);
                     }
                 }
             }

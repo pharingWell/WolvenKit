@@ -19,6 +19,7 @@ using WolvenKit.Core.Extensions;
 using WolvenKit.Core.Interfaces;
 using WolvenKit.Core.Services;
 using WolvenKit.Helpers;
+using WolvenKit.Modkit.Managers;
 using WolvenKit.Modkit.RED4;
 using WolvenKit.Modkit.RED4.Opus;
 using WolvenKit.RED4.Archive;
@@ -34,6 +35,7 @@ public partial class ExportViewModel : AbstractExportViewModel
     private readonly IProjectManager _projectManager;
     private readonly IProgressService<double> _progressService;
     private readonly ImportExportHelper _importExportHelper;
+    private readonly ConvertManager _convertManager;
 
     public ExportViewModel(
         IArchiveManager archiveManager,
@@ -43,13 +45,15 @@ public partial class ExportViewModel : AbstractExportViewModel
         IWatcherService watcherService,
         IProjectManager projectManager,
         IProgressService<double> progressService,
-        ImportExportHelper importExportHelper) : base(archiveManager, notificationService, settingsManager, "Export Tool", "Export Tool")
+        ImportExportHelper importExportHelper,
+        ConvertManager convertManager) : base(archiveManager, notificationService, settingsManager, "Export Tool", "Export Tool")
     {
         _loggerService = loggerService;
         _watcherService = watcherService;
         _projectManager = projectManager;
         _progressService = progressService;
         _importExportHelper = importExportHelper;
+        _convertManager = convertManager;
 
         PropertyChanged += ExportViewModel_PropertyChanged;
     }
@@ -170,6 +174,28 @@ public partial class ExportViewModel : AbstractExportViewModel
         if (!_importExportHelper.Finalize(settings))
         {
             return false;
+        }
+
+        var projectArchive = proj.AsArchive();
+        if (_convertManager.Archives == null)
+        {
+            _convertManager.Archives = new List<IGameArchive>();
+
+            _convertManager.Archives.Add(projectArchive);
+            foreach (var modArchive in _archiveManager.ModArchives.Items)
+            {
+                _convertManager.Archives.Add(modArchive);
+            }
+            foreach (var archive in _archiveManager.Archives.Items)
+            {
+                _convertManager.Archives.Add(archive);
+            }
+        }
+
+        var gameFile = projectArchive.GetFile(item.BaseFile);
+        if (gameFile != null)
+        {
+            _convertManager.Export(gameFile, settings);
         }
 
         return await _importExportHelper.Export(fi, settings, new DirectoryInfo(proj.ModDirectory), new DirectoryInfo(proj.RawDirectory));

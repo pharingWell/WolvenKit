@@ -945,7 +945,7 @@ public partial class AppViewModel : ObservableObject/*, IAppViewModel*/
                 {
                     CR2WFile cr2w = new()
                     {
-                        RootChunk = RedTypeManager.Create(redType)
+                        RootChunk = (CResource)RedTypeManager.Create(redType)
                     };
                     stream = new FileStream(file.FullPath, FileMode.Create, FileAccess.Write);
                     using CR2WWriter writer = new(stream);

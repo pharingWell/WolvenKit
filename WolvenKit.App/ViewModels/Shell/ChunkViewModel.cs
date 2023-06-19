@@ -1630,7 +1630,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                         }
                         list.Files.Insert(index, new CR2WFile()
                         {
-                            RootChunk = (RedBaseClass)e
+                            RootChunk = (CResource)e
                         });
                     }
                 }
@@ -2495,7 +2495,7 @@ public partial class ChunkViewModel : ObservableObject, ISelectableTreeViewItemM
                         }
                         list.Files.Insert(index, new CR2WFile()
                         {
-                            RootChunk = rbc
+                            RootChunk = (CResource)rbc
                         });
                     }
                 }

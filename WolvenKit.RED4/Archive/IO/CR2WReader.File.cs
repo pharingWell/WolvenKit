@@ -247,7 +247,7 @@ public partial class CR2WReader
 
         if (chunkIndex == 0)
         {
-            _cr2wFile.RootChunk = instance;
+            _cr2wFile.RootChunk = (CResource)instance;
         }
 
         _chunks.Add(chunkIndex, new ChunkInfo(instance));
@@ -344,7 +344,7 @@ public partial class CR2WReader
         var result = new CR2WEmbedded
         {
             FileName = importsList[(int)info.importIndex - 1].DepotPath!,
-            Content = _chunks[(int)info.chunkIndex].Instance
+            Content = (CResource)_chunks[(int)info.chunkIndex].Instance
         };
 
         _chunks[(int)info.chunkIndex].IsUsed = true;

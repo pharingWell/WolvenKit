@@ -18,8 +18,8 @@ public struct CR2WEmbeddedInfo
 
 public class CR2WEmbedded : ICR2WEmbeddedFile, IEquatable<CR2WEmbedded>
 {
-    public string FileName { get; set; }
-    public RedBaseClass Content { get; set; }
+    public ResourcePath FileName { get; set; }
+    public CResource Content { get; set; }
 
     public bool Equals(CR2WEmbedded? other)
     {

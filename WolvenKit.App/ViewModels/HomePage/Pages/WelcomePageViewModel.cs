@@ -56,6 +56,8 @@ public partial class WelcomePageViewModel : PageViewModel
     public string TwitterLink = "https://twitter.com/ModdingRed";
     public string YoutubeLink = "https://www.youtube.com/channel/UCl3JpsP49JgYLMYAYQvoaLg";
 
+    public Boolean SortByName = true;
+
     [ObservableProperty]
     private ObservableCollection<FancyProjectObject> _fancyProjects = new();
 
@@ -202,6 +204,14 @@ public partial class WelcomePageViewModel : PageViewModel
         DispatcherHelper.RunOnMainThread(() => FancyProjects.Clear());
 
         var sorted = _recentlyUsedItems.ToList();
+        if (SortByName)
+        {
+            sorted.Sort(delegate (RecentlyUsedItemModel a, RecentlyUsedItemModel b) {
+                return a.Name.CompareTo(b.Name);
+            });
+            
+        }
+        else
         sorted.Sort(delegate (RecentlyUsedItemModel a, RecentlyUsedItemModel b)
         {
             DateTime ad, bd;

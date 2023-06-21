@@ -7,6 +7,7 @@
     xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:o="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
     xmlns:reactiveUi="http://reactiveui.net"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:shared="clr-namespace:WolvenKit.App.ViewModels.HomePage.Pages;assembly=WolvenKit.App"
     xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
     xmlns:system="clr-namespace:System;assembly=mscorlib"
@@ -239,6 +240,19 @@
                         Margin="8,0,0,0"
                         FontSize="24"
                         Text="Recent Projects" />
+                    
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="28,0"
+                        VerticalAlignment="Center"
+                        Text="Sort by Name" />
+
+                    <mah:ToggleSwitch
+                        Grid.Column="2"
+                        Command="{Binding ToggleSortCommand}"
+                        OffContent=""
+                        OnContent=""
+                        ToolTip="Toggle to sort by name instead of date" />
                 </StackPanel>
             </StackPanel>
 

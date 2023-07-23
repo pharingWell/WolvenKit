@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CP77.Common.Image;
-using SharpDX.Win32;
 using WolvenKit.Common;
 using WolvenKit.Common.DDS;
 using WolvenKit.Common.Model.Arguments;
-using WolvenKit.Common.Services;
 using WolvenKit.RED4.CR2W;
 using WolvenKit.RED4.Types;
 
@@ -16,7 +14,7 @@ namespace WolvenKit.Modkit.RED4
     {
         #region Methods
 
-        private static IEnumerable<RedImage> GetRedImages(rendRenderMultilayerMaskBlobPC blob)
+        public static IEnumerable<RedImage> GetRedImages(rendRenderMultilayerMaskBlobPC blob)
         {
             uint atlasWidth = blob.Header.AtlasWidth;
             uint atlasHeight = blob.Header.AtlasHeight;
